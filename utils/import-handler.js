@@ -1,0 +1,160 @@
+// QuestBank — Import Handler
+// Validates and imports questions from JSON files
+
+const QBImport = {
+    REQUIRED_FIELDS: ['id', 'enunciado', 'disciplina', 'topico', 'conteudo', 'assunto', 'banca', 'ano', 'tipo', 'dificuldade', 'gabarito'],
+    VALID_TIPOS: ['objetiva', 'discursiva', 'v_f', 'somatoria'],
+    VALID_DIFICULDADES: ['facil', 'medio', 'dificil'],
+
+    /**
+     * Validate a JSON object against QuestBank Import Standard v1.0
+     * Returns: { valid, errors[], warnings[], validQuestions[], stats }
+     */
+    validate(data) {
+        const errors = [];
+        const warnings = [];
+
+        if (!data || typeof data !== 'object') {
+            return { valid: false, errors: ['JSON inválido ou vazio.'], warnings, validQuestions: [], stats: {} };
+        }
+
+        if (!data.version) {
+            warnings.push('Campo "version" ausente. Assumindo v1.0.');
+        }
+
+        if (!Array.isArray(data.questions) || data.questions.length === 0) {
+            return {
+                valid: false,
+                errors: ['O campo "questions" deve ser um array com pelo menos uma questão.'],
+                warnings,
+                validQuestions: [],
+                stats: {},
+            };
+        }
+
+        const validQuestions = [];
+        const seenIds = new Set();
+
+        data.questions.forEach((q, i) => {
+            const label = q.id ? `Questão "${q.id}"` : `Questão #${i + 1}`;
+
+            // Check for duplicate IDs within the file
+            if (q.id && seenIds.has(q.id)) {
+                warnings.push(`${label}: ID duplicado no arquivo. Apenas a primeira ocorrência será importada.`);
+                return;
+            }
+            if (q.id) seenIds.add(q.id);
+
+            // Check required fields
+            const missing = this.REQUIRED_FIELDS.filter(f => {
+                const val = q[f];
+                return val === undefined || val === null || val === '';
+            });
+
+            if (missing.length > 0) {
+                errors.push(`${label}: campos obrigatórios ausentes — ${missing.join(', ')}`);
+                return;
+            }
+
+            // Validate tipo
+            if (!this.VALID_TIPOS.includes(q.tipo)) {
+                errors.push(`${label}: tipo inválido "${q.tipo}". Valores aceitos: ${this.VALID_TIPOS.join(', ')}`);
+                return;
+            }
+
+            // Validate dificuldade
+            if (!this.VALID_DIFICULDADES.includes(q.dificuldade)) {
+                errors.push(`${label}: dificuldade inválida "${q.dificuldade}". Valores aceitos: ${this.VALID_DIFICULDADES.join(', ')}`);
+                return;
+            }
+
+            // Validate alternativas for objetiva
+            if (q.tipo === 'objetiva') {
+                if (!Array.isArray(q.alternativas) || q.alternativas.length === 0) {
+                    errors.push(`${label}: tipo "objetiva" requer campo "alternativas" com pelo menos uma alternativa.`);
+                    return;
+                }
+
+                const letras = q.alternativas.map(a => a.letra);
+                if (!letras.includes(q.gabarito)) {
+                    warnings.push(`${label}: gabarito "${q.gabarito}" não corresponde a nenhuma alternativa (${letras.join(', ')}).`);
+                }
+            }
+
+            validQuestions.push(q);
+        });
+
+        return {
+            valid: errors.length === 0,
+            errors,
+            warnings,
+            validQuestions,
+            stats: {
+                total: data.questions.length,
+                valid: validQuestions.length,
+                rejected: data.questions.length - validQuestions.length,
+            },
+        };
+    },
+
+    /**
+     * Import validated questions into IndexedDB
+     * Returns: { imported, duplicates, total }
+     */
+    async importToDb(questions) {
+        const existingIds = new Set((await db.questions.toArray()).map(q => q.id));
+        const toInsert = [];
+        let duplicates = 0;
+
+        for (const q of questions) {
+            if (existingIds.has(q.id)) {
+                duplicates++;
+                continue;
+            }
+
+            toInsert.push({
+                id: q.id,
+                enunciado: q.enunciado,
+                disciplina: q.disciplina,
+                topico: q.topico,
+                conteudo: q.conteudo,
+                assunto: q.assunto,
+                banca: q.banca,
+                ano: q.ano,
+                tipo: q.tipo,
+                dificuldade: q.dificuldade,
+                gabarito: q.gabarito,
+                alternativas: q.alternativas || [],
+                imagens: q.imagens || [],
+                resolucao_link: q.resolucao_link || '',
+                tags: q.tags || [],
+                created_at: new Date().toISOString(),
+            });
+        }
+
+        if (toInsert.length > 0) {
+            await db.questions.bulkAdd(toInsert);
+        }
+
+        return { imported: toInsert.length, duplicates, total: questions.length };
+    },
+
+    /**
+     * Read a File object and parse as JSON
+     */
+    readFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    resolve(data);
+                } catch (err) {
+                    reject(new Error('Arquivo não é um JSON válido.'));
+                }
+            };
+            reader.onerror = () => reject(new Error('Erro ao ler o arquivo.'));
+            reader.readAsText(file);
+        });
+    },
+};

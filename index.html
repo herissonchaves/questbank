@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="QuestBank — Banco de Questões de Vestibulares para Professores. Monte provas offline.">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <title>QuestBank — Banco de Questões</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- React 18 -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+    <!-- Dexie.js -->
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+
+    <style>
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.3); }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.93) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        .animate-slide-up { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        .animate-modal-in { animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.4);
+        }
+        .glass-light {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Custom checkbox */
+        input[type="checkbox"] {
+            accent-color: #6366f1;
+            cursor: pointer;
+        }
+
+        /* Card hover glow */
+        .card-glow {
+            transition: all 0.2s ease;
+        }
+        .card-glow:hover {
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2), 0 4px 20px rgba(99, 102, 241, 0.06);
+        }
+
+        /* Drag states */
+        .dragging { opacity: 0.4; transform: scale(0.97); }
+        .drag-over { border-top: 2px solid #6366f1 !important; }
+
+        /* Smooth expand/collapse */
+        .expandable {
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+        }
+
+        /* Button press effect */
+        .btn-press:active { transform: scale(0.97); }
+
+        /* Loading shimmer */
+        .shimmer {
+            background: linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.05) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen overflow-hidden">
+    <div id="root" class="min-h-screen flex flex-col"></div>
+
+    <!-- Database & Utilities (plain JS) -->
+    <script src="db/schema.js"></script>
+    <script src="db/taxonomy.js"></script>
+    <script src="utils/import-handler.js"></script>
+    <script src="utils/export-handler.js"></script>
+
+    <!-- React Components (JSX via Babel) -->
+    <script type="text/babel" src="components/subject-tree.jsx"></script>
+    <script type="text/babel" src="components/filter-bar.jsx"></script>
+    <script type="text/babel" src="components/question-card.jsx"></script>
+    <script type="text/babel" src="components/question-list.jsx"></script>
+    <script type="text/babel" src="components/selected-panel.jsx"></script>
+    <script type="text/babel" src="components/import-modal.jsx"></script>
+    <script type="text/babel" src="components/export-modal.jsx"></script>
+
+    <!-- Main App (must be last) -->
+    <script type="text/babel" src="app.jsx"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('✅ SW registered:', reg.scope))
+                    .catch(err => console.warn('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
