@@ -1,38 +1,48 @@
 // QuestBank — Database Schema (Dexie.js v3)
-// IndexedDB with optimized indices for taxonomy + filtering
+// IndexedDB with optimized indices for taxonomy + filtering + exam history
 
 const db = new Dexie('QuestBankDB');
 
+// Version 1: original schema
 db.version(1).stores({
-    // Questions table — main data store
-    // Indexed fields enable fast filtering by taxonomy and metadata
     questions: 'id, disciplina, topico, conteudo, assunto, banca, ano, tipo, dificuldade, created_at',
-
-    // Exams table — saved exam configurations
     exams: '++id, title, created_at',
-
-    // Settings table — user preferences (key-value store)
     settings: 'key',
 });
 
-// Discipline color palette — consistent colors per discipline
+// Version 2: add usedInExams to questions, improve exams table
+db.version(2).stores({
+    questions: 'id, disciplina, topico, conteudo, assunto, banca, ano, tipo, dificuldade, regiao, *tags, *usedInExams, created_at',
+    exams: '++id, title, created_at',
+    settings: 'key',
+}).upgrade(tx => {
+    // Add usedInExams array to existing questions
+    return tx.table('questions').toCollection().modify(q => {
+        if (!q.usedInExams) q.usedInExams = [];
+        if (!q.regiao) q.regiao = '';
+        if (!q.tags) q.tags = [];
+    });
+});
+
+// Discipline color palette — consistent colors per discipline (light theme)
 const DISCIPLINE_COLORS = {
-    'Fisica':     { bg: 'bg-blue-500/10',    text: 'text-blue-400',    border: 'border-blue-500/30',    dot: 'bg-blue-400' },
-    'Quimica':    { bg: 'bg-emerald-500/10',  text: 'text-emerald-400',  border: 'border-emerald-500/30',  dot: 'bg-emerald-400' },
-    'Biologia':   { bg: 'bg-green-500/10',    text: 'text-green-400',    border: 'border-green-500/30',    dot: 'bg-green-400' },
-    'Matematica': { bg: 'bg-amber-500/10',    text: 'text-amber-400',    border: 'border-amber-500/30',    dot: 'bg-amber-400' },
-    'Portugues':  { bg: 'bg-rose-500/10',     text: 'text-rose-400',     border: 'border-rose-500/30',     dot: 'bg-rose-400' },
-    'Historia':   { bg: 'bg-orange-500/10',   text: 'text-orange-400',   border: 'border-orange-500/30',   dot: 'bg-orange-400' },
-    'Geografia':  { bg: 'bg-teal-500/10',     text: 'text-teal-400',     border: 'border-teal-500/30',     dot: 'bg-teal-400' },
-    'Filosofia':  { bg: 'bg-purple-500/10',   text: 'text-purple-400',   border: 'border-purple-500/30',   dot: 'bg-purple-400' },
-    'Sociologia': { bg: 'bg-pink-500/10',     text: 'text-pink-400',     border: 'border-pink-500/30',     dot: 'bg-pink-400' },
-    'Ingles':     { bg: 'bg-cyan-500/10',     text: 'text-cyan-400',     border: 'border-cyan-500/30',     dot: 'bg-cyan-400' },
+    'Fisica':     { bg: 'bg-blue-50',     text: 'text-blue-700',     border: 'border-blue-200',   dot: 'bg-blue-500' },
+    'Quimica':    { bg: 'bg-emerald-50',  text: 'text-emerald-700',  border: 'border-emerald-200', dot: 'bg-emerald-500' },
+    'Biologia':   { bg: 'bg-green-50',    text: 'text-green-700',    border: 'border-green-200',   dot: 'bg-green-500' },
+    'Matematica': { bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-200',   dot: 'bg-amber-500' },
+    'Portugues':  { bg: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-200',    dot: 'bg-rose-500' },
+    'Historia':   { bg: 'bg-orange-50',   text: 'text-orange-700',   border: 'border-orange-200',  dot: 'bg-orange-500' },
+    'Geografia':  { bg: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200',    dot: 'bg-teal-500' },
+    'Filosofia':  { bg: 'bg-purple-50',   text: 'text-purple-700',   border: 'border-purple-200',  dot: 'bg-purple-500' },
+    'Sociologia': { bg: 'bg-pink-50',     text: 'text-pink-700',     border: 'border-pink-200',    dot: 'bg-pink-500' },
+    'Ingles':     { bg: 'bg-cyan-50',     text: 'text-cyan-700',     border: 'border-cyan-200',    dot: 'bg-cyan-500' },
 };
 
 const DIFFICULTY_STYLES = {
-    'facil':   { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: 'Fácil',   dot: 'bg-emerald-400' },
-    'medio':   { bg: 'bg-amber-500/10',   text: 'text-amber-400',   label: 'Médio',   dot: 'bg-amber-400' },
-    'dificil': { bg: 'bg-rose-500/10',     text: 'text-rose-400',     label: 'Difícil', dot: 'bg-rose-400' },
+    'facil':          { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Fácil',         dot: 'bg-emerald-500' },
+    'medio':          { bg: 'bg-amber-50',   text: 'text-amber-700',   label: 'Médio',         dot: 'bg-amber-500' },
+    'dificil':        { bg: 'bg-rose-50',    text: 'text-rose-700',    label: 'Difícil',       dot: 'bg-rose-500' },
+    'nao_definida':   { bg: 'bg-gray-50',    text: 'text-gray-500',    label: 'Não definida',  dot: 'bg-gray-400' },
 };
 
 const TYPE_LABELS = {
@@ -43,10 +53,9 @@ const TYPE_LABELS = {
 };
 
 function getDisciplineColor(disciplina) {
-    // Try exact match, then partial match, then default
     if (DISCIPLINE_COLORS[disciplina]) return DISCIPLINE_COLORS[disciplina];
     const key = Object.keys(DISCIPLINE_COLORS).find(k =>
         disciplina.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(disciplina.toLowerCase())
     );
-    return DISCIPLINE_COLORS[key] || { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/30', dot: 'bg-indigo-400' };
+    return DISCIPLINE_COLORS[key] || { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', dot: 'bg-indigo-500' };
 }

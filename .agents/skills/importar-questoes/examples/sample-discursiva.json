@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "questions": [
+    {
+      "id": "UNICAMP-2025-D3",
+      "enunciado": "Explique o conceito de energia potencial gravitacional e derive a expressão para a energia potencial gravitacional de um corpo de massa m a uma altura h da superfície terrestre. Em seguida, calcule a energia potencial de um corpo de 5 kg a 10 m de altura.",
+      "tipo": "discursiva",
+      "disciplina": "Física",
+      "topico": "Mecânica",
+      "conteudo": "Energia",
+      "assunto": "Energia Potencial Gravitacional",
+      "dificuldade": "dificil",
+      "banca": "UNICAMP",
+      "ano": 2025,
+      "gabarito": "Ep = mgh. Para m=5kg, g=10m/s², h=10m: Ep = 5 × 10 × 10 = 500 J",
+      "tags": ["energia", "gravitação", "discursiva"]
+    }
+  ]
+}

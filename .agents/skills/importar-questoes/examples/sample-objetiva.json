@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "questions": [
+    {
+      "id": "ENEM-2024-Q45",
+      "enunciado": "Um projétil é lançado obliquamente do solo, formando um ângulo de 60° com a horizontal, com velocidade inicial de 20 m/s. Desconsiderando a resistência do ar e adotando g = 10 m/s², determine a altura máxima atingida pelo projétil.",
+      "tipo": "objetiva",
+      "disciplina": "Física",
+      "topico": "Mecânica",
+      "conteudo": "Cinemática",
+      "assunto": "Lançamento Oblíquo",
+      "dificuldade": "medio",
+      "banca": "ENEM",
+      "ano": 2024,
+      "gabarito": "C",
+      "alternativas": [
+        {"letra": "A", "texto": "5,0 m"},
+        {"letra": "B", "texto": "10,0 m"},
+        {"letra": "C", "texto": "15,0 m"},
+        {"letra": "D", "texto": "20,0 m"},
+        {"letra": "E", "texto": "25,0 m"}
+      ],
+      "regiao": "Nacional",
+      "tags": ["cinemática", "lançamento oblíquo", "vestibular"]
+    }
+  ]
+}

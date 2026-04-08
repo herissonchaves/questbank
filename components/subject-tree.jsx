@@ -1,5 +1,5 @@
 // QuestBank — SubjectTree Component
-// Dynamic hierarchical tree with checkboxes, search, and cascading selection
+// Dynamic hierarchical tree with checkboxes, search, and cascading selection (white theme)
 
 const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
     const [expanded, setExpanded] = React.useState({});
@@ -10,7 +10,6 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
         const initial = {};
         Object.keys(tree).forEach(k => {
             initial[k] = true;
-            // Also expand level 2
             Object.keys(tree[k].children || {}).forEach(k2 => {
                 initial[k + '>' + k2] = true;
             });
@@ -31,7 +30,6 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
 
     const clearAll = () => onSubjectsChange([]);
 
-    // Check if a node or any descendant matches the search
     const nodeMatchesSearch = (key, node) => {
         if (!search) return true;
         const term = search.toLowerCase();
@@ -52,11 +50,11 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
 
         return (
             <div key={fullPath} className={indentClass}>
-                <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-slate-800/60 cursor-pointer group transition-all duration-150">
-                    {/* Expand/collapse chevron — only click here to expand */}
+                <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-gray-100 cursor-pointer group transition-all duration-150">
+                    {/* Expand/collapse chevron */}
                     {hasChildren ? (
                         <button
-                            className="w-5 h-5 flex items-center justify-center text-slate-500 group-hover:text-slate-300 transition-transform duration-200 flex-shrink-0 hover:bg-slate-700/50 rounded"
+                            className="w-5 h-5 flex items-center justify-center text-gray-400 group-hover:text-gray-600 transition-transform duration-200 flex-shrink-0 hover:bg-gray-200 rounded"
                             style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                             onClick={(e) => toggleExpand(fullPath, e)}
                         >
@@ -68,7 +66,7 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
                         <span className="w-5 flex-shrink-0" />
                     )}
 
-                    {/* Checkbox + Label — click either to toggle selection */}
+                    {/* Checkbox + Label */}
                     <label
                         className="flex items-center gap-1.5 flex-1 min-w-0 cursor-pointer"
                         onClick={(e) => { e.preventDefault(); handleToggle(fullPath, node, e); }}
@@ -88,16 +86,16 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
 
                         {/* Label */}
                         <span className={`text-sm truncate flex-1 ${
-                            level === 0 ? 'font-semibold text-slate-200' :
-                            level === 1 ? 'font-medium text-slate-300' :
-                            'text-slate-400'
-                        } group-hover:text-slate-100 transition-colors`}>
+                            level === 0 ? 'font-semibold text-gray-800' :
+                            level === 1 ? 'font-medium text-gray-700' :
+                            'text-gray-600'
+                        } group-hover:text-gray-900 transition-colors`}>
                             {node.label}
                         </span>
                     </label>
 
                     {/* Count badge */}
-                    <span className="text-[10px] text-slate-500 bg-slate-800/80 px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium">
+                    <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium">
                         {node.count}
                     </span>
                 </div>
@@ -121,15 +119,15 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="p-3 border-b border-slate-700/40">
+            <div className="p-3 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500">
                         Assuntos
                     </h2>
                     {hasActiveFilters && (
                         <button
                             onClick={clearAll}
-                            className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                            className="text-[10px] text-brand-600 hover:text-brand-700 font-medium transition-colors"
                         >
                             Limpar
                         </button>
@@ -137,7 +135,7 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
                 </div>
                 {/* Search */}
                 <div className="relative">
-                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
@@ -145,12 +143,12 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar assunto..."
-                        className="w-full bg-slate-800/50 border border-slate-700/40 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
                     />
                     {search && (
                         <button
                             onClick={() => setSearch('')}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -167,7 +165,7 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
                     .map(([key, node]) => renderNode(key, node, '', 0))
                 }
                 {Object.keys(tree).length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                         <svg className="w-10 h-10 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                         </svg>

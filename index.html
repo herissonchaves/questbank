@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="QuestBank — Banco de Questões de Vestibulares para Professores. Monte provas offline.">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
     <title>QuestBank — Banco de Questões</title>
@@ -20,12 +20,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
+                    colors: {
+                        brand: {
+                            50:  '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
                 }
             }
         }
@@ -41,12 +52,18 @@
     <!-- Dexie.js -->
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
 
+    <!-- docx.js for Word export -->
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+    <!-- FileSaver.js for download -->
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
     <style>
         /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.15); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.35); }
 
         /* Animations */
         @keyframes fadeIn {
@@ -69,31 +86,18 @@
         .animate-slide-up { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
         .animate-modal-in { animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        /* Glassmorphism */
-        .glass {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(51, 65, 85, 0.4);
-        }
-        .glass-light {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-
         /* Custom checkbox */
         input[type="checkbox"] {
             accent-color: #6366f1;
             cursor: pointer;
         }
 
-        /* Card hover glow */
-        .card-glow {
+        /* Card hover */
+        .card-hover {
             transition: all 0.2s ease;
         }
-        .card-glow:hover {
-            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2), 0 4px 20px rgba(99, 102, 241, 0.06);
+        .card-hover:hover {
+            box-shadow: 0 1px 8px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(99, 102, 241, 0.12);
         }
 
         /* Drag states */
@@ -109,15 +113,32 @@
         /* Button press effect */
         .btn-press:active { transform: scale(0.97); }
 
-        /* Loading shimmer */
-        .shimmer {
-            background: linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.05) 50%, transparent 100%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s ease-in-out infinite;
+        /* Panel borders */
+        .panel-border-r { border-right: 1px solid #e2e8f0; }
+        .panel-border-l { border-left: 1px solid #e2e8f0; }
+
+        /* Used-in tag */
+        .used-tag {
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 9999px;
+            background: #fef3c7;
+            color: #92400e;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Select styling */
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 20 20'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E");
+            background-position: right 6px center;
+            background-size: 14px;
+            background-repeat: no-repeat;
+            padding-right: 24px;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen overflow-hidden">
+<body class="bg-white text-gray-900 font-sans antialiased min-h-screen overflow-hidden">
     <div id="root" class="min-h-screen flex flex-col"></div>
 
     <!-- Database & Utilities (plain JS) -->
@@ -134,6 +155,7 @@
     <script type="text/babel" src="components/selected-panel.jsx"></script>
     <script type="text/babel" src="components/import-modal.jsx"></script>
     <script type="text/babel" src="components/export-modal.jsx"></script>
+    <script type="text/babel" src="components/exams-panel.jsx"></script>
 
     <!-- Main App (must be last) -->
     <script type="text/babel" src="app.jsx"></script>
@@ -143,7 +165,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('✅ SW registered:', reg.scope))
+                    .then(reg => console.log('SW registered:', reg.scope))
                     .catch(err => console.warn('SW registration failed:', err));
             });
         }

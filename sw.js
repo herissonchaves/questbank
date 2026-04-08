@@ -1,5 +1,5 @@
-// QuestBank Service Worker — Cache-First Strategy
-const CACHE_NAME = 'questbank-v1';
+// QuestBank Service Worker — Cache-First Strategy (v2)
+const CACHE_NAME = 'questbank-v2';
 
 const APP_SHELL = [
     './',
@@ -16,6 +16,7 @@ const APP_SHELL = [
     './components/selected-panel.jsx',
     './components/import-modal.jsx',
     './components/export-modal.jsx',
+    './components/exams-panel.jsx',
     './manifest.json',
 ];
 
@@ -24,6 +25,8 @@ const CDN_URLS = [
     'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
     'https://unpkg.com/@babel/standalone@7/babel.min.js',
     'https://unpkg.com/dexie@3/dist/dexie.js',
+    'https://unpkg.com/docx@8.5.0/build/index.umd.js',
+    'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
     'https://cdn.tailwindcss.com',
 ];
 
@@ -31,7 +34,7 @@ const CDN_URLS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Caching app shell');
+            console.log('[SW] Caching app shell v2');
             return cache.addAll(APP_SHELL);
         })
     );
@@ -54,7 +57,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Cache-first for same-origin and CDN resources
     if (url.origin === self.location.origin || CDN_URLS.some(cdn => event.request.url.startsWith(cdn))) {
         event.respondWith(
             caches.match(event.request).then((cached) => {
@@ -70,7 +72,6 @@ self.addEventListener('fetch', (event) => {
 
                     return response;
                 }).catch(() => {
-                    // Offline fallback
                     if (event.request.destination === 'document') {
                         return caches.match('./index.html');
                     }

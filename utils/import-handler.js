@@ -1,10 +1,11 @@
 // QuestBank — Import Handler
 // Validates and imports questions from JSON files
+// Supports both objetiva and discursiva question types
 
 const QBImport = {
-    REQUIRED_FIELDS: ['id', 'enunciado', 'disciplina', 'topico', 'conteudo', 'assunto', 'banca', 'ano', 'tipo', 'dificuldade', 'gabarito'],
+    REQUIRED_FIELDS: ['id', 'enunciado', 'disciplina', 'topico', 'conteudo', 'assunto', 'tipo', 'dificuldade'],
     VALID_TIPOS: ['objetiva', 'discursiva', 'v_f', 'somatoria'],
-    VALID_DIFICULDADES: ['facil', 'medio', 'dificil'],
+    VALID_DIFICULDADES: ['facil', 'medio', 'dificil', 'nao_definida'],
 
     /**
      * Validate a JSON object against QuestBank Import Standard v1.0
@@ -75,11 +76,26 @@ const QBImport = {
                     return;
                 }
 
-                const letras = q.alternativas.map(a => a.letra);
-                if (!letras.includes(q.gabarito)) {
-                    warnings.push(`${label}: gabarito "${q.gabarito}" não corresponde a nenhuma alternativa (${letras.join(', ')}).`);
+                if (!q.gabarito) {
+                    warnings.push(`${label}: tipo "objetiva" sem campo "gabarito".`);
+                }
+
+                if (q.gabarito) {
+                    const letras = q.alternativas.map(a => a.letra);
+                    if (!letras.includes(q.gabarito)) {
+                        warnings.push(`${label}: gabarito "${q.gabarito}" não corresponde a nenhuma alternativa (${letras.join(', ')}).`);
+                    }
                 }
             }
+
+            // Discursiva: gabarito is optional (can be the expected answer or empty)
+            if (q.tipo === 'discursiva' && !q.gabarito) {
+                // This is fine — discursive questions may not have a fixed answer
+            }
+
+            // banca and ano are optional but recommended
+            if (!q.banca) warnings.push(`${label}: campo "banca" ausente.`);
+            if (!q.ano) warnings.push(`${label}: campo "ano" ausente.`);
 
             validQuestions.push(q);
         });
@@ -119,15 +135,17 @@ const QBImport = {
                 topico: q.topico,
                 conteudo: q.conteudo,
                 assunto: q.assunto,
-                banca: q.banca,
-                ano: q.ano,
+                banca: q.banca || '',
+                ano: q.ano || '',
                 tipo: q.tipo,
                 dificuldade: q.dificuldade,
-                gabarito: q.gabarito,
+                gabarito: q.gabarito || '',
                 alternativas: q.alternativas || [],
                 imagens: q.imagens || [],
                 resolucao_link: q.resolucao_link || '',
+                regiao: q.regiao || '',
                 tags: q.tags || [],
+                usedInExams: [],
                 created_at: new Date().toISOString(),
             });
         }
