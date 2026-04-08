@@ -77,7 +77,7 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
 
     // Generate .docx using docx.js
     const generateDocx = async (questions, cfg) => {
-        const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, TabStopPosition, TabStopType, HeadingLevel, Table, TableRow, TableCell, WidthType } = docx;
+        const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, ImageRun } = docx;
 
         const children = [];
 
@@ -124,18 +124,48 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
         }));
 
         // Questions
-        questions.forEach((q, idx) => {
+        for (let idx = 0; idx < questions.length; idx++) {
+            const q = questions[idx];
             const questionNum = idx + 1;
             const isObjective = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
 
-            // Question number + enunciado
+            // Question number + enunciado (strip HTML tags)
+            const cleanEnunciado = q.enunciado.replace(/<[^>]*>/g, '');
             children.push(new Paragraph({
                 spacing: { before: 250, after: 120 },
                 children: [
                     new TextRun({ text: `${questionNum}) `, bold: true, size: 22, font: 'Arial' }),
-                    new TextRun({ text: q.enunciado, size: 22, font: 'Arial' }),
+                    new TextRun({ text: cleanEnunciado, size: 22, font: 'Arial' }),
                 ],
             }));
+
+            // Images (base64)
+            if (q.imagens && q.imagens.length > 0) {
+                for (const imgSrc of q.imagens) {
+                    try {
+                        const base64Match = imgSrc.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+                        if (base64Match) {
+                            const base64Data = base64Match[2];
+                            const binaryString = atob(base64Data);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            children.push(new Paragraph({
+                                spacing: { before: 100, after: 100 },
+                                children: [
+                                    new ImageRun({
+                                        data: bytes,
+                                        transformation: { width: 400, height: 300 },
+                                    }),
+                                ],
+                            }));
+                        }
+                    } catch (imgErr) {
+                        console.warn('Could not include image in docx:', imgErr);
+                    }
+                }
+            }
 
             // Alternatives for objective questions
             if (isObjective && q.alternativas && q.alternativas.length > 0) {
@@ -162,7 +192,7 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                     }));
                 }
             }
-        });
+        }
 
         // Gabarito page (if enabled and there are objective questions)
         if (cfg.incluir_gabarito) {

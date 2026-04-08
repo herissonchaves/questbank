@@ -1,12 +1,29 @@
 // QuestBank — QuestionCard Component
-// Expandable card with simplified/full view, usage tags, discursive support
+// Expandable card with simplified/full view, usage tags, edit/delete, HTML support
 
-const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onToggleSelect }) => {
+const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onToggleSelect, onEdit, onDelete }) => {
     const q = question;
     const colors = getDisciplineColor(q.disciplina);
     const diff = DIFFICULTY_STYLES[q.dificuldade] || DIFFICULTY_STYLES['medio'];
     const usedInExams = q.usedInExams || [];
     const isUsed = usedInExams.length > 0;
+
+    // Safe HTML render for enunciado (basic tags only)
+    const renderEnunciado = (text, truncate = false) => {
+        // Check if the text contains HTML tags
+        const hasHTML = /<[a-z][\s\S]*>/i.test(text);
+        if (hasHTML) {
+            const displayText = truncate ? text.substring(0, 200) : text;
+            return (
+                <span dangerouslySetInnerHTML={{ __html: displayText }} />
+            );
+        }
+        // Plain text
+        if (truncate) {
+            return <span className="line-clamp-2">{text}</span>;
+        }
+        return <span className="whitespace-pre-wrap">{text}</span>;
+    };
 
     return (
         <div
@@ -75,8 +92,8 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
 
                     {/* Enunciado preview (2 lines) */}
                     {!isExpanded && (
-                        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                            {q.enunciado}
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                            {renderEnunciado(q.enunciado, true)}
                         </p>
                     )}
                 </div>
@@ -108,8 +125,8 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                 <div className="px-3 pb-3 animate-fade-in border-t border-gray-100 mt-0">
                     {/* Full enunciado */}
                     <div className="pt-3 pb-2">
-                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                            {q.enunciado}
+                        <p className="text-sm text-gray-800 leading-relaxed">
+                            {renderEnunciado(q.enunciado)}
                         </p>
                     </div>
 
@@ -218,6 +235,28 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                             ))}
                         </div>
                     )}
+
+                    {/* Action buttons (edit / delete) */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); if (window._questBankEditQuestion) window._questBankEditQuestion(q); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-lg bg-gray-50 border border-gray-200 text-gray-600 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all"
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); if (window._questBankDeleteQuestion) window._questBankDeleteQuestion(q.id); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-lg bg-gray-50 border border-gray-200 text-gray-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all"
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Excluir
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

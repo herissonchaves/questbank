@@ -1,7 +1,7 @@
 // QuestBank — FilterBar Component
 // Search + dynamic dropdown filters + advanced filters + ignore used toggle
 
-const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, resultCount, totalCount, ignoreUsed, onToggleIgnoreUsed }) => {
+const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, resultCount, totalCount, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
 
     const [showAdvanced, setShowAdvanced] = React.useState(false);
     const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.regiao || filters.tag || filters.codigo || ignoreUsed;
@@ -15,6 +15,7 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
                 </svg>
                 <input
                     type="text"
+                    ref={searchRef}
                     value={filters.search}
                     onChange={(e) => onFilterChange('search', e.target.value)}
                     placeholder="Buscar no enunciado, código ou tags..."

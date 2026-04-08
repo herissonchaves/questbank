@@ -1,7 +1,7 @@
 // QuestBank — SubjectTree Component
-// Dynamic hierarchical tree with checkboxes, search, and cascading selection (white theme)
+// Dynamic hierarchical tree with checkboxes, search, cascading selection, filtered counts (white theme)
 
-const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
+const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange }) => {
     const [expanded, setExpanded] = React.useState({});
     const [search, setSearch] = React.useState('');
 
@@ -37,6 +37,28 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
         return Object.entries(node.children || {}).some(([k, v]) => nodeMatchesSearch(k, v));
     };
 
+    // Get filtered count for a node path
+    const getFilteredCount = (key, parentPath, level) => {
+        if (!filteredTree) return null;
+        try {
+            if (level === 0) return filteredTree[key]?.count;
+            const parts = parentPath ? parentPath.split('>') : [];
+            parts.push(key);
+            let node = filteredTree;
+            for (let i = 0; i < parts.length; i++) {
+                if (i === 0) {
+                    node = node[parts[i]];
+                } else {
+                    node = node?.children?.[parts[i]];
+                }
+                if (!node) return 0;
+            }
+            return node.count;
+        } catch {
+            return null;
+        }
+    };
+
     const renderNode = (key, node, parentPath, level) => {
         const fullPath = parentPath ? `${parentPath}>${key}` : key;
         const hasChildren = node.children && Object.keys(node.children).length > 0;
@@ -47,6 +69,10 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
 
         const indentClass = level === 0 ? '' : 'ml-3';
         const colors = level === 0 ? getDisciplineColor(key) : null;
+
+        // Get filtered count
+        const filteredCount = getFilteredCount(key, parentPath, level);
+        const showFilteredCount = filteredCount !== null && filteredCount !== node.count;
 
         return (
             <div key={fullPath} className={indentClass}>
@@ -94,9 +120,11 @@ const SubjectTree = ({ tree, activeSubjects, onSubjectsChange }) => {
                         </span>
                     </label>
 
-                    {/* Count badge */}
-                    <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium">
-                        {node.count}
+                    {/* Count badge — shows filtered/total when filters active */}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium ${
+                        showFilteredCount ? 'bg-brand-50 text-brand-600' : 'bg-gray-100 text-gray-400'
+                    }`}>
+                        {showFilteredCount ? `${filteredCount}/${node.count}` : node.count}
                     </span>
                 </div>
 

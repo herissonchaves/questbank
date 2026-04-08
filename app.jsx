@@ -1,7 +1,8 @@
 // QuestBank — Main App Component
 // 3-panel layout with state management via useReducer, white theme
+// Responsive: tabs on mobile, 3-panel on desktop
 
-const { useState, useEffect, useReducer, useMemo, useCallback } = React;
+const { useState, useEffect, useReducer, useMemo, useCallback, useRef } = React;
 
 // ─── State Management ───────────────────────────────────────
 
@@ -11,8 +12,9 @@ const initialState = {
     activeSubjects: [],
     filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '' },
     ignoreUsed: false,
-    modals: { import: false, export: false, exams: false },
+    modals: { import: false, export: false, exams: false, stats: false, editQuestion: null },
     loading: true,
+    mobileTab: 'questions', // 'subjects' | 'questions' | 'selected'
 };
 
 function reducer(state, action) {
@@ -28,6 +30,20 @@ function reducer(state, action) {
             return { ...state, selectedIds: ids };
         }
 
+        case 'SELECT_ALL_FILTERED': {
+            const newIds = action.payload;
+            const currentSet = new Set(state.selectedIds);
+            const allSelected = newIds.every(id => currentSet.has(id));
+            if (allSelected) {
+                // Deselect all filtered
+                const removeSet = new Set(newIds);
+                return { ...state, selectedIds: state.selectedIds.filter(id => !removeSet.has(id)) };
+            } else {
+                // Select all filtered (deduplicate)
+                return { ...state, selectedIds: [...new Set([...state.selectedIds, ...newIds])] };
+            }
+        }
+
         case 'REMOVE_SELECTED':
             return { ...state, selectedIds: state.selectedIds.filter(i => i !== action.payload) };
 
@@ -36,6 +52,16 @@ function reducer(state, action) {
             const ids = [...state.selectedIds];
             const [moved] = ids.splice(from, 1);
             ids.splice(to, 0, moved);
+            return { ...state, selectedIds: ids };
+        }
+
+        case 'SHUFFLE_SELECTED': {
+            const ids = [...state.selectedIds];
+            // Fisher-Yates shuffle
+            for (let i = ids.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [ids[i], ids[j]] = [ids[j], ids[i]];
+            }
             return { ...state, selectedIds: ids };
         }
 
@@ -57,6 +83,12 @@ function reducer(state, action) {
         case 'TOGGLE_MODAL':
             return { ...state, modals: { ...state.modals, [action.modal]: !state.modals[action.modal] } };
 
+        case 'SET_EDIT_QUESTION':
+            return { ...state, modals: { ...state.modals, editQuestion: action.payload } };
+
+        case 'SET_MOBILE_TAB':
+            return { ...state, mobileTab: action.payload };
+
         default:
             return state;
     }
@@ -67,10 +99,37 @@ function reducer(state, action) {
 const App = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const [toast, setToast] = useState(null);
+    const searchRef = useRef(null);
 
     useEffect(() => {
         loadQuestions();
     }, []);
+
+    // ─── Keyboard shortcuts ──────────────────────────────────
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ctrl+F → focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                if (searchRef.current) searchRef.current.focus();
+            }
+            // Ctrl+I → open import
+            if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+                e.preventDefault();
+                dispatch({ type: 'TOGGLE_MODAL', modal: 'import' });
+            }
+            // Escape → close any modal
+            if (e.key === 'Escape') {
+                if (state.modals.import) dispatch({ type: 'TOGGLE_MODAL', modal: 'import' });
+                else if (state.modals.export) dispatch({ type: 'TOGGLE_MODAL', modal: 'export' });
+                else if (state.modals.exams) dispatch({ type: 'TOGGLE_MODAL', modal: 'exams' });
+                else if (state.modals.stats) dispatch({ type: 'TOGGLE_MODAL', modal: 'stats' });
+                else if (state.modals.editQuestion) dispatch({ type: 'SET_EDIT_QUESTION', payload: null });
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [state.modals]);
 
     const loadQuestions = async () => {
         try {
@@ -86,6 +145,12 @@ const App = () => {
     const taxonomyTree = useMemo(
         () => QBTaxonomy.buildTree(state.questions),
         [state.questions]
+    );
+
+    // O(1) lookup Set for selectedIds
+    const selectedIdsSet = useMemo(
+        () => new Set(state.selectedIds),
+        [state.selectedIds]
     );
 
     // Filter questions by subjects + filters + ignoreUsed
@@ -124,6 +189,12 @@ const App = () => {
         });
     }, [state.questions, state.activeSubjects, state.filters, state.ignoreUsed]);
 
+    // Build filtered taxonomy tree for showing filtered counts
+    const filteredTaxonomyTree = useMemo(
+        () => QBTaxonomy.buildTree(filteredQuestions),
+        [filteredQuestions]
+    );
+
     // Selected questions in order
     const selectedQuestions = useMemo(
         () => state.selectedIds.map(id => state.questions.find(q => q.id === id)).filter(Boolean),
@@ -148,8 +219,16 @@ const App = () => {
         dispatch({ type: 'TOGGLE_SELECT', payload: id });
     }, []);
 
+    const handleSelectAllFiltered = useCallback((ids) => {
+        dispatch({ type: 'SELECT_ALL_FILTERED', payload: ids });
+    }, []);
+
     const handleReorder = useCallback((from, to) => {
         dispatch({ type: 'REORDER_SELECTED', payload: { from, to } });
+    }, []);
+
+    const handleShuffle = useCallback(() => {
+        dispatch({ type: 'SHUFFLE_SELECTED' });
     }, []);
 
     const handleToggleIgnoreUsed = useCallback(() => {
@@ -159,6 +238,44 @@ const App = () => {
     const handleExamSaved = useCallback(() => {
         // Refresh questions to update usedInExams tags
         loadQuestions();
+    }, []);
+
+    const handleDeleteQuestion = useCallback(async (id) => {
+        if (!confirm('Tem certeza que deseja excluir esta questão? Esta ação não pode ser desfeita.')) return;
+        try {
+            await db.questions.delete(id);
+            // Remove from selection if selected
+            dispatch({ type: 'REMOVE_SELECTED', payload: id });
+            await loadQuestions();
+            showToast('Questão excluída.', 'success');
+        } catch (err) {
+            showToast('Erro ao excluir questão.', 'error');
+        }
+    }, []);
+
+    const handleEditQuestion = useCallback((question) => {
+        dispatch({ type: 'SET_EDIT_QUESTION', payload: question });
+    }, []);
+
+    // Expose edit/delete handlers globally (so QuestionCard can access without deep prop drilling)
+    useEffect(() => {
+        window._questBankEditQuestion = handleEditQuestion;
+        window._questBankDeleteQuestion = handleDeleteQuestion;
+        return () => {
+            delete window._questBankEditQuestion;
+            delete window._questBankDeleteQuestion;
+        };
+    }, [handleEditQuestion, handleDeleteQuestion]);
+
+    const handleSaveEditQuestion = useCallback(async (updatedQuestion) => {
+        try {
+            await db.questions.update(updatedQuestion.id, updatedQuestion);
+            dispatch({ type: 'SET_EDIT_QUESTION', payload: null });
+            await loadQuestions();
+            showToast('Questão atualizada!', 'success');
+        } catch (err) {
+            showToast('Erro ao salvar questão.', 'error');
+        }
     }, []);
 
     const handleBackupExport = async () => {
@@ -171,6 +288,8 @@ const App = () => {
     };
 
     const handleBackupImport = async () => {
+        if (!confirm('⚠️ ATENÇÃO: Isso vai SUBSTITUIR todas as questões e provas atuais pelo conteúdo do backup.\n\nDeseja continuar?')) return;
+
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.questbank.json,.json';
@@ -240,6 +359,18 @@ const App = () => {
                             )}
                         </div>
 
+                        {/* Stats dashboard */}
+                        <button
+                            onClick={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'stats' })}
+                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all btn-press"
+                            title="Estatísticas"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Stats
+                        </button>
+
                         {/* Exams History */}
                         <button
                             onClick={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'exams' })}
@@ -249,18 +380,19 @@ const App = () => {
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Provas
+                            <span className="hidden sm:inline">Provas</span>
                         </button>
 
                         {/* Import */}
                         <button
                             onClick={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'import' })}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all btn-press"
+                            title="Importar Questões (Ctrl+I)"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            Importar
+                            <span className="hidden sm:inline">Importar</span>
                         </button>
 
                         {/* Backup dropdown */}
@@ -271,7 +403,7 @@ const App = () => {
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                                 </svg>
-                                Backup
+                                <span className="hidden sm:inline">Backup</span>
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                                 </svg>
@@ -301,38 +433,88 @@ const App = () => {
                 </div>
             </header>
 
+            {/* ─── Mobile Tab Bar ─────────────────────────── */}
+            <div className="lg:hidden flex-shrink-0 bg-white border-b border-gray-200">
+                <div className="flex">
+                    {[
+                        { key: 'subjects', label: '📚 Assuntos', count: Object.keys(taxonomyTree).length },
+                        { key: 'questions', label: '📋 Questões', count: filteredQuestions.length },
+                        { key: 'selected', label: '✅ Prova', count: state.selectedIds.length },
+                    ].map(tab => (
+                        <button
+                            key={tab.key}
+                            onClick={() => dispatch({ type: 'SET_MOBILE_TAB', payload: tab.key })}
+                            className={`flex-1 py-2.5 text-xs font-semibold text-center transition-all relative ${
+                                state.mobileTab === tab.key
+                                    ? 'text-brand-700 bg-brand-50/50'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            {tab.label}
+                            {tab.count > 0 && (
+                                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full ${
+                                    state.mobileTab === tab.key
+                                        ? 'bg-brand-100 text-brand-700'
+                                        : 'bg-gray-100 text-gray-500'
+                                }`}>
+                                    {tab.count}
+                                </span>
+                            )}
+                            {state.mobileTab === tab.key && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* ─── Main 3-Panel Layout ────────────────────── */}
             <main className="flex-1 flex overflow-hidden">
                 {/* Left Panel: Subject Tree */}
-                <aside className="w-64 flex-shrink-0 bg-white panel-border-r flex flex-col overflow-hidden">
+                <aside className={`w-64 flex-shrink-0 bg-white panel-border-r flex flex-col overflow-hidden ${
+                    state.mobileTab === 'subjects' ? '' : 'hidden lg:flex'
+                }`}
+                    style={state.mobileTab === 'subjects' ? { width: '100%' } : {}}
+                >
                     <SubjectTree
                         tree={taxonomyTree}
+                        filteredTree={filteredTaxonomyTree}
                         activeSubjects={state.activeSubjects}
                         onSubjectsChange={(subjects) => dispatch({ type: 'SET_SUBJECTS', payload: subjects })}
                     />
                 </aside>
 
                 {/* Center Panel: Question List */}
-                <section className="flex-1 flex flex-col overflow-hidden min-w-0 bg-gray-50/50">
+                <section className={`flex-1 flex flex-col overflow-hidden min-w-0 bg-gray-50/50 ${
+                    state.mobileTab === 'questions' ? '' : 'hidden lg:flex'
+                }`}>
                     <QuestionList
                         questions={filteredQuestions}
                         allQuestions={state.questions}
                         selectedIds={state.selectedIds}
+                        selectedIdsSet={selectedIdsSet}
                         filters={state.filters}
                         onFilterChange={handleFilterChange}
                         onClearFilters={handleClearFilters}
                         onToggleSelect={handleToggleSelect}
+                        onSelectAllFiltered={handleSelectAllFiltered}
                         ignoreUsed={state.ignoreUsed}
                         onToggleIgnoreUsed={handleToggleIgnoreUsed}
+                        searchRef={searchRef}
                     />
                 </section>
 
                 {/* Right Panel: Selected Questions */}
-                <aside className="w-72 flex-shrink-0 bg-white panel-border-l flex flex-col overflow-hidden">
+                <aside className={`w-72 flex-shrink-0 bg-white panel-border-l flex flex-col overflow-hidden ${
+                    state.mobileTab === 'selected' ? '' : 'hidden lg:flex'
+                }`}
+                    style={state.mobileTab === 'selected' ? { width: '100%' } : {}}
+                >
                     <SelectedPanel
                         questions={selectedQuestions}
                         onRemove={(id) => dispatch({ type: 'REMOVE_SELECTED', payload: id })}
                         onReorder={handleReorder}
+                        onShuffle={handleShuffle}
                         onClear={() => dispatch({ type: 'CLEAR_SELECTED' })}
                         onExport={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'export' })}
                     />
@@ -357,6 +539,22 @@ const App = () => {
                 isOpen={state.modals.exams}
                 onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'exams' })}
             />
+
+            {state.modals.stats && (
+                <StatsPanel
+                    isOpen={state.modals.stats}
+                    onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'stats' })}
+                    questions={state.questions}
+                />
+            )}
+
+            {state.modals.editQuestion && (
+                <EditQuestionModal
+                    question={state.modals.editQuestion}
+                    onClose={() => dispatch({ type: 'SET_EDIT_QUESTION', payload: null })}
+                    onSave={handleSaveEditQuestion}
+                />
+            )}
 
             {/* ─── Toast Notification ─────────────────────── */}
             {toast && (

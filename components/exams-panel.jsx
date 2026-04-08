@@ -1,10 +1,11 @@
 // QuestBank — ExamsPanel Component
-// View saved exams/lists history with details
+// View saved exams/lists history with details + re-download .docx
 
-const ExamsPanel = ({ isOpen, onClose, onLoadExam }) => {
+const ExamsPanel = ({ isOpen, onClose }) => {
     const [exams, setExams] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const [expandedId, setExpandedId] = React.useState(null);
+    const [redownloading, setRedownloading] = React.useState(null);
 
     React.useEffect(() => {
         if (isOpen) loadExams();
@@ -45,6 +46,7 @@ const ExamsPanel = ({ isOpen, onClose, onLoadExam }) => {
     };
 
     const handleRedownload = async (exam) => {
+        setRedownloading(exam.id);
         try {
             // Load actual questions from DB
             const questions = [];
@@ -54,13 +56,26 @@ const ExamsPanel = ({ isOpen, onClose, onLoadExam }) => {
             }
             if (questions.length === 0) {
                 alert('Nenhuma questão encontrada. Elas podem ter sido removidas do banco.');
+                setRedownloading(null);
                 return;
             }
-            // Re-export using the stored config
-            // We'll emit an event that export-modal can handle
-            if (onLoadExam) onLoadExam(exam, questions);
+
+            // Re-generate .docx using the stored config
+            const cfg = exam.config || {
+                titulo: exam.title,
+                professor: exam.professor || '',
+                instituicao: exam.instituicao || '',
+                data: exam.data || '',
+                incluir_gabarito: true,
+                linhas_discursiva: 5,
+            };
+
+            await ExamsPanel_generateDocx(questions, cfg);
+            setRedownloading(null);
         } catch (err) {
-            alert('Erro ao recarregar prova.');
+            console.error('Error re-downloading exam:', err);
+            alert('Erro ao gerar novo download da prova.');
+            setRedownloading(null);
         }
     };
 
@@ -115,6 +130,7 @@ const ExamsPanel = ({ isOpen, onClose, onLoadExam }) => {
                                 const createdDate = new Date(exam.created_at);
                                 const dateStr = createdDate.toLocaleDateString('pt-BR');
                                 const timeStr = createdDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                const isRedownloading = redownloading === exam.id;
 
                                 return (
                                     <div
@@ -161,12 +177,20 @@ const ExamsPanel = ({ isOpen, onClose, onLoadExam }) => {
                                             <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <button
                                                     onClick={() => handleRedownload(exam)}
-                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                                                    title="Baixar novamente"
+                                                    disabled={isRedownloading}
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50"
+                                                    title="Baixar novamente (.docx)"
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                    </svg>
+                                                    {isRedownloading ? (
+                                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        </svg>
+                                                    )}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(exam.id, exam.title)}
@@ -212,3 +236,166 @@ const ExamsPanel = ({ isOpen, onClose, onLoadExam }) => {
         </div>
     );
 };
+
+// ─── Standalone .docx generator for re-download ────────────────────
+// (Separate function so ExamsPanel can generate without opening ExportModal)
+
+async function ExamsPanel_generateDocx(questions, cfg) {
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, ImageRun } = docx;
+
+    const children = [];
+
+    // Header
+    children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 100 },
+        children: [new TextRun({ text: cfg.instituicao || '', bold: true, size: 24, font: 'Arial' })],
+    }));
+
+    children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 100 },
+        children: [new TextRun({ text: cfg.titulo || 'Prova', bold: true, size: 28, font: 'Arial' })],
+    }));
+
+    if (cfg.professor || cfg.data) {
+        const infoTexts = [];
+        if (cfg.professor) infoTexts.push(`Prof.: ${cfg.professor}`);
+        if (cfg.data) {
+            const parts = cfg.data.split('-');
+            if (parts.length === 3) infoTexts.push(`Data: ${parts[2]}/${parts[1]}/${parts[0]}`);
+        }
+        children.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+            children: [new TextRun({ text: infoTexts.join('    |    '), size: 20, font: 'Arial', color: '555555' })],
+        }));
+    }
+
+    // Name/Class line
+    children.push(new Paragraph({
+        spacing: { before: 200, after: 100 },
+        children: [
+            new TextRun({ text: 'Nome: _____________________________________________   Turma: ________', size: 22, font: 'Arial' }),
+        ],
+    }));
+
+    // Separator
+    children.push(new Paragraph({
+        spacing: { before: 100, after: 300 },
+        border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } },
+        children: [],
+    }));
+
+    // Questions
+    for (let idx = 0; idx < questions.length; idx++) {
+        const q = questions[idx];
+        const questionNum = idx + 1;
+        const isObjective = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
+
+        // Question number + enunciado (strip HTML tags for Word)
+        const cleanEnunciado = q.enunciado.replace(/<[^>]*>/g, '');
+        children.push(new Paragraph({
+            spacing: { before: 250, after: 120 },
+            children: [
+                new TextRun({ text: `${questionNum}) `, bold: true, size: 22, font: 'Arial' }),
+                new TextRun({ text: cleanEnunciado, size: 22, font: 'Arial' }),
+            ],
+        }));
+
+        // Images (base64)
+        if (q.imagens && q.imagens.length > 0) {
+            for (const imgSrc of q.imagens) {
+                try {
+                    // Extract base64 data
+                    const base64Match = imgSrc.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+                    if (base64Match) {
+                        const imageType = base64Match[1] === 'jpg' ? 'jpeg' : base64Match[1];
+                        const base64Data = base64Match[2];
+                        const binaryString = atob(base64Data);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        children.push(new Paragraph({
+                            spacing: { before: 100, after: 100 },
+                            children: [
+                                new ImageRun({
+                                    data: bytes,
+                                    transformation: { width: 400, height: 300 },
+                                    type: imageType === 'png' ? 'png' : 'jpg',
+                                }),
+                            ],
+                        }));
+                    }
+                } catch (imgErr) {
+                    console.warn('Could not include image in docx:', imgErr);
+                }
+            }
+        }
+
+        // Alternatives for objective questions
+        if (isObjective && q.alternativas && q.alternativas.length > 0) {
+            q.alternativas.forEach((alt) => {
+                children.push(new Paragraph({
+                    spacing: { before: 40, after: 40 },
+                    indent: { left: 400 },
+                    children: [
+                        new TextRun({ text: `${alt.letra}) `, bold: true, size: 22, font: 'Arial' }),
+                        new TextRun({ text: alt.texto, size: 22, font: 'Arial' }),
+                    ],
+                }));
+            });
+        }
+
+        // Answer lines for discursive questions
+        if (q.tipo === 'discursiva') {
+            const numLines = cfg.linhas_discursiva || 5;
+            for (let i = 0; i < numLines; i++) {
+                children.push(new Paragraph({
+                    spacing: { before: 200 },
+                    border: { bottom: { color: 'AAAAAA', space: 1, style: BorderStyle.SINGLE, size: 4 } },
+                    children: [new TextRun({ text: ' ', size: 22 })],
+                }));
+            }
+        }
+    }
+
+    // Gabarito page
+    if (cfg.incluir_gabarito) {
+        const objectiveQs = questions.filter(q => q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria');
+        if (objectiveQs.length > 0) {
+            children.push(new Paragraph({
+                pageBreakBefore: true,
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 300 },
+                children: [new TextRun({ text: 'GABARITO', bold: true, size: 28, font: 'Arial' })],
+            }));
+
+            questions.forEach((q, idx) => {
+                if (q.gabarito) {
+                    children.push(new Paragraph({
+                        spacing: { before: 60, after: 60 },
+                        children: [
+                            new TextRun({ text: `${idx + 1}) `, bold: true, size: 22, font: 'Arial' }),
+                            new TextRun({ text: String(q.gabarito), size: 22, font: 'Arial' }),
+                        ],
+                    }));
+                }
+            });
+        }
+    }
+
+    const doc = new Document({
+        sections: [{
+            properties: {
+                page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } },
+            },
+            children,
+        }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const filename = `${(cfg.titulo || 'prova').replace(/\s+/g, '-').toLowerCase()}.docx`;
+    saveAs(blob, filename);
+}

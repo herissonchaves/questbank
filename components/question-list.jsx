@@ -1,14 +1,15 @@
 // QuestBank — QuestionList Component
-// Scrollable list of QuestionCards with FilterBar, advanced filters, lazy loading
+// Paginated list of QuestionCards with FilterBar, pagination controls
 
-const QuestionList = ({ questions, allQuestions, selectedIds, filters, onFilterChange, onClearFilters, onToggleSelect, ignoreUsed, onToggleIgnoreUsed }) => {
+const QuestionList = ({ questions, allQuestions, selectedIds, selectedIdsSet, filters, onFilterChange, onClearFilters, onToggleSelect, onSelectAllFiltered, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
     const [expandedIds, setExpandedIds] = React.useState(new Set());
-    const [visibleCount, setVisibleCount] = React.useState(30);
+    const [currentPage, setCurrentPage] = React.useState(1);
     const listRef = React.useRef(null);
+    const ITEMS_PER_PAGE = 10;
 
-    // Reset visible count when questions change
+    // Reset to page 1 when questions or filters change
     React.useEffect(() => {
-        setVisibleCount(30);
+        setCurrentPage(1);
         if (listRef.current) {
             listRef.current.scrollTop = 0;
         }
@@ -23,14 +24,40 @@ const QuestionList = ({ questions, allQuestions, selectedIds, filters, onFilterC
         });
     };
 
-    // Lazy load on scroll
-    const handleScroll = React.useCallback(() => {
-        if (!listRef.current) return;
-        const { scrollTop, scrollHeight, clientHeight } = listRef.current;
-        if (scrollHeight - scrollTop - clientHeight < 400) {
-            setVisibleCount(prev => Math.min(prev + 20, questions.length));
+    // Pagination calculations
+    const totalPages = Math.max(1, Math.ceil(questions.length / ITEMS_PER_PAGE));
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, questions.length);
+    const visibleQuestions = questions.slice(startIndex, endIndex);
+
+    const goToPage = (page) => {
+        const p = Math.max(1, Math.min(page, totalPages));
+        setCurrentPage(p);
+        if (listRef.current) {
+            listRef.current.scrollTop = 0;
         }
-    }, [questions.length]);
+    };
+
+    // Generate visible page numbers
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 7;
+
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) pages.push(i);
+
+            if (currentPage < totalPages - 2) pages.push('...');
+            pages.push(totalPages);
+        }
+        return pages;
+    };
 
     // Available filter values derived from ALL questions (not filtered)
     const availableValues = React.useMemo(() => ({
@@ -48,8 +75,8 @@ const QuestionList = ({ questions, allQuestions, selectedIds, filters, onFilterC
         })(),
     }), [allQuestions]);
 
-    const visibleQuestions = questions.slice(0, visibleCount);
-    const hasMore = visibleCount < questions.length;
+    // Check if all visible filtered questions are selected
+    const allFilteredSelected = questions.length > 0 && questions.every(q => selectedIdsSet.has(q.id));
 
     return (
         <div className="flex flex-col h-full">
@@ -63,39 +90,42 @@ const QuestionList = ({ questions, allQuestions, selectedIds, filters, onFilterC
                 totalCount={allQuestions.length}
                 ignoreUsed={ignoreUsed}
                 onToggleIgnoreUsed={onToggleIgnoreUsed}
+                searchRef={searchRef}
             />
+
+            {/* Select all bar */}
+            {questions.length > 0 && (
+                <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-200">
+                    <button
+                        onClick={() => onSelectAllFiltered(questions.map(q => q.id))}
+                        className="text-[11px] text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 transition-colors"
+                    >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {allFilteredSelected ? 'Desselecionar todas' : `Selecionar todas (${questions.length})`}
+                    </button>
+                    <span className="text-[10px] text-gray-400">
+                        Mostrando {startIndex + 1}–{endIndex} de {questions.length}
+                    </span>
+                </div>
+            )}
 
             {/* Question list */}
             <div
                 ref={listRef}
-                onScroll={handleScroll}
                 className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50/50"
             >
                 {visibleQuestions.map(q => (
                     <QuestionCard
                         key={q.id}
                         question={q}
-                        isSelected={selectedIds.includes(q.id)}
+                        isSelected={selectedIdsSet.has(q.id)}
                         isExpanded={expandedIds.has(q.id)}
                         onToggleExpand={toggleExpand}
                         onToggleSelect={onToggleSelect}
                     />
                 ))}
-
-                {/* Load more indicator */}
-                {hasMore && (
-                    <div className="flex items-center justify-center py-4">
-                        <button
-                            onClick={() => setVisibleCount(prev => Math.min(prev + 30, questions.length))}
-                            className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-brand-50 transition-all"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                            Carregar mais ({questions.length - visibleCount} restantes)
-                        </button>
-                    </div>
-                )}
 
                 {/* Empty state — filtered */}
                 {questions.length === 0 && allQuestions.length > 0 && (
@@ -125,6 +155,56 @@ const QuestionList = ({ questions, allQuestions, selectedIds, filters, onFilterC
                     </div>
                 )}
             </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 px-3 py-2.5 border-t border-gray-200 bg-white flex-shrink-0">
+                    {/* Previous */}
+                    <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        title="Página anterior"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+
+                    {/* Page numbers */}
+                    {getPageNumbers().map((page, i) => (
+                        page === '...' ? (
+                            <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-xs text-gray-400">
+                                ···
+                            </span>
+                        ) : (
+                            <button
+                                key={page}
+                                onClick={() => goToPage(page)}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold transition-all ${
+                                    currentPage === page
+                                        ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25'
+                                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        )
+                    ))}
+
+                    {/* Next */}
+                    <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        title="Próxima página"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
