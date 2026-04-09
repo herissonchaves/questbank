@@ -94,7 +94,7 @@ window.ExportEngines = {
         let imgCounter = 0;
 
         for (const q of questions) {
-            let texto = q.enunciado.replace(/<br\s*\\/?>/g, '\\\\').replace(/<[^>]*>/g, '');
+            let texto = q.enunciado.replace(/<br\s*\/?>/g, '\\\\').replace(/<[^>]*>/g, '');
             let mapImgToName = {};
             
             if (q.imagens && q.imagens.length > 0) {
