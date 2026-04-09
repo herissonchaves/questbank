@@ -2,6 +2,63 @@
 // Full-screen modal for creating individual questions
 // Inspired by SuperProfessor / Estuda.com UI
 
+// Autocomplete input component
+const AutocompleteInput = ({ label, value, onChange, suggestions: items, error, placeholder }) => {
+    const [showSuggestions, setShowSuggestions] = React.useState(false);
+    const [filtered, setFiltered] = React.useState([]);
+    const containerRef = React.useRef(null);
+
+    React.useEffect(() => {
+        if (value && items.length > 0) {
+            const f = items.filter(s => s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase());
+            setFiltered(f.slice(0, 6));
+        } else {
+            setFiltered([]);
+        }
+    }, [value, items]);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div ref={containerRef} className="relative">
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">{label} <span className="text-rose-400">*</span></label>
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder={placeholder || `Digite ${label.toLowerCase()}...`}
+                className={`w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${
+                    error ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
+                }`}
+            />
+            {error && <p className="text-[10px] text-rose-500 mt-0.5">{error}</p>}
+            {showSuggestions && filtered.length > 0 && (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-36 overflow-y-auto">
+                    {filtered.map((s, i) => (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => { onChange(s); setShowSuggestions(false); }}
+                            className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition-colors"
+                        >
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions }) => {
     const [step, setStep] = React.useState(1);
     const [saving, setSaving] = React.useState(false);
@@ -254,99 +311,13 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions }) => 
     const handleSave = async () => {
         if (!validateStep2()) return;
         setSaving(true);
-
-        // Ensure unique ID
-        const existingIds = new Set((existingQuestions || []).map(q => q.id));
-        let finalId = form.id;
-        while (existingIds.has(finalId)) {
-            finalId = generateId();
-        }
-
-        const question = {
-            id: finalId,
-            enunciado: form.showTextoBase && form.textoBase.trim()
-                ? form.textoBase.trim() + '\n\n' + form.enunciado.trim()
-                : form.enunciado.trim(),
-            tipo: form.tipo,
-            disciplina: form.disciplina.trim(),
-            topico: form.topico.trim(),
-            conteudo: form.conteudo.trim(),
-            assunto: form.assunto.trim(),
-            banca: form.banca.trim(),
-            ano: form.ano ? parseInt(form.ano) || form.ano : '',
-            dificuldade: form.dificuldade,
-            gabarito: form.tipo === 'objetiva' ? form.gabarito : (form.gabarito || ''),
-            alternativas: form.tipo === 'objetiva' ? form.alternativas.filter(a => a.texto.trim()) : [],
-            imagens: form.imagens || [],
-            resolucao_link: form.resolucao_link.trim(),
-            regiao: form.regiao,
-            tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-            usedInExams: [],
-            created_at: new Date().toISOString(),
-        };
-
         try {
-            await onSave(question);
-        } catch (err) {
+            await onSave?.(form);
+            onClose?.();
+        } catch (error) {
+            console.error("Failed to save:", error);
             setSaving(false);
         }
-    };
-
-    // Autocomplete input component
-    const AutocompleteInput = ({ label, value, onChange, suggestions: items, error, placeholder }) => {
-        const [showSuggestions, setShowSuggestions] = React.useState(false);
-        const [filtered, setFiltered] = React.useState([]);
-        const containerRef = React.useRef(null);
-
-        React.useEffect(() => {
-            if (value && items.length > 0) {
-                const f = items.filter(s => s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase());
-                setFiltered(f.slice(0, 6));
-            } else {
-                setFiltered([]);
-            }
-        }, [value, items]);
-
-        React.useEffect(() => {
-            const handleClickOutside = (e) => {
-                if (containerRef.current && !containerRef.current.contains(e.target)) {
-                    setShowSuggestions(false);
-                }
-            };
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }, []);
-
-        return (
-            <div ref={containerRef} className="relative">
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{label} <span className="text-rose-400">*</span></label>
-                <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    onFocus={() => setShowSuggestions(true)}
-                    placeholder={placeholder || `Digite ${label.toLowerCase()}...`}
-                    className={`w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${
-                        error ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
-                    }`}
-                />
-                {error && <p className="text-[10px] text-rose-500 mt-0.5">{error}</p>}
-                {showSuggestions && filtered.length > 0 && (
-                    <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-36 overflow-y-auto">
-                        {filtered.map((s, i) => (
-                            <button
-                                key={i}
-                                type="button"
-                                onClick={() => { onChange(s); setShowSuggestions(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition-colors"
-                            >
-                                {s}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-        );
     };
 
     return (
@@ -795,54 +766,6 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions }) => 
                                             <option value="medio">Médio</option>
                                             <option value="dificil">Difícil</option>
                                         </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tags e extras */}
-                            <div>
-                                <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                    </svg>
-                                    Extras
-                                </h4>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Tags (separadas por vírgula)</label>
-                                        <input
-                                            type="text"
-                                            value={form.tags}
-                                            onChange={(e) => update('tags', e.target.value)}
-                                            placeholder="Ex: vestibular, cinemática"
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Região</label>
-                                        <select
-                                            value={form.regiao}
-                                            onChange={(e) => update('regiao', e.target.value)}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 cursor-pointer appearance-none"
-                                        >
-                                            <option value="">—</option>
-                                            <option value="Nacional">Nacional</option>
-                                            <option value="Sudeste">Sudeste</option>
-                                            <option value="Sul">Sul</option>
-                                            <option value="Nordeste">Nordeste</option>
-                                            <option value="Centro-oeste">Centro-oeste</option>
-                                            <option value="Norte">Norte</option>
-                                        </select>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Link da resolução</label>
-                                        <input
-                                            type="url"
-                                            value={form.resolucao_link}
-                                            onChange={(e) => update('resolucao_link', e.target.value)}
-                                            placeholder="https://..."
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                                        />
                                     </div>
                                 </div>
                             </div>

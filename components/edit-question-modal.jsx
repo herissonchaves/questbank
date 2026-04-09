@@ -213,47 +213,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                         </div>
                     )}
 
-                    {/* Tags */}
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Tags (separadas por vírgula)</label>
-                        <input
-                            type="text"
-                            value={(form.tags || []).join(', ')}
-                            onChange={(e) => update('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-                            placeholder="Ex: ENEM, cinemática, vestibular"
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                        />
-                    </div>
 
-                    {/* Região */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Região</label>
-                            <select
-                                value={form.regiao || ''}
-                                onChange={(e) => update('regiao', e.target.value)}
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 cursor-pointer appearance-none"
-                            >
-                                <option value="">—</option>
-                                <option value="Nacional">Nacional</option>
-                                <option value="Sudeste">Sudeste</option>
-                                <option value="Sul">Sul</option>
-                                <option value="Nordeste">Nordeste</option>
-                                <option value="Centro-oeste">Centro-oeste</option>
-                                <option value="Norte">Norte</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Link da resolução</label>
-                            <input
-                                type="text"
-                                value={form.resolucao_link || ''}
-                                onChange={(e) => update('resolucao_link', e.target.value)}
-                                placeholder="https://..."
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                            />
-                        </div>
-                    </div>
                 </div>
 
                 {/* Footer */}
