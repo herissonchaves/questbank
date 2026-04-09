@@ -1,5 +1,5 @@
 // QuestBank Service Worker — Cache-First Strategy (v5)
-const CACHE_NAME = 'questbank-v8';
+const CACHE_NAME = 'questbank-v9';
 
 const APP_SHELL = [
     './',

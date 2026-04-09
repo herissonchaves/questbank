@@ -153,7 +153,7 @@ Seu app está no ar! Você pode depois personalizar o nome do link.
 2. Use os filtros para refinar (banca, ano, dificuldade, tipo)
 3. Clique no botão **"+"** em cada questão para adicionar à prova
 4. No painel direito, arraste para reordenar as questões
-5. Clique em **"Gerar Prova (.docx)"**
+5. Clique em **"Gerar Prova"**
 6. Preencha o nome da prova (obrigatório), professor e instituição
 7. Clique em **"Baixar Word (.docx)"**
 

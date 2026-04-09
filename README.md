@@ -58,7 +58,7 @@ Web app SaaS **offline-first** para professores montarem provas a partir de um b
        ↓
 5. Reordenar no painel direito (drag & drop)
        ↓
-6. Clicar "Gerar Prova (.docx)"
+6. Clicar "Gerar Prova"
        ↓
 7. Preencher nome da prova → Baixar Word
        ↓
