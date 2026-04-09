@@ -1,5 +1,5 @@
 // QuestBank Service Worker — Cache-First Strategy (v5)
-const CACHE_NAME = 'questbank-v10';
+const CACHE_NAME = 'questbank-v11';
 
 const APP_SHELL = [
     './',
@@ -9,6 +9,7 @@ const APP_SHELL = [
     './db/taxonomy.js',
     './utils/import-handler.js',
     './utils/export-handler.js',
+    './utils/latex-to-docx-math.js',
     './utils/export-engines.js',
     './components/subject-tree.jsx',
     './components/filter-bar.jsx',
