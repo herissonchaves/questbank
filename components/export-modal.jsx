@@ -11,6 +11,7 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
         incluir_gabarito: true,
         incluir_resolucao: false,
         linhas_discursiva: 5,
+        formato: 'word',
     });
     const [savedExam, setSavedExam] = React.useState(null);
 
@@ -59,8 +60,12 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                 }
             }
 
-            // 3. Generate .docx
-            await generateDocx(selectedQuestions, config);
+            // 3. Generate Exam File
+            if (config.formato === 'latex') {
+                await window.ExportEngines.generateLatex(selectedQuestions, config);
+            } else {
+                await window.ExportEngines.generateDocx(selectedQuestions, config);
+            }
 
             setSavedExam({ id: examId, title: config.titulo });
             setStep('done');
@@ -73,166 +78,6 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
             alert('Erro ao gerar prova: ' + err.message);
             setStep('config');
         }
-    };
-
-    // Generate .docx using docx.js
-    const generateDocx = async (questions, cfg) => {
-        const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, ImageRun } = docx;
-
-        const children = [];
-
-        // Header
-        children.push(new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 100 },
-            children: [new TextRun({ text: cfg.instituicao || '', bold: true, size: 24, font: 'Arial' })],
-        }));
-
-        children.push(new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 100 },
-            children: [new TextRun({ text: cfg.titulo || 'Prova', bold: true, size: 28, font: 'Arial' })],
-        }));
-
-        if (cfg.professor || cfg.data) {
-            const infoTexts = [];
-            if (cfg.professor) infoTexts.push(`Prof.: ${cfg.professor}`);
-            if (cfg.data) {
-                const [y, m, d] = cfg.data.split('-');
-                infoTexts.push(`Data: ${d}/${m}/${y}`);
-            }
-            children.push(new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 200 },
-                children: [new TextRun({ text: infoTexts.join('    |    '), size: 20, font: 'Arial', color: '555555' })],
-            }));
-        }
-
-        // Name/Class line
-        children.push(new Paragraph({
-            spacing: { before: 200, after: 100 },
-            children: [
-                new TextRun({ text: 'Nome: _____________________________________________   Turma: ________', size: 22, font: 'Arial' }),
-            ],
-        }));
-
-        // Separator
-        children.push(new Paragraph({
-            spacing: { before: 100, after: 300 },
-            border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } },
-            children: [],
-        }));
-
-        // Questions
-        for (let idx = 0; idx < questions.length; idx++) {
-            const q = questions[idx];
-            const questionNum = idx + 1;
-            const isObjective = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
-
-            // Question number + enunciado (strip HTML tags)
-            const cleanEnunciado = q.enunciado.replace(/<[^>]*>/g, '');
-            children.push(new Paragraph({
-                spacing: { before: 250, after: 120 },
-                children: [
-                    new TextRun({ text: `${questionNum}) `, bold: true, size: 22, font: 'Arial' }),
-                    new TextRun({ text: cleanEnunciado, size: 22, font: 'Arial' }),
-                ],
-            }));
-
-            // Images (base64)
-            if (q.imagens && q.imagens.length > 0) {
-                for (const imgSrc of q.imagens) {
-                    try {
-                        const base64Match = imgSrc.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
-                        if (base64Match) {
-                            const base64Data = base64Match[2];
-                            const binaryString = atob(base64Data);
-                            const bytes = new Uint8Array(binaryString.length);
-                            for (let i = 0; i < binaryString.length; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-                            children.push(new Paragraph({
-                                spacing: { before: 100, after: 100 },
-                                children: [
-                                    new ImageRun({
-                                        data: bytes,
-                                        transformation: { width: 400, height: 300 },
-                                    }),
-                                ],
-                            }));
-                        }
-                    } catch (imgErr) {
-                        console.warn('Could not include image in docx:', imgErr);
-                    }
-                }
-            }
-
-            // Alternatives for objective questions
-            if (isObjective && q.alternativas && q.alternativas.length > 0) {
-                q.alternativas.forEach((alt) => {
-                    children.push(new Paragraph({
-                        spacing: { before: 40, after: 40 },
-                        indent: { left: 400 },
-                        children: [
-                            new TextRun({ text: `${alt.letra}) `, bold: true, size: 22, font: 'Arial' }),
-                            new TextRun({ text: alt.texto, size: 22, font: 'Arial' }),
-                        ],
-                    }));
-                });
-            }
-
-            // Answer lines for discursive questions
-            if (q.tipo === 'discursiva') {
-                const numLines = cfg.linhas_discursiva || 5;
-                for (let i = 0; i < numLines; i++) {
-                    children.push(new Paragraph({
-                        spacing: { before: 200 },
-                        border: { bottom: { color: 'AAAAAA', space: 1, style: BorderStyle.SINGLE, size: 4 } },
-                        children: [new TextRun({ text: ' ', size: 22 })],
-                    }));
-                }
-            }
-        }
-
-        // Gabarito page (if enabled and there are objective questions)
-        if (cfg.incluir_gabarito) {
-            const objectiveQs = questions.filter(q => q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria');
-            if (objectiveQs.length > 0) {
-                children.push(new Paragraph({
-                    pageBreakBefore: true,
-                    alignment: AlignmentType.CENTER,
-                    spacing: { after: 300 },
-                    children: [new TextRun({ text: 'GABARITO', bold: true, size: 28, font: 'Arial' })],
-                }));
-
-                questions.forEach((q, idx) => {
-                    if (q.gabarito) {
-                        children.push(new Paragraph({
-                            spacing: { before: 60, after: 60 },
-                            children: [
-                                new TextRun({ text: `${idx + 1}) `, bold: true, size: 22, font: 'Arial' }),
-                                new TextRun({ text: String(q.gabarito), size: 22, font: 'Arial' }),
-                            ],
-                        }));
-                    }
-                });
-            }
-        }
-
-        const doc = new Document({
-            sections: [{
-                properties: {
-                    page: {
-                        margin: { top: 720, bottom: 720, left: 720, right: 720 },
-                    },
-                },
-                children,
-            }],
-        });
-
-        const blob = await Packer.toBlob(doc);
-        const filename = `${(cfg.titulo || 'prova').replace(/\s+/g, '-').toLowerCase()}.docx`;
-        saveAs(blob, filename);
     };
 
     return (
@@ -278,6 +123,21 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
                                     autoFocus
                                 />
+                            </div>
+                            
+                            {/* Format */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Formato de Saída</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className={`flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-colors ${config.formato === 'word' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                                        <input type="radio" name="formato" checked={config.formato === 'word'} onChange={() => updateConfig('formato', 'word')} className="w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500" />
+                                        <span className="text-sm font-medium text-gray-800">Microsoft Word (.docx)</span>
+                                    </label>
+                                    <label className={`flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-colors ${config.formato === 'latex' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                                        <input type="radio" name="formato" checked={config.formato === 'latex'} onChange={() => updateConfig('formato', 'latex')} className="w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500" />
+                                        <span className="text-sm font-medium text-gray-800">LaTeX (.zip)</span>
+                                    </label>
+                                </div>
                             </div>
 
                             {/* Professor + Institution */}

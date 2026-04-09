@@ -1,5 +1,5 @@
-// QuestBank Service Worker — Cache-First Strategy (v3)
-const CACHE_NAME = 'questbank-v3';
+// QuestBank Service Worker — Cache-First Strategy (v5)
+const CACHE_NAME = 'questbank-v5';
 
 const APP_SHELL = [
     './',
@@ -9,6 +9,7 @@ const APP_SHELL = [
     './db/taxonomy.js',
     './utils/import-handler.js',
     './utils/export-handler.js',
+    './utils/export-engines.js',
     './components/subject-tree.jsx',
     './components/filter-bar.jsx',
     './components/question-card.jsx',
@@ -20,6 +21,28 @@ const APP_SHELL = [
     './components/edit-question-modal.jsx',
     './components/stats-panel.jsx',
     './manifest.json',
+    
+    // External Libraries
+    'https://cdn.tailwindcss.com',
+    'https://unpkg.com/react@18/umd/react.production.min.js',
+    'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+    'https://unpkg.com/@babel/standalone@7/babel.min.js',
+    'https://unpkg.com/dexie@3/dist/dexie.js',
+    'https://unpkg.com/docx@8.5.0/build/index.umd.js',
+    'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
+    'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+    
+    // KaTeX
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Main-Regular.woff2',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Math-Italic.woff2',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Size1-Regular.woff2',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Size2-Regular.woff2',
+    
+    // MathJax
+    'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
 ];
 
 const CDN_URLS = [

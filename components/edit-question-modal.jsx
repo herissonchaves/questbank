@@ -62,7 +62,10 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                 <div className="flex-1 overflow-y-auto p-5 space-y-4">
                     {/* Enunciado */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Enunciado</label>
+                        <div className="flex justify-between items-end mb-1.5">
+                            <label className="block text-xs font-semibold text-gray-600">Enunciado</label>
+                            <span className="text-[10px] text-brand-600 font-mono bg-brand-50 px-1 rounded">Dica: Use [IMAGEM_0] para posicionar imagens.</span>
+                        </div>
                         <textarea
                             value={form.enunciado}
                             onChange={(e) => update('enunciado', e.target.value)}

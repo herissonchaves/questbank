@@ -58,6 +58,27 @@
     <!-- FileSaver.js for download -->
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
+    <!-- JSZip for exporting .zip archives -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <!-- KaTeX for blazing fast UI Mathematical equations -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <!-- MathJax strictly used for off-screen Canvas SVG generation towards .docx exports -->
+    <script>
+        window.MathJax = {
+            startup: {
+                ready: () => {
+                    window.MathJax.startup.defaultReady();
+                    window.MathJaxLoaded = true;
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
     <style>
         /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -146,6 +167,7 @@
     <script src="db/taxonomy.js"></script>
     <script src="utils/import-handler.js"></script>
     <script src="utils/export-handler.js"></script>
+    <script src="utils/export-engines.js"></script>
 
     <!-- React Components (JSX via Babel) -->
     <script type="text/babel" src="components/subject-tree.jsx"></script>

@@ -8,25 +8,49 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
     const usedInExams = q.usedInExams || [];
     const isUsed = usedInExams.length > 0;
 
-    // Safe HTML render for enunciado (basic tags only)
-    const renderEnunciado = (text, truncate = false) => {
-        // Check if the text contains HTML tags
-        const hasHTML = /<[a-z][\s\S]*>/i.test(text);
-        if (hasHTML) {
-            const displayText = truncate ? text.substring(0, 200) : text;
-            return (
-                <span dangerouslySetInnerHTML={{ __html: displayText }} />
-            );
+    const cardRef = React.useRef(null);
+
+    // After render, let KaTeX chew the DOM natively
+    React.useEffect(() => {
+        if (cardRef.current && window.renderMathInElement) {
+            window.renderMathInElement(cardRef.current, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError: false
+            });
         }
-        // Plain text
+    }); // re-run on full expansions
+
+    // Processar [IMAGEM_X] interceptando a string:
+    const processInlineImagesAndHtml = (text, truncate = false) => {
+        let processedText = text || '';
+        
+        // Se houver array q.imagens iterar
+        if (q.imagens && q.imagens.length > 0) {
+            for (let i = 0; i < q.imagens.length; i++) {
+                const marker = `\\[IMAGEM_${i}\\]`;
+                const regex = new RegExp(marker, 'g');
+                // Adicionamos a tag limpa do tailwind com o base64
+                processedText = processedText.replace(regex, `<br><img class="max-w-[80%] max-h-48 rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${q.imagens[i]}" alt="Imagem inline ${i}" /><br>`);
+            }
+        }
+        
         if (truncate) {
-            return <span className="line-clamp-2">{text}</span>;
+            // strip HTML fully before truncation for stability on the list
+            let plainText = processedText.replace(/<[^>]*>?/gm, '');
+            return <div className="line-clamp-2" dangerouslySetInnerHTML={{ __html: plainText }}/>;
         }
-        return <span className="whitespace-pre-wrap">{text}</span>;
+
+        return <div dangerouslySetInnerHTML={{ __html: processedText }} />;
     };
 
     return (
         <div
+            ref={cardRef}
             className={`card-hover rounded-xl border transition-all duration-200 animate-fade-in ${
                 isSelected
                     ? 'border-brand-400 bg-brand-50/50 shadow-sm shadow-brand-100'
@@ -92,9 +116,9 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
 
                     {/* Enunciado preview (2 lines) */}
                     {!isExpanded && (
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                            {renderEnunciado(q.enunciado, true)}
-                        </p>
+                        <div className="text-sm text-gray-600 leading-relaxed max-w-full">
+                            {processInlineImagesAndHtml(q.enunciado, true)}
+                        </div>
                     )}
                 </div>
 
@@ -122,27 +146,30 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
 
             {/* Expanded view */}
             {isExpanded && (
-                <div className="px-3 pb-3 animate-fade-in border-t border-gray-100 mt-0">
+                <div className="px-3 pb-3 animate-fade-in border-t border-gray-100 mt-0 max-w-full overflow-hidden">
                     {/* Full enunciado */}
-                    <div className="pt-3 pb-2">
-                        <p className="text-sm text-gray-800 leading-relaxed">
-                            {renderEnunciado(q.enunciado)}
-                        </p>
+                    <div className="pt-3 pb-2 text-sm text-gray-800 leading-relaxed break-words whitespace-pre-wrap">
+                        {processInlineImagesAndHtml(q.enunciado)}
                     </div>
 
-                    {/* Images */}
-                    {q.imagens && q.imagens.length > 0 && (
-                        <div className="flex flex-wrap gap-2 my-2">
-                            {q.imagens.map((img, i) => (
-                                <img
-                                    key={i}
-                                    src={img}
-                                    alt={`Imagem ${i + 1}`}
-                                    className="max-w-full max-h-48 rounded-lg border border-gray-200"
-                                />
-                            ))}
-                        </div>
-                    )}
+                    {/* Images fallback (apenas as que não foram consumidas via [IMAGEM_X]) */}
+                    {q.imagens && q.imagens.length > 0 && (() => {
+                        const fallbackImages = q.imagens.filter((_, i) => !(q.enunciado||'').includes(`[IMAGEM_${i}]`));
+                        if(fallbackImages.length === 0) return null;
+                        
+                        return (
+                            <div className="flex flex-wrap gap-2 my-2">
+                                {fallbackImages.map((img, i) => (
+                                    <img
+                                        key={i}
+                                        src={img}
+                                        alt={`Fallback Imagem`}
+                                        className="max-w-[80%] max-h-48 rounded-lg border border-gray-200 shadow-sm"
+                                    />
+                                ))}
+                            </div>
+                        )
+                    })()}
 
                     {/* Alternativas (for objetiva/v_f/somatoria) */}
                     {q.alternativas && q.alternativas.length > 0 && (

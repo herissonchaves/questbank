@@ -60,7 +60,7 @@ const ExamsPanel = ({ isOpen, onClose }) => {
                 return;
             }
 
-            // Re-generate .docx using the stored config
+            // Re-generate file using the stored config
             const cfg = exam.config || {
                 titulo: exam.title,
                 professor: exam.professor || '',
@@ -68,9 +68,15 @@ const ExamsPanel = ({ isOpen, onClose }) => {
                 data: exam.data || '',
                 incluir_gabarito: true,
                 linhas_discursiva: 5,
+                formato: 'word',
             };
 
-            await ExamsPanel_generateDocx(questions, cfg);
+            if (cfg.formato === 'latex') {
+                await window.ExportEngines.generateLatex(questions, cfg);
+            } else {
+                await window.ExportEngines.generateDocx(questions, cfg);
+            }
+            
             setRedownloading(null);
         } catch (err) {
             console.error('Error re-downloading exam:', err);
@@ -237,165 +243,4 @@ const ExamsPanel = ({ isOpen, onClose }) => {
     );
 };
 
-// ─── Standalone .docx generator for re-download ────────────────────
-// (Separate function so ExamsPanel can generate without opening ExportModal)
-
-async function ExamsPanel_generateDocx(questions, cfg) {
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, ImageRun } = docx;
-
-    const children = [];
-
-    // Header
-    children.push(new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 100 },
-        children: [new TextRun({ text: cfg.instituicao || '', bold: true, size: 24, font: 'Arial' })],
-    }));
-
-    children.push(new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 100 },
-        children: [new TextRun({ text: cfg.titulo || 'Prova', bold: true, size: 28, font: 'Arial' })],
-    }));
-
-    if (cfg.professor || cfg.data) {
-        const infoTexts = [];
-        if (cfg.professor) infoTexts.push(`Prof.: ${cfg.professor}`);
-        if (cfg.data) {
-            const parts = cfg.data.split('-');
-            if (parts.length === 3) infoTexts.push(`Data: ${parts[2]}/${parts[1]}/${parts[0]}`);
-        }
-        children.push(new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
-            children: [new TextRun({ text: infoTexts.join('    |    '), size: 20, font: 'Arial', color: '555555' })],
-        }));
-    }
-
-    // Name/Class line
-    children.push(new Paragraph({
-        spacing: { before: 200, after: 100 },
-        children: [
-            new TextRun({ text: 'Nome: _____________________________________________   Turma: ________', size: 22, font: 'Arial' }),
-        ],
-    }));
-
-    // Separator
-    children.push(new Paragraph({
-        spacing: { before: 100, after: 300 },
-        border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } },
-        children: [],
-    }));
-
-    // Questions
-    for (let idx = 0; idx < questions.length; idx++) {
-        const q = questions[idx];
-        const questionNum = idx + 1;
-        const isObjective = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
-
-        // Question number + enunciado (strip HTML tags for Word)
-        const cleanEnunciado = q.enunciado.replace(/<[^>]*>/g, '');
-        children.push(new Paragraph({
-            spacing: { before: 250, after: 120 },
-            children: [
-                new TextRun({ text: `${questionNum}) `, bold: true, size: 22, font: 'Arial' }),
-                new TextRun({ text: cleanEnunciado, size: 22, font: 'Arial' }),
-            ],
-        }));
-
-        // Images (base64)
-        if (q.imagens && q.imagens.length > 0) {
-            for (const imgSrc of q.imagens) {
-                try {
-                    // Extract base64 data
-                    const base64Match = imgSrc.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
-                    if (base64Match) {
-                        const imageType = base64Match[1] === 'jpg' ? 'jpeg' : base64Match[1];
-                        const base64Data = base64Match[2];
-                        const binaryString = atob(base64Data);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-                        children.push(new Paragraph({
-                            spacing: { before: 100, after: 100 },
-                            children: [
-                                new ImageRun({
-                                    data: bytes,
-                                    transformation: { width: 400, height: 300 },
-                                    type: imageType === 'png' ? 'png' : 'jpg',
-                                }),
-                            ],
-                        }));
-                    }
-                } catch (imgErr) {
-                    console.warn('Could not include image in docx:', imgErr);
-                }
-            }
-        }
-
-        // Alternatives for objective questions
-        if (isObjective && q.alternativas && q.alternativas.length > 0) {
-            q.alternativas.forEach((alt) => {
-                children.push(new Paragraph({
-                    spacing: { before: 40, after: 40 },
-                    indent: { left: 400 },
-                    children: [
-                        new TextRun({ text: `${alt.letra}) `, bold: true, size: 22, font: 'Arial' }),
-                        new TextRun({ text: alt.texto, size: 22, font: 'Arial' }),
-                    ],
-                }));
-            });
-        }
-
-        // Answer lines for discursive questions
-        if (q.tipo === 'discursiva') {
-            const numLines = cfg.linhas_discursiva || 5;
-            for (let i = 0; i < numLines; i++) {
-                children.push(new Paragraph({
-                    spacing: { before: 200 },
-                    border: { bottom: { color: 'AAAAAA', space: 1, style: BorderStyle.SINGLE, size: 4 } },
-                    children: [new TextRun({ text: ' ', size: 22 })],
-                }));
-            }
-        }
-    }
-
-    // Gabarito page
-    if (cfg.incluir_gabarito) {
-        const objectiveQs = questions.filter(q => q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria');
-        if (objectiveQs.length > 0) {
-            children.push(new Paragraph({
-                pageBreakBefore: true,
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 300 },
-                children: [new TextRun({ text: 'GABARITO', bold: true, size: 28, font: 'Arial' })],
-            }));
-
-            questions.forEach((q, idx) => {
-                if (q.gabarito) {
-                    children.push(new Paragraph({
-                        spacing: { before: 60, after: 60 },
-                        children: [
-                            new TextRun({ text: `${idx + 1}) `, bold: true, size: 22, font: 'Arial' }),
-                            new TextRun({ text: String(q.gabarito), size: 22, font: 'Arial' }),
-                        ],
-                    }));
-                }
-            });
-        }
-    }
-
-    const doc = new Document({
-        sections: [{
-            properties: {
-                page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } },
-            },
-            children,
-        }],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    const filename = `${(cfg.titulo || 'prova').replace(/\s+/g, '-').toLowerCase()}.docx`;
-    saveAs(blob, filename);
-}
+// ─── Componente ExamsPanel Finalizado ────────────────────
