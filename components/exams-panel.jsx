@@ -45,8 +45,8 @@ const ExamsPanel = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleRedownload = async (exam) => {
-        setRedownloading(exam.id);
+    const handleRedownload = async (exam, formatOverride) => {
+        setRedownloading(`${exam.id}-${formatOverride || 'word'}`);
         try {
             // Load actual questions from DB
             const questions = [];
@@ -61,15 +61,17 @@ const ExamsPanel = ({ isOpen, onClose }) => {
             }
 
             // Re-generate file using the stored config
-            const cfg = exam.config || {
+            const cfg = { ...exam.config } || {
                 titulo: exam.title,
                 professor: exam.professor || '',
                 instituicao: exam.instituicao || '',
                 data: exam.data || '',
                 incluir_gabarito: true,
                 linhas_discursiva: 5,
-                formato: 'word',
             };
+            
+            // Override format
+            cfg.formato = formatOverride || 'word';
 
             if (cfg.formato === 'latex') {
                 await window.ExportEngines.generateLatex(questions, cfg);
@@ -136,7 +138,7 @@ const ExamsPanel = ({ isOpen, onClose }) => {
                                 const createdDate = new Date(exam.created_at);
                                 const dateStr = createdDate.toLocaleDateString('pt-BR');
                                 const timeStr = createdDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                                const isRedownloading = redownloading === exam.id;
+                                const isRedownloading = redownloading && redownloading.startsWith(exam.id);
 
                                 return (
                                     <div
@@ -182,20 +184,43 @@ const ExamsPanel = ({ isOpen, onClose }) => {
                                             {/* Actions */}
                                             <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <button
-                                                    onClick={() => handleRedownload(exam)}
+                                                    onClick={() => handleRedownload(exam, 'word')}
                                                     disabled={isRedownloading}
-                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50"
-                                                    title="Baixar novamente (.docx)"
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                                    title="Baixar Word (.docx)"
                                                 >
-                                                    {isRedownloading ? (
+                                                    {redownloading === `${exam.id}-word` ? (
                                                         <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                                                         </svg>
                                                     ) : (
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        <>
+                                                            <span className="text-[10px] font-bold">W</span>
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRedownload(exam, 'latex')}
+                                                    disabled={isRedownloading}
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                                    title="Baixar LaTeX (.zip)"
+                                                >
+                                                    {redownloading === `${exam.id}-latex` ? (
+                                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                                                         </svg>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-[10px] font-bold">L</span>
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                        </>
                                                     )}
                                                 </button>
                                                 <button

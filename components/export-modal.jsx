@@ -240,7 +240,7 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                     {step === 'generating' && (
                         <div className="text-center py-8">
                             <div className="w-10 h-10 border-3 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                            <p className="text-sm text-gray-600">Gerando prova em Word...</p>
+                            <p className="text-sm text-gray-600">Gerando prova em {config.formato === 'latex' ? 'LaTeX' : 'Word'}...</p>
                         </div>
                     )}
 
@@ -251,7 +251,7 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                             </svg>
                             <p className="text-lg font-bold text-gray-900">Prova gerada com sucesso!</p>
                             <p className="text-sm text-gray-500 mt-2">
-                                O arquivo .docx "{savedExam?.title}" foi baixado com {selectedQuestions.length} questões.
+                                O arquivo {config.formato === 'latex' ? '.zip' : '.docx'} "{savedExam?.title}" foi baixado com {selectedQuestions.length} questões.
                             </p>
                             <p className="text-xs text-gray-400 mt-3">
                                 A prova foi salva no histórico e as questões foram marcadas como usadas.
@@ -278,7 +278,7 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
-                                Baixar Word (.docx)
+                                {config.formato === 'latex' ? 'Baixar LaTeX (.zip)' : 'Baixar Word (.docx)'}
                             </button>
                         </>
                     )}
