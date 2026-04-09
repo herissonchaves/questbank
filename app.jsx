@@ -12,7 +12,7 @@ const initialState = {
     activeSubjects: [],
     filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '' },
     ignoreUsed: false,
-    modals: { import: false, export: false, exams: false, stats: false, editQuestion: null },
+    modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null },
     loading: true,
     mobileTab: 'questions', // 'subjects' | 'questions' | 'selected'
 };
@@ -118,9 +118,15 @@ const App = () => {
                 e.preventDefault();
                 dispatch({ type: 'TOGGLE_MODAL', modal: 'import' });
             }
+            // Ctrl+N → open create question
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                dispatch({ type: 'TOGGLE_MODAL', modal: 'createQuestion' });
+            }
             // Escape → close any modal
             if (e.key === 'Escape') {
-                if (state.modals.import) dispatch({ type: 'TOGGLE_MODAL', modal: 'import' });
+                if (state.modals.createQuestion) dispatch({ type: 'TOGGLE_MODAL', modal: 'createQuestion' });
+                else if (state.modals.import) dispatch({ type: 'TOGGLE_MODAL', modal: 'import' });
                 else if (state.modals.export) dispatch({ type: 'TOGGLE_MODAL', modal: 'export' });
                 else if (state.modals.exams) dispatch({ type: 'TOGGLE_MODAL', modal: 'exams' });
                 else if (state.modals.stats) dispatch({ type: 'TOGGLE_MODAL', modal: 'stats' });
@@ -278,6 +284,18 @@ const App = () => {
         }
     }, []);
 
+    const handleCreateQuestion = useCallback(async (newQuestion) => {
+        try {
+            await db.questions.add(newQuestion);
+            dispatch({ type: 'TOGGLE_MODAL', modal: 'createQuestion' });
+            await loadQuestions();
+            showToast('Questão criada com sucesso!', 'success');
+        } catch (err) {
+            showToast('Erro ao criar questão: ' + (err.message || ''), 'error');
+            throw err;
+        }
+    }, []);
+
     const handleBackupExport = async () => {
         try {
             const stats = await QBExport.exportDatabase();
@@ -381,6 +399,18 @@ const App = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="hidden sm:inline">Provas</span>
+                        </button>
+
+                        {/* Create Question */}
+                        <button
+                            onClick={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'createQuestion' })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-all btn-press shadow-sm shadow-brand-500/20"
+                            title="Nova Questão (Ctrl+N)"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span className="hidden sm:inline">Nova Questão</span>
                         </button>
 
                         {/* Import */}
@@ -522,6 +552,13 @@ const App = () => {
             </main>
 
             {/* ─── Modals ─────────────────────────────────── */}
+            <CreateQuestionModal
+                isOpen={state.modals.createQuestion}
+                onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'createQuestion' })}
+                onSave={handleCreateQuestion}
+                existingQuestions={state.questions}
+            />
+
             <ImportModal
                 isOpen={state.modals.import}
                 onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'import' })}
