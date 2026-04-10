@@ -147,10 +147,47 @@ const App = () => {
         }
     };
 
-    // Build taxonomy tree from all questions
+    // ─── Adapted Questions Logic ────────────────────────────
+    // Build a map: regularTag -> adaptedQuestion
+    // A tag starting with "A" followed by digits = adapted question
+    // A tag that is purely digits = regular question
+    const { adaptedMap, regularQuestions } = useMemo(() => {
+        const map = {}; // regularTag -> adaptedQuestion object
+        const tagToQuestion = {}; // tag -> question (for adapted tags)
+        const adaptedIds = new Set();
+
+        // First pass: find all adapted questions by their tags
+        state.questions.forEach(q => {
+            (q.tags || []).forEach(tag => {
+                // Check if this tag marks an adapted question: starts with A followed by digits
+                if (/^A\d+$/.test(tag)) {
+                    const regularTag = tag.substring(1); // remove the A prefix
+                    tagToQuestion[regularTag] = q;
+                    adaptedIds.add(q.id);
+                }
+            });
+        });
+
+        // Second pass: match regular questions to their adapted counterparts
+        state.questions.forEach(q => {
+            (q.tags || []).forEach(tag => {
+                // Check if this is a regular tag (pure digits) that has a matching adapted question
+                if (/^\d+$/.test(tag) && tagToQuestion[tag]) {
+                    map[q.id] = tagToQuestion[tag];
+                }
+            });
+        });
+
+        // Filter out adapted questions from main list (they appear inside the carousel)
+        const regular = state.questions.filter(q => !adaptedIds.has(q.id));
+
+        return { adaptedMap: map, regularQuestions: regular };
+    }, [state.questions]);
+
+    // Build taxonomy tree from regular questions only (adapted are hidden)
     const taxonomyTree = useMemo(
-        () => QBTaxonomy.buildTree(state.questions),
-        [state.questions]
+        () => QBTaxonomy.buildTree(regularQuestions),
+        [regularQuestions]
     );
 
     // O(1) lookup Set for selectedIds
@@ -159,9 +196,9 @@ const App = () => {
         [state.selectedIds]
     );
 
-    // Filter questions by subjects + filters + ignoreUsed
+    // Filter questions by subjects + filters + ignoreUsed (only regular questions)
     const filteredQuestions = useMemo(() => {
-        return state.questions.filter(q => {
+        return regularQuestions.filter(q => {
             // Subject filter
             if (!QBTaxonomy.questionMatchesSubjects(q, state.activeSubjects)) return false;
 
@@ -193,7 +230,7 @@ const App = () => {
 
             return true;
         });
-    }, [state.questions, state.activeSubjects, state.filters, state.ignoreUsed]);
+    }, [regularQuestions, state.activeSubjects, state.filters, state.ignoreUsed]);
 
     // Build filtered taxonomy tree for showing filtered counts
     const filteredTaxonomyTree = useMemo(
@@ -368,7 +405,7 @@ const App = () => {
                         {/* Stats */}
                         <div className="hidden sm:flex items-center gap-3 mr-3 text-xs text-gray-400">
                             <span>
-                                <b className="text-gray-700">{state.questions.length}</b> questões
+                                <b className="text-gray-700">{regularQuestions.length}</b> questões
                             </span>
                             {state.selectedIds.length > 0 && (
                                 <span className="text-brand-600">
@@ -520,7 +557,7 @@ const App = () => {
                 }`}>
                     <QuestionList
                         questions={filteredQuestions}
-                        allQuestions={state.questions}
+                        allQuestions={regularQuestions}
                         selectedIds={state.selectedIds}
                         selectedIdsSet={selectedIdsSet}
                         filters={state.filters}
@@ -531,6 +568,7 @@ const App = () => {
                         ignoreUsed={state.ignoreUsed}
                         onToggleIgnoreUsed={handleToggleIgnoreUsed}
                         searchRef={searchRef}
+                        adaptedMap={adaptedMap}
                     />
                 </section>
 
@@ -557,6 +595,7 @@ const App = () => {
                 onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'createQuestion' })}
                 onSave={handleCreateQuestion}
                 existingQuestions={state.questions}
+                adaptedMap={adaptedMap}
             />
 
             <ImportModal
@@ -570,6 +609,7 @@ const App = () => {
                 onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'export' })}
                 selectedQuestions={selectedQuestions}
                 onExamSaved={handleExamSaved}
+                adaptedMap={adaptedMap}
             />
 
             <ExamsPanel

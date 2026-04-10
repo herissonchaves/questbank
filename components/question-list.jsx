@@ -1,7 +1,7 @@
 // QuestBank — QuestionList Component
 // Paginated list of QuestionCards with FilterBar, pagination controls
 
-const QuestionList = ({ questions, allQuestions, selectedIds, selectedIdsSet, filters, onFilterChange, onClearFilters, onToggleSelect, onSelectAllFiltered, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
+const QuestionList = ({ questions, allQuestions, selectedIds, selectedIdsSet, filters, onFilterChange, onClearFilters, onToggleSelect, onSelectAllFiltered, ignoreUsed, onToggleIgnoreUsed, searchRef, adaptedMap }) => {
     const [expandedIds, setExpandedIds] = React.useState(new Set());
     const [currentPage, setCurrentPage] = React.useState(1);
     const listRef = React.useRef(null);
@@ -124,6 +124,7 @@ const QuestionList = ({ questions, allQuestions, selectedIds, selectedIdsSet, fi
                         isExpanded={expandedIds.has(q.id)}
                         onToggleExpand={toggleExpand}
                         onToggleSelect={onToggleSelect}
+                        adaptedQuestion={adaptedMap ? adaptedMap[q.id] : null}
                     />
                 ))}
 

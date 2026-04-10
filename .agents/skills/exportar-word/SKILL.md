@@ -1,12 +1,13 @@
 ---
 name: exportar-word
 description: >
-  Gera arquivo .docx (Word) a partir das questões selecionadas no QuestBank.
-  Use esta skill quando o usuário pedir para exportar prova, gerar Word,
-  baixar documento, formatar prova, ou quando mencionar "Word", ".docx",
+  Gera arquivo .docx (Word) ou .zip (LaTeX) a partir das questões selecionadas no QuestBank.
+  Use esta skill quando o usuário pedir para exportar prova, gerar Word, gerar LaTeX,
+  baixar documento, formatar prova, ou quando mencionar "Word", ".docx", "LaTeX",
   "gerar prova", "exportar prova", "baixar prova", "formatar documento",
-  "gabarito", "enumeração de questões", "linhas para resposta".
-  Também ative quando houver problemas na geração do .docx ou na formatação.
+  "gabarito", "enumeração de questões", "linhas para resposta", "prova adaptada",
+  "questão adaptada", "aluno atípico", "versão adaptada".
+  Também ative quando houver problemas na geração do .docx/.zip ou na formatação.
 ---
 
 # Exportar para Word — QuestBank

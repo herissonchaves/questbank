@@ -1,7 +1,7 @@
 // QuestBank — ExportModal Component
-// Save exam to DB, tag questions as used, generate .docx with auto-enumeration
+// Save exam to DB, tag questions as used, generate .docx/.zip with adapted version option
 
-const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
+const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved, adaptedMap }) => {
     const [step, setStep] = React.useState('config'); // config | generating | done
     const [config, setConfig] = React.useState({
         titulo: '',
@@ -12,10 +12,15 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
         incluir_resolucao: false,
         linhas_discursiva: 5,
         formato: 'word',
+        gerar_adaptada: false,
     });
     const [savedExam, setSavedExam] = React.useState(null);
 
     if (!isOpen) return null;
+
+    // Count how many selected questions have adapted versions
+    const adaptedCount = selectedQuestions.filter(q => adaptedMap && adaptedMap[q.id]).length;
+    const hasAnyAdapted = adaptedCount > 0;
 
     const handleClose = () => {
         setStep('config');
@@ -60,11 +65,33 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                 }
             }
 
-            // 3. Generate Exam File
+            // 3. Generate Regular Exam File
             if (config.formato === 'latex') {
                 await window.ExportEngines.generateLatex(selectedQuestions, config);
             } else {
                 await window.ExportEngines.generateDocx(selectedQuestions, config);
+            }
+
+            // 4. Generate Adapted Exam File (if toggled and there are adapted questions)
+            if (config.gerar_adaptada && hasAnyAdapted) {
+                // Build adapted questions list: for each selected question, use its adapted version if available
+                const adaptedQuestions = selectedQuestions.map(q => {
+                    if (adaptedMap && adaptedMap[q.id]) {
+                        return adaptedMap[q.id];
+                    }
+                    return q; // fallback to regular if no adapted version
+                });
+
+                const adaptedConfig = {
+                    ...config,
+                    titulo: config.titulo.trim() + ' - Adaptada',
+                };
+
+                if (config.formato === 'latex') {
+                    await window.ExportEngines.generateLatex(adaptedQuestions, adaptedConfig);
+                } else {
+                    await window.ExportEngines.generateDocx(adaptedQuestions, adaptedConfig);
+                }
             }
 
             setSavedExam({ id: examId, title: config.titulo });
@@ -93,7 +120,10 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Gerar Prova</h3>
                         <p className="text-xs text-gray-500 mt-0.5">
-                            {selectedQuestions.length} {selectedQuestions.length === 1 ? 'questão selecionada' : 'questões selecionadas'}
+                            {selectedQuestions.length} {selectedQuestions.length === 1 ? 'questao selecionada' : 'questoes selecionadas'}
+                            {hasAnyAdapted && (
+                                <span className="text-sky-600 ml-1">({adaptedCount} com versao adaptada)</span>
+                            )}
                         </p>
                     </div>
                     <button
@@ -119,15 +149,15 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                                     type="text"
                                     value={config.titulo}
                                     onChange={(e) => updateConfig('titulo', e.target.value)}
-                                    placeholder="Ex: Prova de Física - 2º Bimestre"
+                                    placeholder="Ex: Prova de Fisica - 2o Bimestre"
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
                                     autoFocus
                                 />
                             </div>
-                            
+
                             {/* Format */}
                             <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Formato de Saída</label>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Formato de Saida</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <label className={`flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-colors ${config.formato === 'word' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                                         <input type="radio" name="formato" checked={config.formato === 'word'} onChange={() => updateConfig('formato', 'word')} className="w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500" />
@@ -153,12 +183,12 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Instituição</label>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Instituicao</label>
                                     <input
                                         type="text"
                                         value={config.instituicao}
                                         onChange={(e) => updateConfig('instituicao', e.target.value)}
-                                        placeholder="Escola/Colégio"
+                                        placeholder="Escola/Colegio"
                                         className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
                                     />
                                 </div>
@@ -198,10 +228,33 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                                         className="w-4 h-4 rounded"
                                     />
                                     <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
-                                        Incluir gabarito (página separada)
+                                        Incluir gabarito (pagina separada)
                                     </span>
                                 </label>
                             </div>
+
+                            {/* Adapted exam toggle */}
+                            {hasAnyAdapted && (
+                                <div className="p-3 rounded-xl border-2 border-dashed border-sky-200 bg-sky-50/50 mt-2">
+                                    <label className="flex items-center gap-2.5 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            checked={config.gerar_adaptada}
+                                            onChange={(e) => updateConfig('gerar_adaptada', e.target.checked)}
+                                            className="w-5 h-5 rounded"
+                                        />
+                                        <div>
+                                            <span className="text-sm font-semibold text-sky-800 group-hover:text-sky-900 transition-colors">
+                                                Gerar prova adaptada
+                                            </span>
+                                            <p className="text-[11px] text-sky-600 mt-0.5">
+                                                Gera um segundo arquivo ({config.formato === 'word' ? '.docx' : '.zip'}) com as questoes na versao adaptada para alunos atipicos.
+                                                {adaptedCount < selectedQuestions.length && ` ${selectedQuestions.length - adaptedCount} questoes sem versao adaptada usarao a versao regular.`}
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
 
                             {/* Discipline summary */}
                             <div className="bg-gray-50 rounded-lg p-3 mt-2">
@@ -240,7 +293,9 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                     {step === 'generating' && (
                         <div className="text-center py-8">
                             <div className="w-10 h-10 border-3 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                            <p className="text-sm text-gray-600">Gerando prova em {config.formato === 'latex' ? 'LaTeX' : 'Word'}...</p>
+                            <p className="text-sm text-gray-600">
+                                Gerando prova{config.gerar_adaptada ? ' + versao adaptada' : ''} em {config.formato === 'latex' ? 'LaTeX' : 'Word'}...
+                            </p>
                         </div>
                     )}
 
@@ -251,10 +306,13 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                             </svg>
                             <p className="text-lg font-bold text-gray-900">Prova gerada com sucesso!</p>
                             <p className="text-sm text-gray-500 mt-2">
-                                O arquivo {config.formato === 'latex' ? '.zip' : '.docx'} "{savedExam?.title}" foi baixado com {selectedQuestions.length} questões.
+                                {config.gerar_adaptada
+                                    ? `2 arquivos ${config.formato === 'latex' ? '.zip' : '.docx'} foram baixados: prova regular e prova adaptada.`
+                                    : `O arquivo ${config.formato === 'latex' ? '.zip' : '.docx'} "${savedExam?.title}" foi baixado com ${selectedQuestions.length} questoes.`
+                                }
                             </p>
                             <p className="text-xs text-gray-400 mt-3">
-                                A prova foi salva no histórico e as questões foram marcadas como usadas.
+                                A prova foi salva no historico e as questoes foram marcadas como usadas.
                             </p>
                         </div>
                     )}
@@ -278,7 +336,10 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved }) => {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
-                                {config.formato === 'latex' ? 'Baixar LaTeX (.zip)' : 'Baixar Word (.docx)'}
+                                {config.gerar_adaptada
+                                    ? (config.formato === 'latex' ? 'Baixar 2 LaTeX (.zip)' : 'Baixar 2 Word (.docx)')
+                                    : (config.formato === 'latex' ? 'Baixar LaTeX (.zip)' : 'Baixar Word (.docx)')
+                                }
                             </button>
                         </>
                     )}

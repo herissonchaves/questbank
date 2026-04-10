@@ -4,10 +4,12 @@ description: >
   Cria ou modifica componentes React do web app QuestBank.
   Use esta skill quando o usuário pedir para criar, editar ou corrigir
   qualquer componente da interface: subject-tree, question-list, question-card,
-  selected-panel, filter-bar, import-modal, export-modal, exams-panel.
+  selected-panel, filter-bar, import-modal, export-modal, exams-panel,
+  create-question-modal, edit-question-modal, stats-panel.
   Também ative quando mencionar "componente", "painel", "tela", "interface",
   "layout", "botão", "modal", "card", "filtro", "árvore de assuntos",
-  "lista de questões", "painel de seleção", "tema", "cor", "estilo".
+  "lista de questões", "painel de seleção", "tema", "cor", "estilo",
+  "carrossel", "questão adaptada", "versão adaptada", "aluno atípico".
 ---
 
 # Criar / Modificar Frontend — QuestBank

@@ -27,6 +27,41 @@ O app aceita questões de 4 tipos:
 - **v_f**: verdadeiro ou falso
 - **somatoria**: com alternativas numéricas e gabarito numérico
 
+## Questões Adaptadas (Alunos Atípicos)
+
+O app suporta **versões adaptadas** de cada questão, destinadas a alunos atípicos (inclusão). O sistema funciona via **tags numéricas pareadas**:
+
+### Como funciona o pareamento
+
+- Questão regular recebe uma tag numérica: ex. `47136477`
+- Questão adaptada recebe a mesma tag prefixada com `A`: ex. `A47136477`
+- O app automaticamente pareia questões com tags numéricas iguais (uma sem `A` e outra com `A`)
+
+### Regras das questões adaptadas
+
+- Questões **objetivas adaptadas** possuem no máximo **3 alternativas (A, B, C)**
+- O ID da questão adaptada é o ID da regular prefixado com `A`: ex. regular `12345678`, adaptada `A12345678`
+- Questões adaptadas herdam os metadados da regular (disciplina, tópico, conteúdo, assunto, banca, ano, dificuldade)
+- Questões adaptadas **não aparecem como cards separados** na lista — aparecem dentro do carrossel da questão regular
+
+### Carrossel no QuestionCard
+
+Cada card de questão funciona como um **carrossel de 2 páginas** (estilo Instagram):
+- **Página 1 (Regular):** mostra a questão original
+- **Página 2 (Adaptada):** mostra a versão adaptada
+
+Tabs "Regular" / "Adaptada" aparecem quando a questão tem versão adaptada. Ambas as versões podem ser editadas individualmente.
+
+### Criação de questão adaptada
+
+No modal "Nova Questão", após classificar a questão (Step 2), o usuário pode marcar o checkbox "Adicionar versão adaptada". Isso habilita um Step 3 para preencher o enunciado e alternativas adaptadas.
+
+### Exportação de prova adaptada
+
+No modal "Gerar Prova", se alguma questão selecionada possui versão adaptada, aparece o toggle "Gerar prova adaptada". Se marcado:
+- **Word:** gera 2 downloads `.docx` (regular + adaptada)
+- **LaTeX:** gera 2 downloads `.zip` (regular + adaptada)
+
 ## Importação de questões
 
 O usuário importa questões **já no formato JSON aceito pelo app**. Não há conversão de PDF, imagem, HTML ou Word. O fluxo é:
@@ -49,19 +84,21 @@ O app oferece filtros básicos e avançados:
 - **Avançados** (painel expansível): região, tag específica, código da questão
 - **Ignorar questões já usadas:** checkbox que exclui da busca questões que já foram usadas em provas anteriores
 
-## Exportação para Word (.docx)
+## Exportação para Word (.docx) e LaTeX (.zip)
 
 Ao clicar "Gerar Prova", o app:
 1. **Pede o nome da prova/lista** (campo obrigatório)
-2. Salva a prova no banco de dados (tabela `exams`)
-3. **Marca as questões como usadas** (campo `usedInExams` recebe o nome da prova)
-4. **Gera um arquivo .docx** com formatação automática:
+2. O usuário escolhe formato: **Word (.docx)** ou **LaTeX (.zip)**
+3. Salva a prova no banco de dados (tabela `exams`)
+4. **Marca as questões como usadas** (campo `usedInExams` recebe o nome da prova)
+5. **Gera o arquivo** com formatação automática:
    - Cabeçalho: instituição, título da prova, professor, data
    - Linha para nome do aluno e turma
    - Questões com **enumeração automática** (1, 2, 3...)
    - Alternativas com **enumeração automática** (A, B, C, D, E) para objetivas
    - **Linhas de resposta** (configurável, padrão 5) para questões discursivas
    - Página de gabarito separada (opcional)
+6. Se "Gerar prova adaptada" estiver marcado, **gera 2 arquivos**: um com questões regulares e outro com as versões adaptadas
 
 ## Histórico de provas/listas
 
@@ -110,18 +147,23 @@ questbank/
 ├── components/
 │   ├── subject-tree.jsx    ← painel esquerdo (árvore dinâmica)
 │   ├── question-list.jsx   ← painel central
-│   ├── question-card.jsx   ← card simplificado/completo com tags de uso
+│   ├── question-card.jsx   ← card com carrossel regular/adaptada + tags de uso
 │   ├── selected-panel.jsx  ← painel direito
 │   ├── filter-bar.jsx      ← filtros básicos + avançados + ignorar usadas
 │   ├── import-modal.jsx    ← modal de importação JSON
-│   ├── export-modal.jsx    ← modal de exportação Word (.docx)
-│   └── exams-panel.jsx     ← histórico de provas/listas
+│   ├── export-modal.jsx    ← modal de exportação Word/LaTeX + prova adaptada
+│   ├── create-question-modal.jsx ← criar questão + versão adaptada
+│   ├── edit-question-modal.jsx   ← editar questão (regular ou adaptada)
+│   ├── exams-panel.jsx     ← histórico de provas/listas
+│   └── stats-panel.jsx     ← painel de estatísticas
 ├── db/
 │   ├── schema.js           ← schema IndexedDB v2 (Dexie) com usedInExams
 │   └── taxonomy.js         ← construção da árvore dinâmica
 ├── utils/
-│   ├── export-handler.js   ← backup export/import do banco
-│   └── import-handler.js   ← validar e importar JSON
+│   ├── export-handler.js     ← backup export/import do banco
+│   ├── import-handler.js     ← validar e importar JSON
+│   ├── export-engines.js     ← motores de geração Word (.docx) e LaTeX (.zip)
+│   └── latex-to-docx-math.js ← conversão de LaTeX math para objetos docx
 ├── sw.js                   ← Service Worker
 └── manifest.json           ← PWA manifest
 ```
