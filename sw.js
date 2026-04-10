@@ -1,5 +1,5 @@
 // QuestBank Service Worker — Cache-First Strategy (v5)
-const CACHE_NAME = 'questbank-v11';
+const CACHE_NAME = 'questbank-v12';
 
 const APP_SHELL = [
     './',
@@ -20,6 +20,7 @@ const APP_SHELL = [
     './components/export-modal.jsx',
     './components/exams-panel.jsx',
     './components/edit-question-modal.jsx',
+    './components/rich-text-toolbar.jsx',
     './components/create-question-modal.jsx',
     './components/stats-panel.jsx',
     './manifest.json',

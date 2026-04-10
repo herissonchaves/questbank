@@ -651,6 +651,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                         </button>
                                     </div>
                                 </div>
+                                <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} />
                                 <textarea
                                     ref={enunciadoRef}
                                     value={form.enunciado}
@@ -709,14 +710,21 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                 }`}>
                                                     {alt.letra}
                                                 </div>
-                                                <textarea
-                                                    ref={(el) => alternativasRefs.current[idx] = el}
-                                                    value={alt.texto}
-                                                    onChange={(e) => handleUpdateAlternativa(idx, e.target.value)}
-                                                    rows={2}
-                                                    placeholder={`Digite a alternativa ${alt.letra} aqui...`}
-                                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all resize-none placeholder:text-gray-400"
-                                                />
+                                                <div className="flex-1">
+                                                    <RichTextToolbar
+                                                        textareaRef={{ current: alternativasRefs.current[idx] }}
+                                                        value={alt.texto}
+                                                        onChange={(v) => handleUpdateAlternativa(idx, v)}
+                                                    />
+                                                    <textarea
+                                                        ref={(el) => alternativasRefs.current[idx] = el}
+                                                        value={alt.texto}
+                                                        onChange={(e) => handleUpdateAlternativa(idx, e.target.value)}
+                                                        rows={2}
+                                                        placeholder={`Digite a alternativa ${alt.letra} aqui...`}
+                                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all resize-none placeholder:text-gray-400"
+                                                    />
+                                                </div>
                                                 <div className="flex flex-col gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         type="button"
@@ -821,6 +829,23 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     </div>
                                 </div>
                             )}
+
+                            {/* Link de resolução */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                                    <svg className="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    Link da resolução (opcional)
+                                </label>
+                                <input
+                                    type="url"
+                                    value={form.resolucao_link}
+                                    onChange={(e) => update('resolucao_link', e.target.value)}
+                                    placeholder="https://exemplo.com/resolucao..."
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all placeholder:text-gray-400"
+                                />
+                            </div>
                         </div>
                     ) : step === 2 ? (
                         /* Step 2: Classificacao */
@@ -923,6 +948,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                         </button>
                                     </div>
                                 </div>
+                                <RichTextToolbar textareaRef={adaptedEnunciadoRef} value={adaptedForm.enunciado} onChange={(v) => updateAdapted('enunciado', v)} />
                                 <textarea
                                     ref={adaptedEnunciadoRef}
                                     value={adaptedForm.enunciado}
@@ -954,14 +980,21 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                 }`}>
                                                     {alt.letra}
                                                 </div>
-                                                <textarea
-                                                    ref={(el) => adaptedAlternativasRefs.current[idx] = el}
-                                                    value={alt.texto}
-                                                    onChange={(e) => handleUpdateAdaptedAlternativa(idx, e.target.value)}
-                                                    rows={2}
-                                                    placeholder={`Alternativa ${alt.letra} adaptada...`}
-                                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all resize-none placeholder:text-gray-400"
-                                                />
+                                                <div className="flex-1">
+                                                    <RichTextToolbar
+                                                        textareaRef={{ current: adaptedAlternativasRefs.current[idx] }}
+                                                        value={alt.texto}
+                                                        onChange={(v) => handleUpdateAdaptedAlternativa(idx, v)}
+                                                    />
+                                                    <textarea
+                                                        ref={(el) => adaptedAlternativasRefs.current[idx] = el}
+                                                        value={alt.texto}
+                                                        onChange={(e) => handleUpdateAdaptedAlternativa(idx, e.target.value)}
+                                                        rows={2}
+                                                        placeholder={`Alternativa ${alt.letra} adaptada...`}
+                                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all resize-none placeholder:text-gray-400"
+                                                    />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

@@ -1,8 +1,10 @@
 // QuestBank — EditQuestionModal Component
-// Modal for editing question fields
+// Modal for editing question fields with rich text toolbar
 
 const EditQuestionModal = ({ question, onClose, onSave }) => {
     const [form, setForm] = React.useState({ ...question });
+    const enunciadoRef = React.useRef(null);
+    const alternativasRefs = React.useRef([]);
 
     if (!question) return null;
 
@@ -66,7 +68,9 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                             <label className="block text-xs font-semibold text-gray-600">Enunciado</label>
                             <span className="text-[10px] text-brand-600 font-mono bg-brand-50 px-1 rounded">Dica: Use [IMAGEM_0] para posicionar imagens.</span>
                         </div>
+                        <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} />
                         <textarea
+                            ref={enunciadoRef}
                             value={form.enunciado}
                             onChange={(e) => update('enunciado', e.target.value)}
                             rows={5}
@@ -191,17 +195,26 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                             </div>
                             <div className="space-y-2">
                                 {(form.alternativas || []).map((alt, idx) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-gray-500 w-6 text-center">{alt.letra})</span>
-                                        <input
-                                            type="text"
-                                            value={alt.texto}
-                                            onChange={(e) => handleUpdateAlternativa(idx, 'texto', e.target.value)}
-                                            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                                        />
+                                    <div key={idx} className="flex items-start gap-2">
+                                        <span className="text-xs font-bold text-gray-500 w-6 text-center mt-2">{alt.letra})</span>
+                                        <div className="flex-1">
+                                            <RichTextToolbar
+                                                textareaRef={{ current: alternativasRefs.current[idx] }}
+                                                value={alt.texto}
+                                                onChange={(v) => handleUpdateAlternativa(idx, 'texto', v)}
+                                            />
+                                            <textarea
+                                                ref={(el) => alternativasRefs.current[idx] = el}
+                                                value={alt.texto}
+                                                onChange={(e) => handleUpdateAlternativa(idx, 'texto', e.target.value)}
+                                                rows={2}
+                                                placeholder={`Alternativa ${alt.letra}...`}
+                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all resize-none"
+                                            />
+                                        </div>
                                         <button
                                             onClick={() => handleRemoveAlternativa(idx)}
-                                            className="w-6 h-6 rounded text-gray-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors"
+                                            className="w-6 h-6 rounded text-gray-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors mt-2"
                                         >
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -212,6 +225,23 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                             </div>
                         </div>
                     )}
+
+                    {/* Link de resolução */}
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Link da resolução
+                        </label>
+                        <input
+                            type="url"
+                            value={form.resolucao_link || ''}
+                            onChange={(e) => update('resolucao_link', e.target.value)}
+                            placeholder="https://exemplo.com/resolucao..."
+                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all placeholder:text-gray-400"
+                        />
+                    </div>
 
 
                 </div>
