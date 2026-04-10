@@ -310,12 +310,25 @@ const App = () => {
         };
     }, [handleEditQuestion, handleDeleteQuestion]);
 
-    const handleSaveEditQuestion = useCallback(async (updatedQuestion) => {
+    const handleSaveEditQuestion = useCallback(async (updatedQuestion, adaptedQuestion) => {
         try {
             await db.questions.update(updatedQuestion.id, updatedQuestion);
+
+            // Save adapted question if provided (new adapted version from edit modal)
+            if (adaptedQuestion) {
+                try {
+                    await db.questions.add(adaptedQuestion);
+                    showToast('Questão atualizada + versão adaptada criada!', 'success');
+                } catch (adaptErr) {
+                    console.error('Erro ao salvar versão adaptada:', adaptErr);
+                    showToast('Questão atualizada, mas erro na versão adaptada.', 'error');
+                }
+            } else {
+                showToast('Questão atualizada!', 'success');
+            }
+
             dispatch({ type: 'SET_EDIT_QUESTION', payload: null });
             await loadQuestions();
-            showToast('Questão atualizada!', 'success');
         } catch (err) {
             showToast('Erro ao salvar questão.', 'error');
         }
