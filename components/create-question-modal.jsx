@@ -651,7 +651,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                         </button>
                                     </div>
                                 </div>
-                                <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} />
+                                <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} onEquation={() => handleEquationInsert('enunciado')} onImage={() => handleImageUpload('enunciado')} />
                                 <textarea
                                     ref={enunciadoRef}
                                     value={form.enunciado}
@@ -715,6 +715,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                         textareaRef={{ current: alternativasRefs.current[idx] }}
                                                         value={alt.texto}
                                                         onChange={(v) => handleUpdateAlternativa(idx, v)}
+                                                        onEquation={() => handleEquationInsert('alternativa', idx)}
+                                                        onImage={() => handleImageUpload('alternativa', idx)}
                                                     />
                                                     <textarea
                                                         ref={(el) => alternativasRefs.current[idx] = el}
@@ -948,7 +950,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                         </button>
                                     </div>
                                 </div>
-                                <RichTextToolbar textareaRef={adaptedEnunciadoRef} value={adaptedForm.enunciado} onChange={(v) => updateAdapted('enunciado', v)} />
+                                <RichTextToolbar textareaRef={adaptedEnunciadoRef} value={adaptedForm.enunciado} onChange={(v) => updateAdapted('enunciado', v)} onEquation={() => handleEquationInsert('adapted_enunciado')} onImage={() => handleImageUpload('adapted_enunciado')} />
                                 <textarea
                                     ref={adaptedEnunciadoRef}
                                     value={adaptedForm.enunciado}
@@ -985,6 +987,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                         textareaRef={{ current: adaptedAlternativasRefs.current[idx] }}
                                                         value={alt.texto}
                                                         onChange={(v) => handleUpdateAdaptedAlternativa(idx, v)}
+                                                        onEquation={() => handleEquationInsert('alternativa', idx)}
+                                                        onImage={() => handleImageUpload('alternativa', idx)}
                                                     />
                                                     <textarea
                                                         ref={(el) => adaptedAlternativasRefs.current[idx] = el}

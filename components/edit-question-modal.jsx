@@ -36,6 +36,85 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
         update('alternativas', alts);
     };
 
+    const handleEquationInsert = (targetType, idx = null) => {
+        const eqMarker = ` $$  $$ `;
+        const offset = 4;
+        setForm(prev => {
+            let newForm = { ...prev };
+            if (targetType === 'enunciado') {
+                const ta = enunciadoRef.current;
+                if (ta) {
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    newForm.enunciado = (prev.enunciado || '').substring(0, start) + eqMarker + (prev.enunciado || '').substring(end);
+                    setTimeout(() => { ta.focus(); ta.setSelectionRange(start + offset, start + offset); }, 50);
+                } else {
+                    newForm.enunciado = (prev.enunciado || '') + eqMarker;
+                }
+            } else if (targetType === 'alternativa' && idx !== null) {
+                const ta = alternativasRefs.current[idx];
+                const alts = [...prev.alternativas];
+                if (ta) {
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const text = alts[idx].texto || '';
+                    alts[idx] = { ...alts[idx], texto: text.substring(0, start) + eqMarker + text.substring(end) };
+                    setTimeout(() => { ta.focus(); ta.setSelectionRange(start + offset, start + offset); }, 50);
+                } else {
+                    alts[idx] = { ...alts[idx], texto: (alts[idx].texto || '') + eqMarker };
+                }
+                newForm.alternativas = alts;
+            }
+            return newForm;
+        });
+    };
+
+    const handleImageUpload = (targetType, idx = null) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = event.target.result;
+                setForm(prev => {
+                    const newImages = [...(prev.imagens || []), base64];
+                    const imageMarker = `[IMAGEM_${newImages.length - 1}]`;
+                    let newForm = { ...prev, imagens: newImages };
+                    if (targetType === 'enunciado') {
+                        const ta = enunciadoRef.current;
+                        if (ta) {
+                            const start = ta.selectionStart;
+                            const end = ta.selectionEnd;
+                            newForm.enunciado = (prev.enunciado || '').substring(0, start) + imageMarker + (prev.enunciado || '').substring(end);
+                            setTimeout(() => { ta.focus(); ta.setSelectionRange(start + imageMarker.length, start + imageMarker.length); }, 50);
+                        } else {
+                            newForm.enunciado = (prev.enunciado || '') + imageMarker;
+                        }
+                    } else if (targetType === 'alternativa' && idx !== null) {
+                        const ta = alternativasRefs.current[idx];
+                        const alts = [...prev.alternativas];
+                        if (ta) {
+                            const start = ta.selectionStart;
+                            const end = ta.selectionEnd;
+                            const text = alts[idx].texto || '';
+                            alts[idx] = { ...alts[idx], texto: text.substring(0, start) + imageMarker + text.substring(end) };
+                            setTimeout(() => { ta.focus(); ta.setSelectionRange(start + imageMarker.length, start + imageMarker.length); }, 50);
+                        } else {
+                            alts[idx] = { ...alts[idx], texto: (alts[idx].texto || '') + imageMarker };
+                        }
+                        newForm.alternativas = alts;
+                    }
+                    return newForm;
+                });
+            };
+            reader.readAsDataURL(file);
+        };
+        input.click();
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -68,7 +147,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                             <label className="block text-xs font-semibold text-gray-600">Enunciado</label>
                             <span className="text-[10px] text-brand-600 font-mono bg-brand-50 px-1 rounded">Dica: Use [IMAGEM_0] para posicionar imagens.</span>
                         </div>
-                        <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} />
+                        <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} onEquation={() => handleEquationInsert('enunciado')} onImage={() => handleImageUpload('enunciado')} />
                         <textarea
                             ref={enunciadoRef}
                             value={form.enunciado}
@@ -202,6 +281,8 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                                 textareaRef={{ current: alternativasRefs.current[idx] }}
                                                 value={alt.texto}
                                                 onChange={(v) => handleUpdateAlternativa(idx, 'texto', v)}
+                                                onEquation={() => handleEquationInsert('alternativa', idx)}
+                                                onImage={() => handleImageUpload('alternativa', idx)}
                                             />
                                             <textarea
                                                 ref={(el) => alternativasRefs.current[idx] = el}
