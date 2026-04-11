@@ -38,6 +38,11 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
     const processInlineImagesAndHtml = (text, imgArray, truncate = false) => {
         let processedText = text || '';
 
+        // Clean Word/Office formatting artifacts before display
+        if (window.QBHtmlSanitizer) {
+            processedText = window.QBHtmlSanitizer.cleanForDisplay(processedText);
+        }
+
         // Se houver array imagens iterar
         if (imgArray && imgArray.length > 0) {
             for (let i = 0; i < imgArray.length; i++) {

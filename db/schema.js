@@ -53,6 +53,7 @@ const TYPE_LABELS = {
 };
 
 function getDisciplineColor(disciplina) {
+    if (!disciplina) return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', dot: 'bg-indigo-500' };
     if (DISCIPLINE_COLORS[disciplina]) return DISCIPLINE_COLORS[disciplina];
     const key = Object.keys(DISCIPLINE_COLORS).find(k =>
         disciplina.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(disciplina.toLowerCase())

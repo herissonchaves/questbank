@@ -3,7 +3,21 @@
 // Supports optional Step 2: creating adapted version for questions that don't have one
 
 const EditQuestionModal = ({ question, onClose, onSave }) => {
-    const [form, setForm] = React.useState({ ...question });
+    // Clean Word/Office formatting when loading into editor
+    const cleanQuestion = React.useMemo(() => {
+        if (!question) return question;
+        const q = { ...question };
+        const clean = (x) => window.QBHtmlSanitizer ? window.QBHtmlSanitizer.cleanForEditor(x) : x;
+        if (q.enunciado) q.enunciado = clean(q.enunciado);
+        if (q.alternativas) {
+            q.alternativas = q.alternativas.map(a => ({
+                ...a,
+                texto: a.texto ? clean(a.texto) : a.texto
+            }));
+        }
+        return q;
+    }, [question]);
+    const [form, setForm] = React.useState({ ...cleanQuestion });
     const [step, setStep] = React.useState(1);
     const [includeAdapted, setIncludeAdapted] = React.useState(false);
     const [hasExistingAdapted, setHasExistingAdapted] = React.useState(false);

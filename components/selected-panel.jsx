@@ -117,7 +117,7 @@ const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onOrderByDif
                                     )}
                                 </div>
                                 <p className="text-[11px] text-gray-400 truncate mt-0.5">
-                                    {q.enunciado.substring(0, 60)}...
+                                    {(q.enunciado || '').replace(/<[^>]*>?/gm, '').substring(0, 60)}...
                                 </p>
                             </div>
 

@@ -2,9 +2,7 @@
 // Dashboard showing question distribution by discipline, difficulty, type
 
 const StatsPanel = ({ isOpen, onClose, questions }) => {
-    if (!isOpen) return null;
-
-    // Compute stats
+    // Compute stats (hooks must be called before early returns)
     const stats = React.useMemo(() => {
         const byDisciplina = {};
         const byDificuldade = {};
@@ -12,7 +10,7 @@ const StatsPanel = ({ isOpen, onClose, questions }) => {
         const byBanca = {};
         const byAno = {};
 
-        questions.forEach(q => {
+        (questions || []).forEach(q => {
             byDisciplina[q.disciplina] = (byDisciplina[q.disciplina] || 0) + 1;
             byDificuldade[q.dificuldade] = (byDificuldade[q.dificuldade] || 0) + 1;
             byTipo[q.tipo] = (byTipo[q.tipo] || 0) + 1;
@@ -42,6 +40,8 @@ const StatsPanel = ({ isOpen, onClose, questions }) => {
     };
 
     const sortedEntries = (obj) => Object.entries(obj).sort(([, a], [, b]) => b - a);
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>

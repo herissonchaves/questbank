@@ -159,9 +159,14 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         const html = e.clipboardData.getData('text/html');
         const text = e.clipboardData.getData('text/plain');
         if (html) {
+            // First: DOM-level sanitization (whitelist tags/attrs)
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            const clean = sanitizeNode(doc.body);
+            let clean = sanitizeNode(doc.body);
+            // Second: string-level cleanup (Word/Office junk)
+            if (window.QBHtmlSanitizer) {
+                clean = window.QBHtmlSanitizer.cleanForPaste(clean);
+            }
             document.execCommand('insertHTML', false, clean);
         } else if (text) {
             const escaped = text
@@ -397,7 +402,7 @@ function sanitizeNode(node) {
         'thead', 'tbody', 'font', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     ]);
     const allowedAttrs = new Set([
-        'src', 'alt', 'href', 'style', 'class', 'data-width', 'data-height',
+        'src', 'alt', 'href', 'style', 'data-width', 'data-height',
         'width', 'height', 'colspan', 'rowspan', 'target',
     ]);
     let html = '';
@@ -417,6 +422,13 @@ function sanitizeNode(node) {
                                 .replace(/background[^;]*(;|$)/gi, '')
                                 .replace(/mso-[^;]*(;|$)/gi, '')
                                 .replace(/font-family:[^;]*(;|$)/gi, '')
+                                .replace(/text-indent\s*:\s*-[^;]*(;|$)/gi, '')
+                                .replace(/margin-left\s*:\s*\d+(\.\d+)?pt\s*(;|$)/gi, '')
+                                .replace(/line-height\s*:\s*\d+(\.\d+)?%\s*(;|$)/gi, '')
+                                .replace(/color\s*:[^;]*(;|$)/gi, '')
+                                .replace(/;\s*;/g, ';')
+                                .replace(/^\s*;\s*/g, '')
+                                .replace(/\s*;\s*$/g, '')
                                 .trim();
                             if (cleaned) attrs += ` style="${cleaned}"`;
                         } else {
