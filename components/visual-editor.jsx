@@ -373,22 +373,6 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                 dir="ltr"
                 data-placeholder={placeholder || 'Digite aqui...'}
             />
-            {/* Placeholder overlay when empty */}
-            {isEmpty && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 0, left: 0, right: 0,
-                        padding: 'inherit',
-                        pointerEvents: 'none',
-                        color: '#9ca3af',
-                        lineHeight: '1.6',
-                    }}
-                    className="px-4 py-3 text-sm"
-                >
-                    {placeholder || 'Digite aqui...'}
-                </div>
-            )}
             {selectedImg && renderResizeHandles()}
         </div>
     );
