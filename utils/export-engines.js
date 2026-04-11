@@ -110,10 +110,28 @@ window.ExportEngines = {
                         if (imgData) {
                             var width = 350;
                             var height = 250;
-                            if (node.style && node.style.width && node.style.width.endsWith('px')) {
+                            // Priority 1: data-width/data-height attributes (set by resize handles)
+                            var dw = node.getAttribute('data-width');
+                            var dh = node.getAttribute('data-height');
+                            if (dw && dh) {
+                                width = parseInt(dw);
+                                height = parseInt(dh);
+                            } else if (node.style && node.style.width && node.style.width.endsWith('px')) {
+                                // Priority 2: inline style width+height
                                 width = parseInt(node.style.width);
-                                height = Math.round(width * 0.7); // Approximation
+                                if (node.style.height && node.style.height.endsWith('px')) {
+                                    height = parseInt(node.style.height);
+                                } else {
+                                    height = Math.round(width * 0.7);
+                                }
+                            } else if (node.getAttribute('width')) {
+                                // Priority 3: HTML width/height attributes
+                                width = parseInt(node.getAttribute('width'));
+                                height = node.getAttribute('height') ? parseInt(node.getAttribute('height')) : Math.round(width * 0.7);
                             }
+                            // Sanity limits for docx
+                            if (width > 550) { height = Math.round(height * (550 / width)); width = 550; }
+                            if (height > 700) { width = Math.round(width * (700 / height)); height = 700; }
                             runs.push(new ImageRun({
                                 data: imgData,
                                 transformation: { width: width, height: height }
@@ -188,7 +206,20 @@ window.ExportEngines = {
                         var imgName = 'img_inline_' + imgCounterRef.current + '.png';
                         var b64 = src.split(',')[1];
                         zip.file(imgName, b64, {base64: true});
-                        tex += '\\begin{center}\n\\includegraphics[width=0.7\\linewidth]{' + imgName + '}\n\\end{center}\n';
+                        // Calculate width proportion from data attributes or style
+                        var imgWidthCm = '';
+                        var dw = node.getAttribute('data-width');
+                        if (dw) {
+                            var pxW = parseInt(dw);
+                            // Convert px to approximate cm (96dpi: 1cm ~ 37.8px), then to linewidth fraction
+                            var cmW = pxW / 37.8;
+                            // A4 text width is ~17cm with 2cm margins
+                            var frac = Math.min(1.0, Math.max(0.1, cmW / 17)).toFixed(2);
+                            imgWidthCm = 'width=' + frac + '\\linewidth';
+                        } else {
+                            imgWidthCm = 'width=0.7\\linewidth';
+                        }
+                        tex += '\\begin{center}\n\\includegraphics[' + imgWidthCm + ']{' + imgName + '}\n\\end{center}\n';
                     }
                     return;
                 }
@@ -327,6 +358,7 @@ window.ExportEngines = {
                                 for (var bj = 0; bj < binStr.length; bj++) bytes[bj] = binStr.charCodeAt(bj);
                                 children.push(new Paragraph({
                                     spacing: { before: 100, after: 100 },
+                                    alignment: AlignmentType.CENTER,
                                     children: [new ImageRun({ data: bytes, transformation: { width: 400, height: 300 } })]
                                 }));
                             }

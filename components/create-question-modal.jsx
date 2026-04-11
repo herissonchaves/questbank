@@ -218,15 +218,35 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
+        input.multiple = true;
         input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (re) => {
-                const b64 = re.target.result;
-                document.execCommand('insertHTML', false, `<img src="${b64}" style="max-width:300px; max-height:300px; resize:both; overflow:hidden; display:block; margin:10px 0; border:1px dashed #ccc;" />&nbsp;`);
-            };
-            reader.readAsDataURL(file);
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    const b64 = re.target.result;
+                    // Load image to get natural dimensions
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.naturalWidth;
+                        let h = img.naturalHeight;
+                        // Constrain to max 400px wide, keeping aspect ratio
+                        if (w > 400) {
+                            h = Math.round(h * (400 / w));
+                            w = 400;
+                        }
+                        if (h > 400) {
+                            w = Math.round(w * (400 / h));
+                            h = 400;
+                        }
+                        const html = `<img src="${b64}" data-width="${w}" data-height="${h}" style="width:${w}px; height:${h}px; display:block; margin:10px auto; border-radius:4px; cursor:pointer;" /><br>`;
+                        document.execCommand('insertHTML', false, html);
+                    };
+                    img.src = b64;
+                };
+                reader.readAsDataURL(file);
+            });
         };
         input.click();
     };
@@ -511,7 +531,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <div className="flex items-center gap-1">
                                     </div>
                                 </div>
-                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
                                 <VisualEditor
                                     forwardedRef={enunciadoRef}
                                     value={form.enunciado}
@@ -570,7 +590,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                     {alt.letra}
                                                 </div>
                                                 <div className="flex-1 flex flex-col">
-                                                    <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                                    <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
                                                     <VisualEditor
                                                         forwardedRef={(el) => alternativasRefs.current[idx] = el}
                                                         value={alt.texto}
@@ -772,7 +792,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-bold text-gray-800">Enunciado Adaptado</label>
                                 </div>
-                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
                                 <VisualEditor
                                     forwardedRef={adaptedEnunciadoRef}
                                     value={adaptedForm.enunciado}
@@ -807,7 +827,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                     {alt.letra}
                                                 </div>
                                                 <div className="flex-1 flex flex-col">
-                                                    <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                                    <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
                                                     <VisualEditor
                                                         forwardedRef={(el) => adaptedAlternativasRefs.current[idx] = el}
                                                         value={alt.texto}
