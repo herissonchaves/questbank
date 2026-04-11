@@ -1,11 +1,21 @@
 // QuestBank — ExamsPanel Component
 // View saved exams/lists history with details + re-download .docx
 
-const ExamsPanel = ({ isOpen, onClose }) => {
+const ExamsPanel = ({ isOpen, onClose, questions, selectedIdsSet, onToggleSelect, onToggleSelectAll, adaptedMap }) => {
     const [exams, setExams] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const [expandedId, setExpandedId] = React.useState(null);
     const [redownloading, setRedownloading] = React.useState(null);
+    const [expandedCards, setExpandedCards] = React.useState(new Set());
+
+    const toggleCardExpand = (id) => {
+        setExpandedCards(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
 
     React.useEffect(() => {
         if (isOpen) loadExams();
@@ -237,21 +247,56 @@ const ExamsPanel = ({ isOpen, onClose }) => {
 
                                         {/* Expanded details */}
                                         {isExpanded && (
-                                            <div className="px-4 pb-4 animate-fade-in border-t border-gray-100">
-                                                <div className="mt-3 space-y-2">
-                                                    <p className="text-xs text-gray-500">
-                                                        <span className="font-semibold">IDs das questões:</span>
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {(exam.questionIds || []).map((qId, i) => (
-                                                            <span key={i} className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                                                                {qId}
-                                                            </span>
-                                                        ))}
+                                            <div className="px-4 pb-4 animate-fade-in border-t-2 border-gray-100 bg-gray-50/50">
+                                                <div className="mt-3 space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-xs font-semibold text-gray-700">
+                                                            Questões desta prova/lista:
+                                                        </p>
+                                                        {(questions && selectedIdsSet && onToggleSelectAll) && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onToggleSelectAll(exam.questionIds || []);
+                                                                }}
+                                                                className="text-[11px] text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 transition-colors bg-brand-50 hover:bg-brand-100 px-2 py-1.5 rounded-md"
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                {((exam.questionIds || []).every(id => selectedIdsSet && selectedIdsSet.has(id))) ? 'Remover todas' : 'Adicionar todas à prova'}
+                                                            </button>
+                                                        )}
                                                     </div>
+                                                    
+                                                    <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                                                        {(exam.questionIds || []).map((qId) => {
+                                                            const q = questions ? questions.find(question => question.id === qId) : null;
+                                                            if (!q) {
+                                                                return (
+                                                                    <div key={qId} className="text-[11px] px-3 py-2 rounded-lg bg-red-50 text-red-600 border border-red-100 flex items-center justify-between">
+                                                                        <span>Questão {qId} não encontrada</span>
+                                                                        <span className="text-[10px] bg-red-100 px-2 py-0.5 rounded text-red-700 font-medium">Excluída</span>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return (
+                                                                <QuestionCard
+                                                                    key={q.id}
+                                                                    question={q}
+                                                                    isSelected={selectedIdsSet ? selectedIdsSet.has(q.id) : false}
+                                                                    isExpanded={expandedCards.has(q.id)}
+                                                                    onToggleExpand={toggleCardExpand}
+                                                                    onToggleSelect={onToggleSelect}
+                                                                    adaptedQuestion={adaptedMap ? adaptedMap[q.id] : null}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    
                                                     {exam.data && (
-                                                        <p className="text-xs text-gray-400 mt-2">
-                                                            Data da prova: {exam.data.split('-').reverse().join('/')}
+                                                        <p className="text-[11px] text-gray-400 mt-2 text-right">
+                                                            Data de criação da prova original: {exam.data.split('-').reverse().join('/')}
                                                         </p>
                                                     )}
                                                 </div>

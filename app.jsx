@@ -65,6 +65,24 @@ function reducer(state, action) {
             return { ...state, selectedIds: ids };
         }
 
+        case 'ORDER_BY_DIFFICULTY': {
+            const difficultyMap = {};
+            state.questions.forEach(q => {
+                let rank = 99; // unknown
+                const d = (q.dificuldade || '').toLowerCase();
+                if (d.includes('fácil') || d.includes('facil') || d.includes('baixa')) rank = 1;
+                else if (d.includes('média') || d.includes('media') || d.includes('médio') || d.includes('medio')) rank = 2;
+                else if (d.includes('difícil') || d.includes('dificil') || d.includes('alta')) rank = 3;
+                difficultyMap[q.id] = rank;
+            });
+            const ids = [...state.selectedIds].sort((a, b) => {
+                const rankA = difficultyMap[a] || 99;
+                const rankB = difficultyMap[b] || 99;
+                return rankA - rankB; // ascending, easier first
+            });
+            return { ...state, selectedIds: ids };
+        }
+
         case 'CLEAR_SELECTED':
             return { ...state, selectedIds: [] };
 
@@ -272,6 +290,10 @@ const App = () => {
 
     const handleShuffle = useCallback(() => {
         dispatch({ type: 'SHUFFLE_SELECTED' });
+    }, []);
+
+    const handleOrderByDifficulty = useCallback(() => {
+        dispatch({ type: 'ORDER_BY_DIFFICULTY' });
     }, []);
 
     const handleToggleIgnoreUsed = useCallback(() => {
@@ -623,6 +645,7 @@ const App = () => {
                         onRemove={(id) => dispatch({ type: 'REMOVE_SELECTED', payload: id })}
                         onReorder={handleReorder}
                         onShuffle={handleShuffle}
+                        onOrderByDifficulty={handleOrderByDifficulty}
                         onClear={() => dispatch({ type: 'CLEAR_SELECTED' })}
                         onExport={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'export' })}
                     />
@@ -655,6 +678,11 @@ const App = () => {
             <ExamsPanel
                 isOpen={state.modals.exams}
                 onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'exams' })}
+                questions={state.questions}
+                selectedIdsSet={selectedIdsSet}
+                onToggleSelect={handleToggleSelect}
+                onToggleSelectAll={handleSelectAllFiltered}
+                adaptedMap={adaptedMap}
             />
 
             {state.modals.stats && (
