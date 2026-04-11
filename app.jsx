@@ -166,38 +166,20 @@ const App = () => {
     };
 
     // ─── Adapted Questions Logic ────────────────────────────
-    // Build a map: regularTag -> adaptedQuestion
-    // A tag starting with "A" followed by digits = adapted question
-    // A tag that is purely digits = regular question
+    // Build a map: regularId -> adaptedQuestion
     const { adaptedMap, regularQuestions } = useMemo(() => {
-        const map = {}; // regularTag -> adaptedQuestion object
-        const tagToQuestion = {}; // tag -> question (for adapted tags)
-        const adaptedIds = new Set();
-
-        // First pass: find all adapted questions by their tags
+        const map = {};
+        
+        // Pass 1: Assign adapted questions mapped to their regular counterpart's ID
         state.questions.forEach(q => {
-            (q.tags || []).forEach(tag => {
-                // Check if this tag marks an adapted question: starts with A followed by digits
-                if (/^A\d+$/.test(tag)) {
-                    const regularTag = tag.substring(1); // remove the A prefix
-                    tagToQuestion[regularTag] = q;
-                    adaptedIds.add(q.id);
-                }
-            });
+            if (String(q.id).startsWith('A-')) {
+                const regularId = String(q.id).substring(2); // Extracts "00001" from "A-00001"
+                map[regularId] = q;
+            }
         });
 
-        // Second pass: match regular questions to their adapted counterparts
-        state.questions.forEach(q => {
-            (q.tags || []).forEach(tag => {
-                // Check if this is a regular tag (pure digits) that has a matching adapted question
-                if (/^\d+$/.test(tag) && tagToQuestion[tag]) {
-                    map[q.id] = tagToQuestion[tag];
-                }
-            });
-        });
-
-        // Filter out adapted questions from main list (they appear inside the carousel)
-        const regular = state.questions.filter(q => !adaptedIds.has(q.id));
+        // Pass 2: Filter out adapted questions from the regular list
+        const regular = state.questions.filter(q => !String(q.id).startsWith('A-'));
 
         return { adaptedMap: map, regularQuestions: regular };
     }, [state.questions]);
