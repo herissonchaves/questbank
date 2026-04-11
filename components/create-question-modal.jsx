@@ -214,146 +214,26 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
         updateAdapted('alternativas', alts);
     };
 
-    const handleImageUpload = (targetType, idx = null) => {
+    const handleImageUpload = () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
         input.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
-            reader.onload = (event) => {
-                const base64 = event.target.result;
-
-                if (targetType === 'adapted_enunciado') {
-                    setAdaptedForm(prev => {
-                        const newImages = [...(prev.imagens || []), base64];
-                        const imageMarker = `[IMAGEM_${newImages.length - 1}]`;
-                        const textArea = adaptedEnunciadoRef.current;
-                        let newEnunciado = prev.enunciado;
-                        if (textArea) {
-                            const start = textArea.selectionStart;
-                            const end = textArea.selectionEnd;
-                            newEnunciado = prev.enunciado.substring(0, start) + imageMarker + prev.enunciado.substring(end);
-                            setTimeout(() => {
-                                textArea.focus();
-                                textArea.setSelectionRange(start + imageMarker.length, start + imageMarker.length);
-                            }, 50);
-                        } else {
-                            newEnunciado = prev.enunciado + imageMarker;
-                        }
-                        return { ...prev, imagens: newImages, enunciado: newEnunciado };
-                    });
-                    return;
-                }
-
-                setForm(prev => {
-                    const newImages = [...(prev.imagens || []), base64];
-                    const imageMarker = `[IMAGEM_${newImages.length - 1}]`;
-                    let newForm = { ...prev, imagens: newImages };
-
-                    if (targetType === 'enunciado') {
-                        const textArea = enunciadoRef.current;
-                        if (textArea) {
-                            const start = textArea.selectionStart;
-                            const end = textArea.selectionEnd;
-                            const text = prev.enunciado || '';
-                            newForm.enunciado = text.substring(0, start) + imageMarker + text.substring(end);
-                            setTimeout(() => {
-                                textArea.focus();
-                                textArea.setSelectionRange(start + imageMarker.length, start + imageMarker.length);
-                            }, 50);
-                        } else {
-                            newForm.enunciado = (prev.enunciado || '') + imageMarker;
-                        }
-                        if(errors.enunciado) delete errors.enunciado;
-                    } else if (targetType === 'alternativa' && idx !== null) {
-                        const textArea = alternativasRefs.current[idx];
-                        const alts = [...prev.alternativas];
-                        if (textArea) {
-                            const start = textArea.selectionStart;
-                            const end = textArea.selectionEnd;
-                            const text = alts[idx].texto || '';
-                            alts[idx] = { ...alts[idx], texto: text.substring(0, start) + imageMarker + text.substring(end) };
-                            setTimeout(() => {
-                                textArea.focus();
-                                textArea.setSelectionRange(start + imageMarker.length, start + imageMarker.length);
-                            }, 50);
-                        } else {
-                            alts[idx] = { ...alts[idx], texto: (alts[idx].texto || '') + imageMarker };
-                        }
-                        newForm.alternativas = alts;
-                    }
-                    return newForm;
-                });
+            reader.onload = (re) => {
+                const b64 = re.target.result;
+                document.execCommand('insertHTML', false, `<img src="${b64}" style="max-width:300px; max-height:300px; resize:both; overflow:hidden; display:block; margin:10px 0; border:1px dashed #ccc;" />&nbsp;`);
             };
             reader.readAsDataURL(file);
         };
         input.click();
     };
 
-    const handleEquationInsert = (targetType, idx = null) => {
-        const eqMarker = ` $$  $$ `;
-        const offset = 4;
-
-        if (targetType === 'adapted_enunciado') {
-            setAdaptedForm(prev => {
-                const textArea = adaptedEnunciadoRef.current;
-                let newEnunciado = prev.enunciado;
-                if (textArea) {
-                    const start = textArea.selectionStart;
-                    const end = textArea.selectionEnd;
-                    newEnunciado = prev.enunciado.substring(0, start) + eqMarker + prev.enunciado.substring(end);
-                    setTimeout(() => {
-                        textArea.focus();
-                        textArea.setSelectionRange(start + offset, start + offset);
-                    }, 50);
-                } else {
-                    newEnunciado = prev.enunciado + eqMarker;
-                }
-                return { ...prev, enunciado: newEnunciado };
-            });
-            return;
-        }
-
-        setForm(prev => {
-            let newForm = { ...prev };
-
-            if (targetType === 'enunciado') {
-                const textArea = enunciadoRef.current;
-                if (textArea) {
-                    const start = textArea.selectionStart;
-                    const end = textArea.selectionEnd;
-                    const text = prev.enunciado || '';
-                    newForm.enunciado = text.substring(0, start) + eqMarker + text.substring(end);
-                    setTimeout(() => {
-                        textArea.focus();
-                        textArea.setSelectionRange(start + offset, start + offset);
-                    }, 50);
-                } else {
-                    newForm.enunciado = (prev.enunciado || '') + eqMarker;
-                }
-                if(errors.enunciado) delete errors.enunciado;
-            } else if (targetType === 'alternativa' && idx !== null) {
-                const textArea = alternativasRefs.current[idx];
-                const alts = [...prev.alternativas];
-                if (textArea) {
-                    const start = textArea.selectionStart;
-                    const end = textArea.selectionEnd;
-                    const text = alts[idx].texto || '';
-                    alts[idx] = { ...alts[idx], texto: text.substring(0, start) + eqMarker + text.substring(end) };
-                    setTimeout(() => {
-                        textArea.focus();
-                        textArea.setSelectionRange(start + offset, start + offset);
-                    }, 50);
-                } else {
-                    alts[idx] = { ...alts[idx], texto: (alts[idx].texto || '') + eqMarker };
-                }
-                newForm.alternativas = alts;
-            }
-            return newForm;
-        });
+    const handleEquationInsert = () => {
+        const eq = prompt('Digite a equacao LaTeX (sem $$):');
+        if (eq) document.execCommand('insertHTML', false, '<span>$$' + eq + '$$</span>&nbsp;');
     };
 
     // Validate Step 1
@@ -629,36 +509,15 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-bold text-gray-800">Enunciado</label>
                                     <div className="flex items-center gap-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleEquationInsert('enunciado')}
-                                            className="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-brand-50"
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                            </svg>
-                                            Inserir Equacao
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleImageUpload('enunciado')}
-                                            className="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-brand-50"
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            Inserir Imagem
-                                        </button>
                                     </div>
                                 </div>
-                                <RichTextToolbar textareaRef={enunciadoRef} value={form.enunciado} onChange={(v) => update('enunciado', v)} onEquation={() => handleEquationInsert('enunciado')} onImage={() => handleImageUpload('enunciado')} />
-                                <textarea
-                                    ref={enunciadoRef}
+                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                <VisualEditor
+                                    forwardedRef={enunciadoRef}
                                     value={form.enunciado}
-                                    onChange={(e) => update('enunciado', e.target.value)}
-                                    rows={6}
+                                    onChange={(v) => update('enunciado', v)}
                                     placeholder="Digite o enunciado aqui..."
-                                    className={`w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all resize-y placeholder:text-gray-400 ${
+                                    className={`w-full max-h-[400px] overflow-y-auto bg-gray-50/50 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${
                                         errors.enunciado ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
                                     }`}
                                 />
@@ -710,44 +569,17 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                 }`}>
                                                     {alt.letra}
                                                 </div>
-                                                <div className="flex-1">
-                                                    <RichTextToolbar
-                                                        textareaRef={{ current: alternativasRefs.current[idx] }}
+                                                <div className="flex-1 flex flex-col">
+                                                    <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                                    <VisualEditor
+                                                        forwardedRef={(el) => alternativasRefs.current[idx] = el}
                                                         value={alt.texto}
                                                         onChange={(v) => handleUpdateAlternativa(idx, v)}
-                                                        onEquation={() => handleEquationInsert('alternativa', idx)}
-                                                        onImage={() => handleImageUpload('alternativa', idx)}
-                                                    />
-                                                    <textarea
-                                                        ref={(el) => alternativasRefs.current[idx] = el}
-                                                        value={alt.texto}
-                                                        onChange={(e) => handleUpdateAlternativa(idx, e.target.value)}
-                                                        rows={2}
                                                         placeholder={`Digite a alternativa ${alt.letra} aqui...`}
-                                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all resize-none placeholder:text-gray-400"
+                                                        className="w-full max-h-[200px] overflow-y-auto bg-white border border-gray-200 rounded-b-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEquationInsert('alternativa', idx)}
-                                                        className="flex-shrink-0 w-7 h-7 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all bg-gray-50 border border-gray-200"
-                                                        title="Inserir equacao"
-                                                    >
-                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleImageUpload('alternativa', idx)}
-                                                        className="flex-shrink-0 w-7 h-7 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all bg-gray-50 border border-gray-200"
-                                                        title="Inserir imagem"
-                                                    >
-                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </button>
                                                     {form.alternativas.length > 2 && (
                                                         <button
                                                             type="button"
@@ -939,26 +771,18 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-bold text-gray-800">Enunciado Adaptado</label>
-                                    <div className="flex items-center gap-1">
-                                        <button type="button" onClick={() => handleEquationInsert('adapted_enunciado')} className="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-brand-50">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                            Equacao
-                                        </button>
-                                        <button type="button" onClick={() => handleImageUpload('adapted_enunciado')} className="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-brand-50">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            Imagem
-                                        </button>
-                                    </div>
                                 </div>
-                                <RichTextToolbar textareaRef={adaptedEnunciadoRef} value={adaptedForm.enunciado} onChange={(v) => updateAdapted('enunciado', v)} onEquation={() => handleEquationInsert('adapted_enunciado')} onImage={() => handleImageUpload('adapted_enunciado')} />
-                                <textarea
-                                    ref={adaptedEnunciadoRef}
+                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                <VisualEditor
+                                    forwardedRef={adaptedEnunciadoRef}
                                     value={adaptedForm.enunciado}
-                                    onChange={(e) => updateAdapted('enunciado', e.target.value)}
-                                    rows={6}
-                                    placeholder="Digite o enunciado adaptado (linguagem simplificada, apoio visual, etc.)..."
-                                    className={`w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all resize-y placeholder:text-gray-400 ${
-                                        errors.adaptedEnunciado ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
+                                    onChange={(v) => {
+                                        if (typeof setAdaptedForm === "function") setAdaptedForm(p => ({...p, enunciado: v}));
+                                        else updateAdapted("enunciado", v);
+                                    }}
+                                    placeholder="Digite o enunciado adaptado aqui..."
+                                    className={`w-full max-h-[400px] overflow-y-auto bg-sky-50/30 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all ${
+                                        errors.adaptedEnunciado ? 'border-rose-300 bg-rose-50/50' : 'border-sky-200/60'
                                     }`}
                                 />
                                 {errors.adaptedEnunciado && (
@@ -982,21 +806,14 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                                 }`}>
                                                     {alt.letra}
                                                 </div>
-                                                <div className="flex-1">
-                                                    <RichTextToolbar
-                                                        textareaRef={{ current: adaptedAlternativasRefs.current[idx] }}
+                                                <div className="flex-1 flex flex-col">
+                                                    <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} />
+                                                    <VisualEditor
+                                                        forwardedRef={(el) => adaptedAlternativasRefs.current[idx] = el}
                                                         value={alt.texto}
                                                         onChange={(v) => handleUpdateAdaptedAlternativa(idx, v)}
-                                                        onEquation={() => handleEquationInsert('alternativa', idx)}
-                                                        onImage={() => handleImageUpload('alternativa', idx)}
-                                                    />
-                                                    <textarea
-                                                        ref={(el) => adaptedAlternativasRefs.current[idx] = el}
-                                                        value={alt.texto}
-                                                        onChange={(e) => handleUpdateAdaptedAlternativa(idx, e.target.value)}
-                                                        rows={2}
                                                         placeholder={`Alternativa ${alt.letra} adaptada...`}
-                                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all resize-none placeholder:text-gray-400"
+                                                        className="w-full max-h-[200px] overflow-y-auto bg-white border border-sky-200/60 rounded-b-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                                                     />
                                                 </div>
                                             </div>
@@ -1104,3 +921,4 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
         </div>
     );
 };
+window.CreateQuestionModal = CreateQuestionModal;

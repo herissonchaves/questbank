@@ -1,0 +1,44 @@
+﻿diff --git a/components/create-question-modal.jsx b/components/create-question-modal.jsx
+index bda5d74..eb2ab7d 100644
+--- a/components/create-question-modal.jsx
++++ b/components/create-question-modal.jsx
+@@ -1,1106 +1,2 @@
+-// QuestBank ÔÇö CreateQuestionModal Component
+-// Full-screen modal for creating individual questions + adapted version
+-// Inspired by SuperProfessor / Estuda.com UI
+ 
+-// Autocomplete input component
+-const AutocompleteInput = ({ label, value, onChange, suggestions: items, error, placeholder }) => {
+-    const [showSuggestions, setShowSuggestions] = React.useState(false);
+-    const [filtered, setFiltered] = React.useState([]);
+-    const containerRef = React.useRef(null);
+-
+-    React.useEffect(() => {
+-        if (value && items.length > 0) {
+-            const f = items.filter(s => s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase());
+-            setFiltered(f.slice(0, 6));
+-        } else {
+-            setFiltered([]);
+-        }
+-    }, [value, items]);
+-
+-    React.useEffect(() => {
+-        const handleClickOutside = (e) => {
+-            if (containerRef.current && !containerRef.current.contains(e.target)) {
+-                setShowSuggestions(false);
+-            }
+-        };
+-        document.addEventListener('mousedown', handleClickOutside);
+-        return () => document.removeEventListener('mousedown', handleClickOutside);
+-    }, []);
+-
+-    return (
+-        <div ref={containerRef} className="relative">
+-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">{label} <span className="text-rose-400">*</span></label>
+-            <input
+-                type="text"
+-                value={value}
+-                onChange={(e) => onChange(e.target.value)}
+-                onFocus={() => setShowSuggestions(true)}
+-                placeholder={placeholder || `Digite ${label.toLowerCase()}...`}
+-                className={`w-full bg-gray-50 border rounded-lg px-3 py-2 t

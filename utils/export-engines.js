@@ -30,69 +30,182 @@ window.ExportEngines = {
         });
     },
 
-    // Processador de textos mesclados (Equacoes Nativas + Imagens Inline)
-    async processMixedContent(text, imagesArray, TextRun, ImageRun) {
-        var cleanText = text.replace(/<br\s*\/?>/g, '\n').replace(/<[^>]*>/g, '');
-        var parts = cleanText.split(/(\$\$[\s\S]+?\$\$|\$[\s\S]+?\$|\[IMAGEM_\d+\])/g);
+    // Processador de textos mesclados (Equacoes Nativas + Imagens Inline + HTML Formatting)
+    async processMixedContent(htmlText, imagesArray, TextRun, ImageRun) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(htmlText || '', 'text/html');
         var runs = [];
         var useNativeMath = window.LatexToDocxMath && window.LatexToDocxMath.isSupported(docx);
 
         var processStrBase64 = function(b) {
+            if (!b) return null;
             var d = b.split(',')[1];
+            if (!d) return null;
             var bs = atob(d);
             var arr = new Uint8Array(bs.length);
             for (var i = 0; i < bs.length; i++) arr[i] = bs.charCodeAt(i);
             return arr;
         };
 
-        for (var pi = 0; pi < parts.length; pi++) {
-            var part = parts[pi];
-            if (!part) continue;
+        var traverse = async function(node, style) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                var text = node.textContent;
+                // Avoid stripping whitespace completely, as it might be needed for spacing between formatted words
+                if (text === '') return;
+                
+                var parts = text.split(/(\$\$[\s\S]+?\$\$|\$[\s\S]+?\$|\[IMAGEM_\d+\])/g);
+                for (var pi = 0; pi < parts.length; pi++) {
+                    var part = parts[pi];
+                    if (!part) continue;
 
-            if (part.startsWith('[IMAGEM_')) {
-                var imgMatch = part.match(/\[IMAGEM_(\d+)\]/);
-                if (imgMatch && imagesArray && imagesArray[imgMatch[1]]) {
-                    runs.push(new ImageRun({
-                        data: processStrBase64(imagesArray[imgMatch[1]]),
-                        transformation: { width: 350, height: 250 }
-                    }));
-                }
-            } else if (part.startsWith('$$') || part.startsWith('$')) {
-                var isDisplay = part.startsWith('$$');
-                var tex = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
+                    if (part.startsWith('[IMAGEM_')) {
+                        var imgMatch = part.match(/\[IMAGEM_(\d+)\]/);
+                        if (imgMatch && imagesArray && imagesArray[imgMatch[1]]) {
+                            var data = processStrBase64(imagesArray[imgMatch[1]]);
+                            if (data) {
+                                runs.push(new ImageRun({
+                                    data: data,
+                                    transformation: { width: 350, height: 250 }
+                                }));
+                            }
+                        }
+                    } else if (part.startsWith('$$') || part.startsWith('$')) {
+                        var isDisplay = part.startsWith('$$');
+                        var tex = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
 
-                if (useNativeMath) {
-                    try {
-                        var mathObj = window.LatexToDocxMath.convert(tex, docx);
-                        runs.push(mathObj);
-                    } catch (e) {
-                        console.warn('Fallback para texto na equacao:', tex, e);
-                        runs.push(new TextRun({ text: tex, font: 'Cambria Math', size: 22, italics: true }));
-                    }
-                } else if (window.MathJax && window.MathJaxLoaded) {
-                    try {
-                        var container = window.MathJax.tex2svg(tex, {display: isDisplay});
-                        var svg = container.querySelector('svg');
-                        if (svg) {
-                            var pngData = await this.svgToPng(svg);
-                            runs.push(new ImageRun({
-                                data: processStrBase64(pngData.data),
-                                transformation: { width: pngData.width * 0.3, height: pngData.height * 0.3 }
-                            }));
+                        if (useNativeMath) {
+                            try {
+                                var mathObj = window.LatexToDocxMath.convert(tex, docx);
+                                runs.push(mathObj);
+                            } catch (e) {
+                                runs.push(new TextRun({ text: tex, font: 'Cambria Math', size: 22, italics: true }));
+                            }
                         } else {
                             runs.push(new TextRun({ text: part, font: 'Arial', size: 22 }));
                         }
-                    } catch (e) {
-                        runs.push(new TextRun({ text: part, font: 'Arial', size: 22 }));
+                    } else {
+                        runs.push(new TextRun({ 
+                            text: part, 
+                            font: 'Arial', 
+                            size: style.size || 22,
+                            bold: style.bold,
+                            italics: style.italics,
+                            underline: style.underline ? {} : undefined
+                        }));
                     }
-                } else {
-                    runs.push(new TextRun({ text: part, font: 'Arial', size: 22 }));
                 }
-            } else {
-                runs.push(new TextRun({ text: part, font: 'Arial', size: 22 }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                var tag = node.tagName.toLowerCase();
+                
+                if (tag === 'br') {
+                    runs.push(new TextRun({ break: 1 }));
+                } else if (tag === 'div' || tag === 'p') {
+                    if (node.previousSibling) runs.push(new TextRun({ break: 1 }));
+                }
+
+                if (tag === 'img') {
+                    var src = node.getAttribute('src');
+                    if (src && src.startsWith('data:image')) {
+                        var imgData = processStrBase64(src);
+                        if (imgData) {
+                            var width = 350;
+                            var height = 250;
+                            if (node.style && node.style.width && node.style.width.endsWith('px')) {
+                                width = parseInt(node.style.width);
+                                height = Math.round(width * 0.7); // Approximation
+                            }
+                            runs.push(new ImageRun({
+                                data: imgData,
+                                transformation: { width: width, height: height }
+                            }));
+                        }
+                    }
+                }
+
+                var newStyle = Object.assign({}, style);
+                if (tag === 'b' || tag === 'strong') newStyle.bold = true;
+                if (tag === 'i' || tag === 'em') newStyle.italics = true;
+                if (tag === 'u') newStyle.underline = true;
+                
+                if (node.style && node.style.fontSize) {
+                    if (node.style.fontSize === '12px' || node.style.fontSize === '1') newStyle.size = 18;
+                    else if (node.style.fontSize === '24px' || node.style.fontSize === '5') newStyle.size = 32;
+                    else if (node.style.fontSize === '32px' || node.style.fontSize === '7') newStyle.size = 40;
+                }
+
+                for (var i = 0; i < node.childNodes.length; i++) {
+                    await traverse(node.childNodes[i], newStyle);
+                }
             }
+        };
+
+        for (var idx = 0; idx < doc.body.childNodes.length; idx++) {
+            await traverse(doc.body.childNodes[idx], { size: 22 });
         }
+        
         return runs;
+    },
+
+    async htmlToLatex(htmlText, zip, imgCounterRef, imagesArray) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(htmlText || '', 'text/html');
+        var tex = '';
+
+        var traverse = function(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                var text = node.textContent;
+                // handle legacy [IMAGEM_X] here if any
+                if (imagesArray) {
+                    text = text.replace(/\[IMAGEM_(\d+)\]/g, function(match, p1) {
+                        var index = parseInt(p1);
+                        if (imagesArray[index]) {
+                            imgCounterRef.current++;
+                            var imgName = 'img_leg_' + imgCounterRef.current + '.png';
+                            var b64 = imagesArray[index].split(',')[1];
+                            zip.file(imgName, b64, {base64: true});
+                            return '\\begin{center}\n\\includegraphics[width=0.7\\linewidth]{' + imgName + '}\n\\end{center}\n';
+                        }
+                        return match;
+                    });
+                }
+                tex += text;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                var tag = node.tagName.toLowerCase();
+                var pre = '';
+                var post = '';
+                
+                if (tag === 'b' || tag === 'strong') { pre = '\\textbf{'; post = '}'; }
+                else if (tag === 'i' || tag === 'em') { pre = '\\textit{'; post = '}'; }
+                else if (tag === 'u') { pre = '\\underline{'; post = '}'; }
+                else if (tag === 'br') { tex += '\\\\\n'; return; }
+                else if (tag === 'div' || tag === 'p') {
+                    if (node.previousSibling) tex += '\n\n';
+                }
+                else if (tag === 'img') {
+                    var src = node.getAttribute('src');
+                    if (src && src.startsWith('data:image')) {
+                        imgCounterRef.current++;
+                        var imgName = 'img_inline_' + imgCounterRef.current + '.png';
+                        var b64 = src.split(',')[1];
+                        zip.file(imgName, b64, {base64: true});
+                        tex += '\\begin{center}\n\\includegraphics[width=0.7\\linewidth]{' + imgName + '}\n\\end{center}\n';
+                    }
+                    return;
+                }
+                
+                tex += pre;
+                for (var i = 0; i < node.childNodes.length; i++) {
+                    traverse(node.childNodes[i]);
+                }
+                tex += post;
+            }
+        };
+
+        for (var idx = 0; idx < doc.body.childNodes.length; idx++) {
+            traverse(doc.body.childNodes[idx]);
+        }
+        
+        return tex;
     },
 
     // Motor LaTeX
@@ -112,45 +225,18 @@ window.ExportEngines = {
         t += '\\vspace{1cm}\n\\hrule\n\\vspace{1cm}\n\n\\begin{enumerate}\n';
 
         var zip = new JSZip();
-        var imgCounter = 0;
+        var imgRef = { current: 0 };
 
         for (var qi = 0; qi < questions.length; qi++) {
             var q = questions[qi];
-            var texto = q.enunciado.replace(/<br\s*\/?>/g, '\\\\').replace(/<[^>]*>/g, '');
-            var mapImgToName = {};
-
-            if (q.imagens && q.imagens.length > 0) {
-                for (var ii = 0; ii < q.imagens.length; ii++) {
-                    imgCounter++;
-                    var imgName = 'img_' + imgCounter + '.png';
-                    mapImgToName[ii] = imgName;
-                    var b64 = q.imagens[ii].split(',')[1];
-                    zip.file(imgName, b64, {base64: true});
-                }
-            }
-
-            texto = texto.replace(/\[IMAGEM_(\d+)\]/g, function(match, p1) {
-                var index = parseInt(p1);
-                if (mapImgToName[index]) {
-                    return '\\begin{center}\n\\includegraphics[width=0.7\\linewidth]{' + mapImgToName[index] + '}\n\\end{center}';
-                }
-                return match;
-            });
+            var texto = await this.htmlToLatex(q.enunciado, zip, imgRef, q.imagens);
             t += '\\item ' + texto + '\n';
-
-            if (q.imagens && q.imagens.length > 0) {
-                for (var ij = 0; ij < q.imagens.length; ij++) {
-                    if (!texto.includes(mapImgToName[ij])) {
-                        t += '\\begin{center}\n\\includegraphics[width=0.7\\linewidth]{' + mapImgToName[ij] + '}\n\\end{center}\n';
-                    }
-                }
-            }
 
             var isObj = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
             if (isObj && q.alternativas) {
                 t += '\\begin{itemize}\n';
                 for (var ai = 0; ai < q.alternativas.length; ai++) {
-                    var altTxt = q.alternativas[ai].texto.replace(/<[^>]*>/g, '');
+                    var altTxt = await this.htmlToLatex(q.alternativas[ai].texto, zip, imgRef, q.imagens);
                     t += '  \\item[' + q.alternativas[ai].letra + ')] ' + altTxt + '\n';
                 }
                 t += '\\end{itemize}\n';

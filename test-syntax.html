@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="errors" style="color: red; font-family: monospace; white-space: pre-wrap; padding: 20px;"></div>
+    <script>
+        const logError = (msg) => {
+            document.getElementById('errors').textContent += msg + '\n\n';
+        };
+        window.addEventListener('error', (e) => logError(e.error ? e.error.stack : e.message));
+        Babel.registerPlugin('transform-react-jsx', babel.availablePlugins['transform-react-jsx']);
+    </script>
+    <script type="text/babel" data-type="module">
+        try {
+            const createModal = await fetch('components/create-question-modal.jsx').then(r => r.text());
+            Babel.transform(createModal, { presets: ['react'] });
+            logError("create-question-modal.jsx Parsed Successfully!");
+        } catch (e) {
+            logError("Create Modal Error:\n" + e.message);
+        }
+        
+        try {
+            const editModal = await fetch('components/edit-question-modal.jsx').then(r => r.text());
+            Babel.transform(editModal, { presets: ['react'] });
+            logError("edit-question-modal.jsx Parsed Successfully!");
+        } catch (e) {
+            logError("Edit Modal Error:\n" + e.message);
+        }
+    </script>
+</body>
+</html>
