@@ -124,8 +124,7 @@ const StatsPanel = ({ isOpen, onClose, questions }) => {
                                     {sortedEntries(stats.byTipo).map(([label, count]) => {
                                         const typeLabel = TYPE_LABELS[label] || label;
                                         const colorClass = label === 'discursiva' ? 'bg-violet-500' :
-                                                          label === 'objetiva' ? 'bg-brand-500' :
-                                                          label === 'v_f' ? 'bg-teal-500' : 'bg-orange-500';
+                                                          label === 'objetiva' ? 'bg-brand-500' : 'bg-gray-500';
                                         return renderBar(typeLabel, count, colorClass, questions.length);
                                     })}
                                 </div>

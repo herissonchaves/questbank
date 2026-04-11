@@ -376,7 +376,7 @@ window.ExportEngines = {
             var texto = await this.htmlToLatex(q.enunciado, zip, imgRef, q.imagens);
             t += '\\item ' + texto + '\n';
 
-            var isObj = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
+            var isObj = q.tipo === 'objetiva';
             if (isObj && q.alternativas) {
                 t += '\\begin{itemize}\n';
                 for (var ai = 0; ai < q.alternativas.length; ai++) {
@@ -460,7 +460,7 @@ window.ExportEngines = {
 
         for (var idx = 0; idx < questions.length; idx++) {
             var q = questions[idx];
-            var isObj = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
+            var isObj = q.tipo === 'objetiva';
 
             // ── Get paragraph groups with alignment for enunciado ──
             var enunciadoGroups = await this.processMixedContentWithParagraphs(q.enunciado, q.imagens || [], TextRun, ImageRun);
@@ -534,7 +534,7 @@ window.ExportEngines = {
 
         if (cfg.incluir_gabarito) {
             var hasObj = questions.some(function(q) {
-                return q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
+                return q.tipo === 'objetiva';
             });
             if (hasObj) {
                 children.push(new Paragraph({

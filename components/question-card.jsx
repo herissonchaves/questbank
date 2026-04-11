@@ -24,10 +24,10 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
         if (cardRef.current && window.renderMathInElement) {
             window.renderMathInElement(cardRef.current, {
                 delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\\(', right: '\\)', display: false},
-                    {left: '\\[', right: '\\]', display: true}
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
                 ],
                 throwOnError: false
             });
@@ -54,7 +54,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
 
         if (truncate) {
             let plainText = processedText.replace(/<[^>]*>?/gm, '');
-            return <div className="line-clamp-2" dangerouslySetInnerHTML={{ __html: plainText }}/>;
+            return <div className="line-clamp-2" dangerouslySetInnerHTML={{ __html: plainText }} />;
         }
 
         return <div dangerouslySetInnerHTML={{ __html: processedText }} />;
@@ -63,11 +63,10 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
     return (
         <div
             ref={cardRef}
-            className={`card-hover rounded-xl border transition-all duration-200 animate-fade-in ${
-                isSelected
+            className={`card-hover rounded-xl border transition-all duration-200 animate-fade-in ${isSelected
                     ? 'border-brand-400 bg-brand-50/50 shadow-sm shadow-brand-100'
                     : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
+                }`}
         >
             {/* Simplified view (always visible) */}
             <div
@@ -104,9 +103,8 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                         </span>
 
                         {/* Type badge */}
-                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                            q.tipo === 'discursiva' ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-500'
-                        }`}>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${q.tipo === 'discursiva' ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-500'
+                            }`}>
                             {TYPE_LABELS[q.tipo] || q.tipo}
                         </span>
 
@@ -144,11 +142,10 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                 {/* Right: add/remove button */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleSelect(q.id); }}
-                    className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 btn-press ${
-                        isSelected
+                    className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 btn-press ${isSelected
                             ? 'bg-brand-100 text-brand-600 hover:bg-brand-200'
                             : 'bg-gray-100 text-gray-400 hover:bg-brand-50 hover:text-brand-600'
-                    }`}
+                        }`}
                     title={isSelected ? 'Remover da prova' : 'Adicionar à prova'}
                 >
                     {isSelected ? (
@@ -171,11 +168,10 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                         <div className="flex items-center gap-2 pt-3 pb-2">
                             <button
                                 onClick={(e) => { e.stopPropagation(); setCarouselPage(0); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                                    carouselPage === 0
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${carouselPage === 0
                                         ? 'bg-brand-50 border-brand-300 text-brand-700 shadow-sm'
                                         : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                }`}
+                                    }`}
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -184,11 +180,10 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setCarouselPage(1); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                                    carouselPage === 1
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${carouselPage === 1
                                         ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-sm'
                                         : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                }`}
+                                    }`}
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -226,8 +221,8 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
 
                     {/* Images fallback */}
                     {displayQ.imagens && displayQ.imagens.length > 0 && (() => {
-                        const fallbackImages = displayQ.imagens.filter((_, i) => !(displayQ.enunciado||'').includes(`[IMAGEM_${i}]`));
-                        if(fallbackImages.length === 0) return null;
+                        const fallbackImages = displayQ.imagens.filter((_, i) => !(displayQ.enunciado || '').includes(`[IMAGEM_${i}]`));
+                        if (fallbackImages.length === 0) return null;
 
                         return (
                             <div className="flex flex-wrap gap-2 my-2">
@@ -243,7 +238,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                         )
                     })()}
 
-                    {/* Alternativas (for objetiva/v_f/somatoria) */}
+                    {/* Alternativas (for objetiva) */}
                     {displayQ.alternativas && displayQ.alternativas.length > 0 && (
                         <div className="space-y-1.5 my-3">
                             {displayQ.alternativas.map((alt) => {
@@ -251,15 +246,13 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                                 return (
                                     <div
                                         key={alt.letra}
-                                        className={`flex items-start gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                                            isCorrect
+                                        className={`flex items-start gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isCorrect
                                                 ? 'bg-emerald-50 border border-emerald-200'
                                                 : 'bg-gray-50 border border-transparent'
-                                        }`}
+                                            }`}
                                     >
-                                        <span className={`font-bold flex-shrink-0 ${
-                                            isCorrect ? 'text-emerald-600' : 'text-gray-400'
-                                        }`}>
+                                        <span className={`font-bold flex-shrink-0 ${isCorrect ? 'text-emerald-600' : 'text-gray-400'
+                                            }`}>
                                             {alt.letra})
                                         </span>
                                         <div className={`flex-1 min-w-0 ${isCorrect ? 'text-emerald-700' : 'text-gray-600'}`}>
@@ -276,7 +269,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                         </div>
                     )}
 
-                    {/* Gabarito (for discursiva / somatoria without alternativas) */}
+                    {/* Gabarito (for discursiva) */}
                     {displayQ.tipo !== 'objetiva' && displayQ.gabarito && (
                         <div className="my-3 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200">
                             <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Gabarito:</span>

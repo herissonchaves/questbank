@@ -4,7 +4,7 @@
 const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, resultCount, totalCount, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
 
     const [showAdvanced, setShowAdvanced] = React.useState(false);
-    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.regiao || filters.tag || filters.codigo || ignoreUsed || filters.orderByRecent;
+    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.codigo || filters.orderById || ignoreUsed || filters.orderByRecent;
 
     return (
         <div className="flex flex-col gap-2 p-3 border-b border-gray-200">
@@ -86,11 +86,10 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
                 {/* Advanced toggle */}
                 <button
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${
-                        showAdvanced
+                    className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${showAdvanced
                             ? 'bg-brand-50 border-brand-200 text-brand-700'
                             : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                        }`}
                 >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -123,28 +122,15 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
             {/* Advanced filters */}
             {showAdvanced && (
                 <div className="flex flex-wrap gap-2 items-center pt-1 animate-fade-in">
-                    {/* Região */}
+                    {/* Order By ID */}
                     <select
-                        value={filters.regiao || ''}
-                        onChange={(e) => onFilterChange('regiao', e.target.value)}
+                        value={filters.orderById || ''}
+                        onChange={(e) => onFilterChange('orderById', e.target.value)}
                         className="bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 cursor-pointer appearance-none"
                     >
-                        <option value="">Região</option>
-                        {availableValues.regioes.map(v => (
-                            <option key={v} value={v}>{v}</option>
-                        ))}
-                    </select>
-
-                    {/* Tag */}
-                    <select
-                        value={filters.tag || ''}
-                        onChange={(e) => onFilterChange('tag', e.target.value)}
-                        className="bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 cursor-pointer appearance-none"
-                    >
-                        <option value="">Tag</option>
-                        {availableValues.tags.map(v => (
-                            <option key={v} value={v}>{v}</option>
-                        ))}
+                        <option value="">Ordenar ID (Nenhum)</option>
+                        <option value="asc">ID Crescente</option>
+                        <option value="desc">ID Decrescente</option>
                     </select>
 
                     {/* Código da questão */}
@@ -162,11 +148,10 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
                     {/* Order by Recent */}
                     <button
                         onClick={() => onFilterChange('orderByRecent', !filters.orderByRecent)}
-                        className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                            filters.orderByRecent
+                        className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${filters.orderByRecent
                                 ? 'bg-sky-50 border-sky-200 text-sky-700 shadow-sm'
                                 : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
+                            }`}
                         title="Mostrar questões mais recentes primeiro"
                     >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -36,9 +36,8 @@ const AutocompleteInput = ({ label, value, onChange, suggestions: items, error, 
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={placeholder || `Digite ${label.toLowerCase()}...`}
-                className={`w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${
-                    error ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
-                }`}
+                className={`w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${error ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
+                    }`}
             />
             {error && <p className="text-[10px] text-rose-500 mt-0.5">{error}</p>}
             {showSuggestions && filtered.length > 0 && (
@@ -411,11 +410,10 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Criar Nova Questao</h3>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                form.tipo === 'objetiva'
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${form.tipo === 'objetiva'
                                     ? 'bg-blue-50 text-blue-700'
                                     : 'bg-violet-50 text-violet-700'
-                            }`}>
+                                }`}>
                                 {form.tipo === 'objetiva' ? 'Objetiva' : 'Discursiva'}
                             </span>
                             <span className="text-xs text-gray-400 font-mono">#{form.id}</span>
@@ -456,11 +454,10 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                 <button
                                     type="button"
                                     onClick={() => update('showTextoBase', !form.showTextoBase)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all btn-press ${
-                                        form.showTextoBase
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all btn-press ${form.showTextoBase
                                             ? 'bg-teal-50 border-teal-200 text-teal-700'
                                             : 'bg-white border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-600'
-                                    }`}
+                                        }`}
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -474,15 +471,13 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <button
                                         type="button"
                                         onClick={() => handleTipoChange('objetiva')}
-                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                                            form.tipo === 'objetiva'
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${form.tipo === 'objetiva'
                                                 ? 'bg-brand-50 border-brand-200 text-brand-700 shadow-sm'
                                                 : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                                        }`}
+                                            }`}
                                     >
-                                        <span className={`inline-block w-3 h-3 rounded-full border-2 mr-1.5 align-middle ${
-                                            form.tipo === 'objetiva' ? 'border-brand-600 bg-brand-600' : 'border-gray-300'
-                                        }`}>
+                                        <span className={`inline-block w-3 h-3 rounded-full border-2 mr-1.5 align-middle ${form.tipo === 'objetiva' ? 'border-brand-600 bg-brand-600' : 'border-gray-300'
+                                            }`}>
                                             {form.tipo === 'objetiva' && (
                                                 <span className="block w-1.5 h-1.5 bg-white rounded-full mx-auto mt-[1px]" />
                                             )}
@@ -492,15 +487,13 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <button
                                         type="button"
                                         onClick={() => handleTipoChange('discursiva')}
-                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                                            form.tipo === 'discursiva'
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${form.tipo === 'discursiva'
                                                 ? 'bg-violet-50 border-violet-200 text-violet-700 shadow-sm'
                                                 : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                                        }`}
+                                            }`}
                                     >
-                                        <span className={`inline-block w-3 h-3 rounded-full border-2 mr-1.5 align-middle ${
-                                            form.tipo === 'discursiva' ? 'border-violet-600 bg-violet-600' : 'border-gray-300'
-                                        }`}>
+                                        <span className={`inline-block w-3 h-3 rounded-full border-2 mr-1.5 align-middle ${form.tipo === 'discursiva' ? 'border-violet-600 bg-violet-600' : 'border-gray-300'
+                                            }`}>
                                             {form.tipo === 'discursiva' && (
                                                 <span className="block w-1.5 h-1.5 bg-white rounded-full mx-auto mt-[1px]" />
                                             )}
@@ -537,9 +530,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     value={form.enunciado}
                                     onChange={(v) => update('enunciado', v)}
                                     placeholder="Digite o enunciado aqui..."
-                                    className={`w-full max-h-[400px] overflow-y-auto bg-gray-50/50 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${
-                                        errors.enunciado ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
-                                    }`}
+                                    className={`w-full max-h-[400px] overflow-y-auto bg-gray-50/50 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all ${errors.enunciado ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
+                                        }`}
                                 />
                                 {errors.enunciado && (
                                     <p className="text-xs text-rose-500 mt-1 flex items-center gap-1">
@@ -582,11 +574,10 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <div className="space-y-2">
                                         {form.alternativas.map((alt, idx) => (
                                             <div key={idx} className="flex items-start gap-2 group">
-                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1 transition-colors ${
-                                                    form.gabarito === alt.letra
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1 transition-colors ${form.gabarito === alt.letra
                                                         ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-300'
                                                         : 'bg-gray-100 text-gray-500'
-                                                }`}>
+                                                    }`}>
                                                     {alt.letra}
                                                 </div>
                                                 <div className="flex-1 flex flex-col">
@@ -623,9 +614,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                         <select
                                             value={form.gabarito}
                                             onChange={(e) => update('gabarito', e.target.value)}
-                                            className={`w-48 bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 cursor-pointer appearance-none ${
-                                                errors.gabarito ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
-                                            }`}
+                                            className={`w-48 bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 cursor-pointer appearance-none ${errors.gabarito ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
+                                                }`}
                                         >
                                             <option value="">Selecione</option>
                                             {form.alternativas.map(alt => (
@@ -657,22 +647,20 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-600 mb-2">Formato da Questao Discursiva</label>
                                         <div className="flex items-center gap-3">
-                                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm ${
-                                                form.discursivaFormato === 'com_linhas'
+                                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm ${form.discursivaFormato === 'com_linhas'
                                                     ? 'bg-brand-50 border-brand-200 text-brand-700'
                                                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                                            }`}>
+                                                }`}>
                                                 <input type="radio" name="discursivaFormato" checked={form.discursivaFormato === 'com_linhas'} onChange={() => update('discursivaFormato', 'com_linhas')} className="sr-only" />
                                                 <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.discursivaFormato === 'com_linhas' ? 'border-brand-600' : 'border-gray-300'}`}>
                                                     {form.discursivaFormato === 'com_linhas' && <span className="w-2 h-2 rounded-full bg-brand-600" />}
                                                 </span>
                                                 Com linhas
                                             </label>
-                                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm ${
-                                                form.discursivaFormato === 'em_branco'
+                                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm ${form.discursivaFormato === 'em_branco'
                                                     ? 'bg-brand-50 border-brand-200 text-brand-700'
                                                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                                            }`}>
+                                                }`}>
                                                 <input type="radio" name="discursivaFormato" checked={form.discursivaFormato === 'em_branco'} onChange={() => update('discursivaFormato', 'em_branco')} className="sr-only" />
                                                 <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.discursivaFormato === 'em_branco' ? 'border-brand-600' : 'border-gray-300'}`}>
                                                     {form.discursivaFormato === 'em_branco' && <span className="w-2 h-2 rounded-full bg-brand-600" />}
@@ -797,13 +785,12 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     forwardedRef={adaptedEnunciadoRef}
                                     value={adaptedForm.enunciado}
                                     onChange={(v) => {
-                                        if (typeof setAdaptedForm === "function") setAdaptedForm(p => ({...p, enunciado: v}));
+                                        if (typeof setAdaptedForm === "function") setAdaptedForm(p => ({ ...p, enunciado: v }));
                                         else updateAdapted("enunciado", v);
                                     }}
                                     placeholder="Digite o enunciado adaptado aqui..."
-                                    className={`w-full max-h-[400px] overflow-y-auto bg-sky-50/30 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all ${
-                                        errors.adaptedEnunciado ? 'border-rose-300 bg-rose-50/50' : 'border-sky-200/60'
-                                    }`}
+                                    className={`w-full max-h-[400px] overflow-y-auto bg-sky-50/30 border rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all ${errors.adaptedEnunciado ? 'border-rose-300 bg-rose-50/50' : 'border-sky-200/60'
+                                        }`}
                                 />
                                 {errors.adaptedEnunciado && (
                                     <p className="text-xs text-rose-500 mt-1">{errors.adaptedEnunciado}</p>
@@ -819,11 +806,10 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <div className="space-y-2">
                                         {adaptedForm.alternativas.map((alt, idx) => (
                                             <div key={idx} className="flex items-start gap-2 group">
-                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1 transition-colors ${
-                                                    adaptedForm.gabarito === alt.letra
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1 transition-colors ${adaptedForm.gabarito === alt.letra
                                                         ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-300'
                                                         : 'bg-gray-100 text-gray-500'
-                                                }`}>
+                                                    }`}>
                                                     {alt.letra}
                                                 </div>
                                                 <div className="flex-1 flex flex-col">
@@ -845,9 +831,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                         <select
                                             value={adaptedForm.gabarito}
                                             onChange={(e) => updateAdapted('gabarito', e.target.value)}
-                                            className={`w-48 bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 cursor-pointer appearance-none ${
-                                                errors.adaptedGabarito ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
-                                            }`}
+                                            className={`w-48 bg-gray-50 border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 cursor-pointer appearance-none ${errors.adaptedGabarito ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'
+                                                }`}
                                         >
                                             <option value="">Selecione</option>
                                             {adaptedForm.alternativas.map(alt => (
@@ -903,9 +888,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                 <button
                                     onClick={handleNext}
                                     disabled={saving}
-                                    className={`px-5 py-2 text-sm font-semibold rounded-xl text-white transition-all duration-200 btn-press shadow-lg flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                        includeAdapted ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
-                                    }`}
+                                    className={`px-5 py-2 text-sm font-semibold rounded-xl text-white transition-all duration-200 btn-press shadow-lg flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${includeAdapted ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                                        }`}
                                 >
                                     {saving ? (
                                         <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Salvando...</>

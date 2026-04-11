@@ -10,7 +10,7 @@ const initialState = {
     questions: [],
     selectedIds: [],
     activeSubjects: [],
-    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '', orderByRecent: false },
+    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '' },
     ignoreUsed: false,
     modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null },
     loading: true,
@@ -93,7 +93,7 @@ function reducer(state, action) {
             return { ...state, filters: { ...state.filters, [action.key]: action.value } };
 
         case 'CLEAR_FILTERS':
-            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '', orderByRecent: false } };
+            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '' } };
 
         case 'TOGGLE_IGNORE_USED':
             return { ...state, ignoreUsed: !state.ignoreUsed };
@@ -243,8 +243,6 @@ const App = () => {
             if (state.filters.ano && String(q.ano) !== state.filters.ano) return false;
             if (state.filters.dificuldade && q.dificuldade !== state.filters.dificuldade) return false;
             if (state.filters.tipo && q.tipo !== state.filters.tipo) return false;
-            if (state.filters.regiao && q.regiao !== state.filters.regiao) return false;
-            if (state.filters.tag && !(q.tags || []).includes(state.filters.tag)) return false;
 
             return true;
         });
@@ -254,6 +252,15 @@ const App = () => {
                 const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
                 const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
                 return dateB - dateA;
+            });
+        }
+
+        if (state.filters.orderById) {
+            result = [...result].sort((a, b) => {
+                const parseId = (idStr) => parseInt(String(idStr).replace('A-', ''), 10) || 0;
+                const idA = a.id ? parseId(a.id) : 0;
+                const idB = b.id ? parseId(b.id) : 0;
+                return state.filters.orderById === 'asc' ? idA - idB : idB - idA;
             });
         }
 
@@ -556,16 +563,7 @@ const App = () => {
                                     </svg>
                                     Restaurar banco
                                 </button>
-                                <div className="border-t border-gray-100 my-1" />
-                                <button
-                                    onClick={handleExportIds}
-                                    className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors flex items-center gap-2"
-                                >
-                                    <svg className="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Exportar IDs (.txt)
-                                </button>
+
                             </div>
                         </div>
                     </div>
@@ -583,19 +581,17 @@ const App = () => {
                         <button
                             key={tab.key}
                             onClick={() => dispatch({ type: 'SET_MOBILE_TAB', payload: tab.key })}
-                            className={`flex-1 py-2.5 text-xs font-semibold text-center transition-all relative ${
-                                state.mobileTab === tab.key
+                            className={`flex-1 py-2.5 text-xs font-semibold text-center transition-all relative ${state.mobileTab === tab.key
                                     ? 'text-brand-700 bg-brand-50/50'
                                     : 'text-gray-500 hover:text-gray-700'
-                            }`}
+                                }`}
                         >
                             {tab.label}
                             {tab.count > 0 && (
-                                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full ${
-                                    state.mobileTab === tab.key
+                                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full ${state.mobileTab === tab.key
                                         ? 'bg-brand-100 text-brand-700'
                                         : 'bg-gray-100 text-gray-500'
-                                }`}>
+                                    }`}>
                                     {tab.count}
                                 </span>
                             )}
@@ -610,9 +606,8 @@ const App = () => {
             {/* ─── Main 3-Panel Layout ────────────────────── */}
             <main className="flex-1 flex overflow-hidden">
                 {/* Left Panel: Subject Tree */}
-                <aside className={`w-64 flex-shrink-0 bg-white panel-border-r flex flex-col overflow-hidden ${
-                    state.mobileTab === 'subjects' ? '' : 'hidden lg:flex'
-                }`}
+                <aside className={`w-64 flex-shrink-0 bg-white panel-border-r flex flex-col overflow-hidden ${state.mobileTab === 'subjects' ? '' : 'hidden lg:flex'
+                    }`}
                     style={state.mobileTab === 'subjects' ? { width: '100%' } : {}}
                 >
                     <SubjectTree
@@ -624,9 +619,8 @@ const App = () => {
                 </aside>
 
                 {/* Center Panel: Question List */}
-                <section className={`flex-1 flex flex-col overflow-hidden min-w-0 bg-gray-50/50 ${
-                    state.mobileTab === 'questions' ? '' : 'hidden lg:flex'
-                }`}>
+                <section className={`flex-1 flex flex-col overflow-hidden min-w-0 bg-gray-50/50 ${state.mobileTab === 'questions' ? '' : 'hidden lg:flex'
+                    }`}>
                     <QuestionList
                         questions={filteredQuestions}
                         allQuestions={regularQuestions}
@@ -645,9 +639,8 @@ const App = () => {
                 </section>
 
                 {/* Right Panel: Selected Questions */}
-                <aside className={`w-72 flex-shrink-0 bg-white panel-border-l flex flex-col overflow-hidden ${
-                    state.mobileTab === 'selected' ? '' : 'hidden lg:flex'
-                }`}
+                <aside className={`w-72 flex-shrink-0 bg-white panel-border-l flex flex-col overflow-hidden ${state.mobileTab === 'selected' ? '' : 'hidden lg:flex'
+                    }`}
                     style={state.mobileTab === 'selected' ? { width: '100%' } : {}}
                 >
                     <SelectedPanel
@@ -713,13 +706,12 @@ const App = () => {
 
             {/* ─── Toast Notification ─────────────────────── */}
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-50 animate-slide-up flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium ${
-                    toast.type === 'success'
+                <div className={`fixed bottom-6 right-6 z-50 animate-slide-up flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium ${toast.type === 'success'
                         ? 'bg-emerald-500 text-white'
                         : toast.type === 'error'
                             ? 'bg-rose-500 text-white'
                             : 'bg-gray-800 text-white'
-                }`}>
+                    }`}>
                     {toast.type === 'success' && (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

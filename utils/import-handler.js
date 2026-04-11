@@ -4,7 +4,7 @@
 
 const QBImport = {
     REQUIRED_FIELDS: ['id', 'enunciado', 'disciplina', 'topico', 'conteudo', 'assunto', 'tipo', 'dificuldade'],
-    VALID_TIPOS: ['objetiva', 'discursiva', 'v_f', 'somatoria'],
+    VALID_TIPOS: ['objetiva', 'discursiva'],
     VALID_DIFICULDADES: ['facil', 'medio', 'dificil', 'nao_definida'],
 
     /**

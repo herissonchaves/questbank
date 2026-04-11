@@ -46,13 +46,13 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
     React.useEffect(() => {
         const checkAdapted = async () => {
             try {
-                // Skip check for adapted questions (already start with A)
-                if (question.id && question.id.toString().startsWith('A')) {
+                // Skip check for adapted questions (already start with A-)
+                if (question.id && question.id.toString().startsWith('A-')) {
                     setHasExistingAdapted(true);
                     setCheckingAdapted(false);
                     return;
                 }
-                const adaptedId = 'A' + question.id;
+                const adaptedId = 'A-' + question.id;
                 const existing = await db.questions.get(adaptedId);
                 setHasExistingAdapted(!!existing);
             } catch (e) {
@@ -80,10 +80,8 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
         // Build adapted question if step 2 was filled
         let adaptedQuestion = null;
         if (includeAdapted && adaptedForm.enunciado.trim()) {
-            const originalTag = (form.tags || [])[0] || form.id;
-            const adaptedTag = 'A' + originalTag;
             adaptedQuestion = {
-                id: 'A' + form.id,
+                id: 'A-' + form.id,
                 enunciado: adaptedForm.enunciado,
                 tipo: form.tipo,
                 disciplina: form.disciplina,
@@ -93,8 +91,6 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                 banca: form.banca || '',
                 ano: form.ano || '',
                 dificuldade: form.dificuldade,
-                regiao: form.regiao || '',
-                tags: [adaptedTag],
                 gabarito: adaptedForm.gabarito || '',
                 alternativas: form.tipo === 'objetiva' ? adaptedForm.alternativas : [],
                 imagens: adaptedForm.imagens || [],
@@ -171,7 +167,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
     };
 
     const totalSteps = includeAdapted ? 2 : 1;
-    const isAdaptedQuestion = question.id && question.id.toString().startsWith('A');
+    const isAdaptedQuestion = question.id && question.id.toString().startsWith('A-');
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -224,7 +220,6 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                             <div>
                                 <div className="flex justify-between items-end mb-1.5">
                                     <label className="block text-xs font-semibold text-gray-600">Enunciado</label>
-                                    <span className="text-[10px] text-brand-600 font-mono bg-brand-50 px-1 rounded">Dica: Use [IMAGEM_0] para posicionar imagens.</span>
                                 </div>
                                 <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
                                 <VisualEditor
@@ -305,8 +300,6 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                     >
                                         <option value="objetiva">Objetiva</option>
                                         <option value="discursiva">Discursiva</option>
-                                        <option value="v_f">V/F</option>
-                                        <option value="somatoria">Somatória</option>
                                     </select>
                                 </div>
                                 <div>
@@ -337,7 +330,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                             </div>
 
                             {/* Alternativas (for objetiva) */}
-                            {(form.tipo === 'objetiva' || form.tipo === 'v_f' || form.tipo === 'somatoria') && (
+                            {form.tipo === 'objetiva' && (
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
                                         <label className="text-xs font-semibold text-gray-600">Alternativas</label>
@@ -418,7 +411,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                 </svg>
                                                 <span className="text-sm font-medium text-sky-700">Versão adaptada será criada</span>
-                                                <span className="text-[10px] text-sky-500 font-mono bg-sky-100 px-1.5 py-0.5 rounded">ID: A{form.id}</span>
+                                                <span className="text-[10px] text-sky-500 font-mono bg-sky-100 px-1.5 py-0.5 rounded">ID: A-{form.id}</span>
                                             </div>
                                             <button
                                                 type="button"
@@ -442,7 +435,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span className="text-sm text-emerald-700">Esta questão já possui versão adaptada</span>
-                                    <span className="text-[10px] text-emerald-500 font-mono bg-emerald-100 px-1.5 py-0.5 rounded">ID: A{form.id}</span>
+                                    <span className="text-[10px] text-emerald-500 font-mono bg-emerald-100 px-1.5 py-0.5 rounded">ID: A-{form.id}</span>
                                 </div>
                             )}
                         </React.Fragment>
@@ -459,7 +452,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                     <h4 className="text-sm font-bold text-sky-800">Versão Adaptada para Aluno Atípico</h4>
                                 </div>
                                 <p className="text-[11px] text-sky-600 leading-relaxed">
-                                    A versão adaptada será salva com <span className="font-mono font-bold bg-sky-100 px-1 rounded">ID: A{form.id}</span>.
+                                    A versão adaptada será salva com <span className="font-mono font-bold bg-sky-100 px-1 rounded">ID: A-{form.id}</span>.
                                     Os metadados (disciplina, tópico, etc.) serão herdados da questão original.
                                     Preencha apenas o enunciado e alternativas adaptados.
                                 </p>
@@ -487,11 +480,10 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                     <div className="space-y-2">
                                         {adaptedForm.alternativas.map((alt, idx) => (
                                             <div key={idx} className="flex items-start gap-2 group">
-                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1 transition-colors ${
-                                                    adaptedForm.gabarito === alt.letra
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mt-1 transition-colors ${adaptedForm.gabarito === alt.letra
                                                         ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-300'
                                                         : 'bg-gray-100 text-gray-500'
-                                                }`}>
+                                                    }`}>
                                                     {alt.letra}
                                                 </div>
                                                 <div className="flex-1">

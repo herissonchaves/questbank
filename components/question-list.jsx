@@ -182,11 +182,10 @@ const QuestionList = ({ questions, allQuestions, selectedIds, selectedIdsSet, fi
                             <button
                                 key={page}
                                 onClick={() => goToPage(page)}
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold transition-all ${
-                                    currentPage === page
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold transition-all ${currentPage === page
                                         ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25'
                                         : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
-                                }`}
+                                    }`}
                             >
                                 {page}
                             </button>
