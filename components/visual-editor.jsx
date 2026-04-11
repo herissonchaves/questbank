@@ -1,16 +1,15 @@
-// QuestBank — VisualEditor Component (v2)
-// Rich contentEditable editor with:
-//   - Undo/redo via browser native + custom fallback history
-//   - Image resize handles with drag interaction
-//   - Persisted image dimensions (data-width / data-height attributes)
-//   - Bug fixes: proper HTML sync, placeholder, paste cleanup
+// QuestBank — VisualEditor Component (v2.1)
+// Fixes: cursor direction, cursor jumping, proper contentEditable lifecycle
+// Features: undo/redo, image resize handles, paste cleanup, dimension persistence
 
 const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef }) => {
     const editorRef = React.useRef(null);
     const lastHtml = React.useRef(value || '');
     const isComposing = React.useRef(false);
+    const isMounted = React.useRef(false);
+    const isInternalChange = React.useRef(false);
 
-    // ── Custom undo/redo history (fallback for image resize, delete, etc.) ──
+    // ── Custom undo/redo history ──
     const historyStack = React.useRef([value || '']);
     const historyIndex = React.useRef(0);
     const historyTimer = React.useRef(null);
@@ -27,23 +26,30 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         }
     }, [forwardedRef]);
 
-    // Sync value from parent (only when value differs from current editor)
+    // ── MOUNT ONLY: set initial innerHTML once ──
     React.useEffect(() => {
-        if (editorRef.current && value !== lastHtml.current) {
-            const sel = window.getSelection();
-            let savedRange = null;
-            if (sel && sel.rangeCount > 0 && editorRef.current.contains(sel.anchorNode)) {
-                savedRange = sel.getRangeAt(0).cloneRange();
-            }
+        if (editorRef.current && !isMounted.current) {
             editorRef.current.innerHTML = value || '';
             lastHtml.current = value || '';
-            if (savedRange) {
-                try { sel.removeAllRanges(); sel.addRange(savedRange); } catch (e) { /* noop */ }
-            }
+            isMounted.current = true;
+        }
+    }, []);
+
+    // ── Sync from parent ONLY when value was changed externally ──
+    // (e.g. form reset, loading saved question, NOT from user typing)
+    React.useEffect(() => {
+        if (!isMounted.current) return;
+        if (isInternalChange.current) {
+            isInternalChange.current = false;
+            return;
+        }
+        if (editorRef.current && value !== lastHtml.current) {
+            editorRef.current.innerHTML = value || '';
+            lastHtml.current = value || '';
         }
     }, [value]);
 
-    // Push state to custom history (debounced — for image operations)
+    // Push state to custom history (debounced)
     const pushHistory = React.useCallback((html) => {
         if (isUndoAction.current) return;
         clearTimeout(historyTimer.current);
@@ -60,7 +66,6 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         }, 400);
     }, []);
 
-    // Custom undo (called when browser undo fails or for image operations)
     const customUndo = React.useCallback(() => {
         const idx = historyIndex.current;
         if (idx <= 0) return false;
@@ -70,13 +75,14 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         if (editorRef.current) {
             editorRef.current.innerHTML = html;
             lastHtml.current = html;
+            isInternalChange.current = true;
             onChange(html);
         }
         try {
             const sel = window.getSelection();
             sel.selectAllChildren(editorRef.current);
             sel.collapseToEnd();
-        } catch (e) { /* noop */ }
+        } catch (e) {}
         requestAnimationFrame(() => { isUndoAction.current = false; });
         return true;
     }, [onChange]);
@@ -90,13 +96,14 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         if (editorRef.current) {
             editorRef.current.innerHTML = html;
             lastHtml.current = html;
+            isInternalChange.current = true;
             onChange(html);
         }
         try {
             const sel = window.getSelection();
             sel.selectAllChildren(editorRef.current);
             sel.collapseToEnd();
-        } catch (e) { /* noop */ }
+        } catch (e) {}
         requestAnimationFrame(() => { isUndoAction.current = false; });
         return true;
     }, [onChange]);
@@ -108,25 +115,23 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         if (newHtml === '<br>' || newHtml === '<div><br></div>') newHtml = '';
         if (newHtml !== lastHtml.current) {
             lastHtml.current = newHtml;
+            isInternalChange.current = true;
             onChange(newHtml);
             pushHistory(newHtml);
         }
     }, [onChange, pushHistory]);
 
-    // ── Keyboard: Ctrl+Z / Ctrl+Y — let browser handle first, custom as fallback ──
+    // ── Keyboard: Ctrl+Z / Ctrl+Y ──
     const handleKeyDown = React.useCallback((e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-            // Save current content to detect if browser undo actually changed anything
             const before = editorRef.current ? editorRef.current.innerHTML : '';
-            // Let browser try native undo first (don't preventDefault)
             requestAnimationFrame(() => {
                 const after = editorRef.current ? editorRef.current.innerHTML : '';
                 if (before === after) {
-                    // Browser undo did nothing — use custom undo
                     customUndo();
                 } else {
-                    // Browser undo worked — sync state
                     lastHtml.current = after;
+                    isInternalChange.current = true;
                     onChange(after);
                 }
             });
@@ -140,6 +145,7 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                     customRedo();
                 } else {
                     lastHtml.current = after;
+                    isInternalChange.current = true;
                     onChange(after);
                 }
             });
@@ -147,7 +153,7 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         }
     }, [customUndo, customRedo, onChange]);
 
-    // ── Paste handler — clean up pasted HTML ──
+    // ── Paste handler ──
     const handlePaste = React.useCallback((e) => {
         e.preventDefault();
         const html = e.clipboardData.getData('text/html');
@@ -167,12 +173,24 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         }
     }, []);
 
+    // ── Placeholder via CSS pseudo-element ──
+    const [isEmpty, setIsEmpty] = React.useState(!value);
+    const checkEmpty = React.useCallback(() => {
+        if (!editorRef.current) return;
+        const text = editorRef.current.textContent || '';
+        const hasImg = editorRef.current.querySelector('img');
+        setIsEmpty(!text.trim() && !hasImg);
+    }, []);
+
+    React.useEffect(() => { checkEmpty(); }, [value]);
+
     // ── Image selection for resize ──
     const [selectedImg, setSelectedImg] = React.useState(null);
     const [resizing, setResizing] = React.useState(false);
-    const resizeStart = React.useRef({ x: 0, y: 0, w: 0, h: 0, corner: '' });
+    const resizeStart = React.useRef({});
 
     const handleEditorClick = React.useCallback((e) => {
+        checkEmpty();
         const img = e.target.closest('img');
         if (img && editorRef.current && editorRef.current.contains(img)) {
             e.preventDefault();
@@ -180,9 +198,8 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         } else {
             setSelectedImg(null);
         }
-    }, []);
+    }, [checkEmpty]);
 
-    // Deselect on outside click
     React.useEffect(() => {
         const handler = (e) => {
             if (editorRef.current && !editorRef.current.contains(e.target)) {
@@ -210,29 +227,21 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
 
     React.useEffect(() => {
         if (!resizing || !selectedImg) return;
-
         const handleMouseMove = (e) => {
             const { x, w, h, corner, aspectRatio } = resizeStart.current;
             let dx = e.clientX - x;
             let newW, newH;
-
             if (corner === 'se' || corner === 'ne') {
-                newW = Math.max(50, w + dx);
-                newH = newW / aspectRatio;
+                newW = Math.max(50, w + dx); newH = newW / aspectRatio;
             } else if (corner === 'sw' || corner === 'nw') {
-                newW = Math.max(50, w - dx);
-                newH = newW / aspectRatio;
+                newW = Math.max(50, w - dx); newH = newW / aspectRatio;
             } else if (corner === 'e') {
-                newW = Math.max(50, w + dx);
-                newH = h;
+                newW = Math.max(50, w + dx); newH = h;
             } else if (corner === 'w') {
-                newW = Math.max(50, w - dx);
-                newH = h;
+                newW = Math.max(50, w - dx); newH = h;
             }
-
             newW = Math.round(newW);
             newH = Math.round(newH);
-
             selectedImg.style.width = newW + 'px';
             selectedImg.style.height = newH + 'px';
             selectedImg.style.maxWidth = 'none';
@@ -240,17 +249,16 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
             selectedImg.setAttribute('data-width', newW);
             selectedImg.setAttribute('data-height', newH);
         };
-
         const handleMouseUp = () => {
             setResizing(false);
             if (editorRef.current) {
                 const newHtml = editorRef.current.innerHTML;
                 lastHtml.current = newHtml;
+                isInternalChange.current = true;
                 onChange(newHtml);
                 pushHistory(newHtml);
             }
         };
-
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
         return () => {
@@ -270,6 +278,7 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                 if (editorRef.current) {
                     const newHtml = editorRef.current.innerHTML;
                     lastHtml.current = newHtml;
+                    isInternalChange.current = true;
                     onChange(newHtml);
                     pushHistory(newHtml);
                 }
@@ -284,35 +293,31 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
         if (!selectedImg || !editorRef.current) return null;
         const editorRect = editorRef.current.getBoundingClientRect();
         const imgRect = selectedImg.getBoundingClientRect();
-
         const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
         const left = imgRect.left - editorRect.left + editorRef.current.scrollLeft;
         const width = imgRect.width;
         const height = imgRect.height;
-        const hs = 10; // handle size
+        const hs = 10;
 
         const handles = [
-            { corner: 'nw', style: { top: top - hs / 2, left: left - hs / 2, cursor: 'nw-resize' } },
-            { corner: 'ne', style: { top: top - hs / 2, left: left + width - hs / 2, cursor: 'ne-resize' } },
-            { corner: 'sw', style: { top: top + height - hs / 2, left: left - hs / 2, cursor: 'sw-resize' } },
-            { corner: 'se', style: { top: top + height - hs / 2, left: left + width - hs / 2, cursor: 'se-resize' } },
-            { corner: 'e', style: { top: top + height / 2 - hs / 2, left: left + width - hs / 2, cursor: 'e-resize' } },
-            { corner: 'w', style: { top: top + height / 2 - hs / 2, left: left - hs / 2, cursor: 'w-resize' } },
+            { corner: 'nw', style: { top: top - hs/2, left: left - hs/2, cursor: 'nw-resize' } },
+            { corner: 'ne', style: { top: top - hs/2, left: left + width - hs/2, cursor: 'ne-resize' } },
+            { corner: 'sw', style: { top: top + height - hs/2, left: left - hs/2, cursor: 'sw-resize' } },
+            { corner: 'se', style: { top: top + height - hs/2, left: left + width - hs/2, cursor: 'se-resize' } },
+            { corner: 'e', style: { top: top + height/2 - hs/2, left: left + width - hs/2, cursor: 'e-resize' } },
+            { corner: 'w', style: { top: top + height/2 - hs/2, left: left - hs/2, cursor: 'w-resize' } },
         ];
 
         return (
             <React.Fragment>
-                {/* Selection border */}
                 <div style={{
                     position: 'absolute', top, left, width, height,
                     border: '2px solid #4f46e5', borderRadius: '2px',
                     pointerEvents: 'none', zIndex: 10,
                 }} />
-                {/* Dimension badge */}
                 <div style={{
                     position: 'absolute',
-                    top: top + height + 4,
-                    left: left + width / 2,
+                    top: top + height + 4, left: left + width/2,
                     transform: 'translateX(-50%)',
                     background: '#4f46e5', color: '#fff',
                     fontSize: '10px', fontWeight: 600,
@@ -321,7 +326,6 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                 }}>
                     {Math.round(imgRect.width)} x {Math.round(imgRect.height)}
                 </div>
-                {/* Corner & side handles */}
                 {handles.map((h) => (
                     <div
                         key={h.corner}
@@ -329,8 +333,7 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                         style={{
                             position: 'absolute', width: hs, height: hs,
                             background: '#fff', border: '2px solid #4f46e5',
-                            borderRadius: '2px', zIndex: 12,
-                            ...h.style,
+                            borderRadius: '2px', zIndex: 12, ...h.style,
                         }}
                     />
                 ))}
@@ -344,8 +347,8 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                 ref={editorRef}
                 contentEditable={true}
                 suppressContentEditableWarning={true}
-                onInput={handleInput}
-                onBlur={handleInput}
+                onInput={(e) => { handleInput(); checkEmpty(); }}
+                onBlur={(e) => { handleInput(); checkEmpty(); }}
                 onKeyDown={handleKeyDown}
                 onClick={handleEditorClick}
                 onPaste={handlePaste}
@@ -358,10 +361,29 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                     position: 'relative',
                     lineHeight: '1.6',
                     wordBreak: 'break-word',
+                    direction: 'ltr',
+                    textAlign: 'left',
+                    unicodeBidi: 'plaintext',
                 }}
+                dir="ltr"
                 data-placeholder={placeholder || 'Digite aqui...'}
-                dangerouslySetInnerHTML={{ __html: value || '' }}
             />
+            {/* Placeholder overlay when empty */}
+            {isEmpty && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0,
+                        padding: 'inherit',
+                        pointerEvents: 'none',
+                        color: '#9ca3af',
+                        lineHeight: '1.6',
+                    }}
+                    className="px-4 py-3 text-sm"
+                >
+                    {placeholder || 'Digite aqui...'}
+                </div>
+            )}
             {selectedImg && renderResizeHandles()}
         </div>
     );

@@ -1,4 +1,5 @@
 // QuestBank — Geradores de Exportacao (Word e LaTeX com Parser Math)
+// v2.1 — Fixes: alignment export, font size from <font> tags, paragraph splitting
 
 window.ExportEngines = {
     // Helper para converter SVG do MathJax para PNG Base64
@@ -30,149 +31,256 @@ window.ExportEngines = {
         });
     },
 
-    // Processador de textos mesclados (Equacoes Nativas + Imagens Inline + HTML Formatting)
-    async processMixedContent(htmlText, imagesArray, TextRun, ImageRun) {
+    // Helper: detect alignment from a DOM node's style
+    _getAlignment(node) {
+        if (!node || !node.style) return null;
+        var ta = node.style.textAlign || '';
+        if (ta === 'center') return 'CENTER';
+        if (ta === 'right') return 'RIGHT';
+        if (ta === 'justify') return 'BOTH';
+        if (ta === 'left') return 'LEFT';
+        // Also check align attribute (older HTML)
+        var align = node.getAttribute && node.getAttribute('align');
+        if (align === 'center') return 'CENTER';
+        if (align === 'right') return 'RIGHT';
+        if (align === 'justify') return 'BOTH';
+        return null;
+    },
+
+    // Helper: get font size from <font size="X"> or style.fontSize
+    _getFontSize(node, currentSize) {
+        if (!node) return currentSize;
+        var tag = node.tagName ? node.tagName.toLowerCase() : '';
+        // <font size="X"> — values 1-7 from execCommand('fontSize')
+        if (tag === 'font') {
+            var sizeAttr = node.getAttribute('size');
+            if (sizeAttr) {
+                var sizeMap = { '1': 16, '2': 18, '3': 22, '4': 26, '5': 32, '6': 40, '7': 48 };
+                return sizeMap[sizeAttr] || currentSize;
+            }
+        }
+        // Inline style fontSize
+        if (node.style && node.style.fontSize) {
+            var fs = node.style.fontSize;
+            // px values
+            if (fs.endsWith('px')) {
+                var px = parseInt(fs);
+                // Convert px to half-points (docx uses half-points): 1pt = 2 half-points, 1px ≈ 0.75pt
+                return Math.round(px * 1.5);
+            }
+            // pt values
+            if (fs.endsWith('pt')) {
+                return Math.round(parseFloat(fs) * 2);
+            }
+        }
+        return currentSize;
+    },
+
+    // Helper: process base64 string to Uint8Array
+    _processBase64(b) {
+        if (!b) return null;
+        var d = b.split(',')[1];
+        if (!d) return null;
+        var bs = atob(d);
+        var arr = new Uint8Array(bs.length);
+        for (var i = 0; i < bs.length; i++) arr[i] = bs.charCodeAt(i);
+        return arr;
+    },
+
+    // ── NEW: Process HTML into paragraph groups with alignment ──
+    // Returns: [{ alignment: 'LEFT'|'CENTER'|'RIGHT'|'BOTH'|null, runs: [...] }, ...]
+    async processMixedContentWithParagraphs(htmlText, imagesArray, TextRun, ImageRun) {
+        var self = this;
         var parser = new DOMParser();
         var doc = parser.parseFromString(htmlText || '', 'text/html');
-        var runs = [];
         var useNativeMath = window.LatexToDocxMath && window.LatexToDocxMath.isSupported(docx);
 
-        var processStrBase64 = function(b) {
-            if (!b) return null;
-            var d = b.split(',')[1];
-            if (!d) return null;
-            var bs = atob(d);
-            var arr = new Uint8Array(bs.length);
-            for (var i = 0; i < bs.length; i++) arr[i] = bs.charCodeAt(i);
-            return arr;
+        // Result: array of paragraph groups
+        var paragraphs = [];
+        var currentRuns = [];
+        var currentAlignment = null;
+
+        var flushParagraph = function(alignment) {
+            if (currentRuns.length > 0) {
+                paragraphs.push({ alignment: currentAlignment, runs: currentRuns });
+                currentRuns = [];
+            }
+            currentAlignment = alignment || null;
         };
 
-        var traverse = async function(node, style) {
-            if (node.nodeType === Node.TEXT_NODE) {
-                var text = node.textContent;
-                // Avoid stripping whitespace completely, as it might be needed for spacing between formatted words
-                if (text === '') return;
-                
-                var parts = text.split(/(\$\$[\s\S]+?\$\$|\$[\s\S]+?\$|\[IMAGEM_\d+\])/g);
-                for (var pi = 0; pi < parts.length; pi++) {
-                    var part = parts[pi];
-                    if (!part) continue;
+        var processTextNode = function(text, style) {
+            if (text === '') return;
 
-                    if (part.startsWith('[IMAGEM_')) {
-                        var imgMatch = part.match(/\[IMAGEM_(\d+)\]/);
-                        if (imgMatch && imagesArray && imagesArray[imgMatch[1]]) {
-                            var data = processStrBase64(imagesArray[imgMatch[1]]);
-                            if (data) {
-                                runs.push(new ImageRun({
-                                    data: data,
-                                    transformation: { width: 350, height: 250 }
-                                }));
-                            }
+            var parts = text.split(/(\$\$[\s\S]+?\$\$|\$[\s\S]+?\$|\[IMAGEM_\d+\])/g);
+            for (var pi = 0; pi < parts.length; pi++) {
+                var part = parts[pi];
+                if (!part) continue;
+
+                if (part.startsWith('[IMAGEM_')) {
+                    var imgMatch = part.match(/\[IMAGEM_(\d+)\]/);
+                    if (imgMatch && imagesArray && imagesArray[imgMatch[1]]) {
+                        var data = self._processBase64(imagesArray[imgMatch[1]]);
+                        if (data) {
+                            currentRuns.push(new ImageRun({
+                                data: data,
+                                transformation: { width: 350, height: 250 }
+                            }));
                         }
-                    } else if (part.startsWith('$$') || part.startsWith('$')) {
-                        var isDisplay = part.startsWith('$$');
-                        var tex = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
-
-                        if (useNativeMath) {
-                            try {
-                                var mathObj = window.LatexToDocxMath.convert(tex, docx);
-                                runs.push(mathObj);
-                            } catch (e) {
-                                runs.push(new TextRun({ text: tex, font: 'Cambria Math', size: 22, italics: true }));
-                            }
-                        } else {
-                            runs.push(new TextRun({ text: part, font: 'Arial', size: 22 }));
+                    }
+                } else if (part.startsWith('$$') || part.startsWith('$')) {
+                    var isDisplay = part.startsWith('$$');
+                    var tex = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
+                    if (useNativeMath) {
+                        try {
+                            var mathObj = window.LatexToDocxMath.convert(tex, docx);
+                            currentRuns.push(mathObj);
+                        } catch (e) {
+                            currentRuns.push(new TextRun({ text: tex, font: 'Cambria Math', size: 22, italics: true }));
                         }
                     } else {
-                        runs.push(new TextRun({ 
-                            text: part, 
-                            font: 'Arial', 
-                            size: style.size || 22,
-                            bold: style.bold,
-                            italics: style.italics,
-                            underline: style.underline ? {} : undefined
-                        }));
+                        currentRuns.push(new TextRun({ text: part, font: 'Arial', size: 22 }));
                     }
+                } else {
+                    currentRuns.push(new TextRun({
+                        text: part,
+                        font: 'Arial',
+                        size: style.size || 22,
+                        bold: style.bold,
+                        italics: style.italics,
+                        underline: style.underline ? {} : undefined,
+                        superScript: style.superscript,
+                        subScript: style.subscript,
+                    }));
                 }
+            }
+        };
+
+        var traverse = async function(node, style, parentAlignment) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                processTextNode(node.textContent, style);
             } else if (node.nodeType === Node.ELEMENT_NODE) {
                 var tag = node.tagName.toLowerCase();
-                
+
                 if (tag === 'br') {
-                    runs.push(new TextRun({ break: 1 }));
-                } else if (tag === 'div' || tag === 'p') {
-                    if (node.previousSibling) runs.push(new TextRun({ break: 1 }));
+                    currentRuns.push(new TextRun({ break: 1 }));
+                    return;
                 }
 
+                // Block-level elements: div, p — start new paragraph if they have alignment
+                if (tag === 'div' || tag === 'p') {
+                    var blockAlign = self._getAlignment(node) || parentAlignment;
+
+                    // If there are runs before this block, flush them
+                    if (node.previousSibling && currentRuns.length > 0) {
+                        flushParagraph(blockAlign);
+                    }
+                    // Set alignment for this block
+                    currentAlignment = blockAlign;
+
+                    // Process children
+                    var newStyle = Object.assign({}, style);
+                    newStyle.size = self._getFontSize(node, style.size);
+
+                    for (var i = 0; i < node.childNodes.length; i++) {
+                        await traverse(node.childNodes[i], newStyle, blockAlign);
+                    }
+
+                    // After block, flush to new paragraph
+                    if (currentRuns.length > 0) {
+                        flushParagraph(null);
+                    }
+                    return;
+                }
+
+                // Image
                 if (tag === 'img') {
                     var src = node.getAttribute('src');
                     if (src && src.startsWith('data:image')) {
-                        var imgData = processStrBase64(src);
+                        var imgData = self._processBase64(src);
                         if (imgData) {
-                            var width = 350;
-                            var height = 250;
-                            // Priority 1: data-width/data-height attributes (set by resize handles)
+                            var width = 350, height = 250;
                             var dw = node.getAttribute('data-width');
                             var dh = node.getAttribute('data-height');
                             if (dw && dh) {
                                 width = parseInt(dw);
                                 height = parseInt(dh);
                             } else if (node.style && node.style.width && node.style.width.endsWith('px')) {
-                                // Priority 2: inline style width+height
                                 width = parseInt(node.style.width);
-                                if (node.style.height && node.style.height.endsWith('px')) {
-                                    height = parseInt(node.style.height);
-                                } else {
-                                    height = Math.round(width * 0.7);
-                                }
+                                height = (node.style.height && node.style.height.endsWith('px'))
+                                    ? parseInt(node.style.height) : Math.round(width * 0.7);
                             } else if (node.getAttribute('width')) {
-                                // Priority 3: HTML width/height attributes
                                 width = parseInt(node.getAttribute('width'));
                                 height = node.getAttribute('height') ? parseInt(node.getAttribute('height')) : Math.round(width * 0.7);
                             }
-                            // Sanity limits for docx
                             if (width > 550) { height = Math.round(height * (550 / width)); width = 550; }
                             if (height > 700) { width = Math.round(width * (700 / height)); height = 700; }
-                            runs.push(new ImageRun({
+                            currentRuns.push(new ImageRun({
                                 data: imgData,
                                 transformation: { width: width, height: height }
                             }));
                         }
                     }
+                    return;
                 }
 
+                // Inline elements: b, i, u, font, sub, sup, span, etc.
                 var newStyle = Object.assign({}, style);
                 if (tag === 'b' || tag === 'strong') newStyle.bold = true;
                 if (tag === 'i' || tag === 'em') newStyle.italics = true;
                 if (tag === 'u') newStyle.underline = true;
-                
-                if (node.style && node.style.fontSize) {
-                    if (node.style.fontSize === '12px' || node.style.fontSize === '1') newStyle.size = 18;
-                    else if (node.style.fontSize === '24px' || node.style.fontSize === '5') newStyle.size = 32;
-                    else if (node.style.fontSize === '32px' || node.style.fontSize === '7') newStyle.size = 40;
-                }
+                if (tag === 'sup') newStyle.superscript = true;
+                if (tag === 'sub') newStyle.subscript = true;
+                newStyle.size = self._getFontSize(node, style.size);
+
+                // Check for alignment on span/other inline (rare but possible)
+                var inlineAlign = self._getAlignment(node);
+                if (inlineAlign) currentAlignment = inlineAlign;
 
                 for (var i = 0; i < node.childNodes.length; i++) {
-                    await traverse(node.childNodes[i], newStyle);
+                    await traverse(node.childNodes[i], newStyle, parentAlignment);
                 }
             }
         };
 
         for (var idx = 0; idx < doc.body.childNodes.length; idx++) {
-            await traverse(doc.body.childNodes[idx], { size: 22 });
+            await traverse(doc.body.childNodes[idx], { size: 22 }, null);
         }
-        
-        return runs;
+
+        // Flush any remaining runs
+        if (currentRuns.length > 0) {
+            paragraphs.push({ alignment: currentAlignment, runs: currentRuns });
+        }
+
+        // If no paragraphs were created, return a single empty one
+        if (paragraphs.length === 0) {
+            paragraphs.push({ alignment: null, runs: [] });
+        }
+
+        return paragraphs;
+    },
+
+    // ── LEGACY: flat runs (used by alternativas where alignment doesn't matter) ──
+    async processMixedContent(htmlText, imagesArray, TextRun, ImageRun) {
+        var groups = await this.processMixedContentWithParagraphs(htmlText, imagesArray, TextRun, ImageRun);
+        var allRuns = [];
+        for (var i = 0; i < groups.length; i++) {
+            if (i > 0 && groups[i].runs.length > 0) {
+                allRuns.push(new TextRun({ break: 1 }));
+            }
+            allRuns = allRuns.concat(groups[i].runs);
+        }
+        return allRuns;
     },
 
     async htmlToLatex(htmlText, zip, imgCounterRef, imagesArray) {
         var parser = new DOMParser();
         var doc = parser.parseFromString(htmlText || '', 'text/html');
         var tex = '';
+        var self = this;
 
         var traverse = function(node) {
             if (node.nodeType === Node.TEXT_NODE) {
                 var text = node.textContent;
-                // handle legacy [IMAGEM_X] here if any
                 if (imagesArray) {
                     text = text.replace(/\[IMAGEM_(\d+)\]/g, function(match, p1) {
                         var index = parseInt(p1);
@@ -191,13 +299,18 @@ window.ExportEngines = {
                 var tag = node.tagName.toLowerCase();
                 var pre = '';
                 var post = '';
-                
+
                 if (tag === 'b' || tag === 'strong') { pre = '\\textbf{'; post = '}'; }
                 else if (tag === 'i' || tag === 'em') { pre = '\\textit{'; post = '}'; }
                 else if (tag === 'u') { pre = '\\underline{'; post = '}'; }
                 else if (tag === 'br') { tex += '\\\\\n'; return; }
                 else if (tag === 'div' || tag === 'p') {
                     if (node.previousSibling) tex += '\n\n';
+                    // Handle alignment in LaTeX
+                    var align = self._getAlignment(node);
+                    if (align === 'CENTER') { pre = '\\begin{center}'; post = '\\end{center}'; }
+                    else if (align === 'RIGHT') { pre = '\\begin{flushright}'; post = '\\end{flushright}'; }
+                    else if (align === 'BOTH') { /* justify is default in LaTeX */ }
                 }
                 else if (tag === 'img') {
                     var src = node.getAttribute('src');
@@ -206,14 +319,11 @@ window.ExportEngines = {
                         var imgName = 'img_inline_' + imgCounterRef.current + '.png';
                         var b64 = src.split(',')[1];
                         zip.file(imgName, b64, {base64: true});
-                        // Calculate width proportion from data attributes or style
                         var imgWidthCm = '';
                         var dw = node.getAttribute('data-width');
                         if (dw) {
                             var pxW = parseInt(dw);
-                            // Convert px to approximate cm (96dpi: 1cm ~ 37.8px), then to linewidth fraction
                             var cmW = pxW / 37.8;
-                            // A4 text width is ~17cm with 2cm margins
                             var frac = Math.min(1.0, Math.max(0.1, cmW / 17)).toFixed(2);
                             imgWidthCm = 'width=' + frac + '\\linewidth';
                         } else {
@@ -223,7 +333,9 @@ window.ExportEngines = {
                     }
                     return;
                 }
-                
+                else if (tag === 'sup') { pre = '\\textsuperscript{'; post = '}'; }
+                else if (tag === 'sub') { pre = '\\textsubscript{'; post = '}'; }
+
                 tex += pre;
                 for (var i = 0; i < node.childNodes.length; i++) {
                     traverse(node.childNodes[i]);
@@ -235,7 +347,7 @@ window.ExportEngines = {
         for (var idx = 0; idx < doc.body.childNodes.length; idx++) {
             traverse(doc.body.childNodes[idx]);
         }
-        
+
         return tex;
     },
 
@@ -245,7 +357,8 @@ window.ExportEngines = {
         var inst = cfg.instituicao || '';
         var t = '\\documentclass[12pt]{article}\n';
         t += '\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath}\n';
-        t += '\\usepackage{graphicx}\n\\usepackage[margin=2cm]{geometry}\n\n';
+        t += '\\usepackage{graphicx}\n\\usepackage[margin=2cm]{geometry}\n';
+        t += '\\usepackage{fixltx2e}\n\n'; // for \textsubscript
         t += '\\begin{document}\n\n\\begin{center}\n';
         t += '    {\\Large \\textbf{' + inst + '}} \\\\[0.5cm]\n';
         t += '    {\\huge \\textbf{' + title + '}} \\\\[0.5cm]\n';
@@ -296,13 +409,21 @@ window.ExportEngines = {
         saveAs(content, zipName);
     },
 
-    // Motor DOCX
+    // ── Motor DOCX (with alignment support) ──
     async generateDocx(questions, cfg) {
         var D = docx;
         var Document = D.Document, Packer = D.Packer, Paragraph = D.Paragraph;
         var TextRun = D.TextRun, AlignmentType = D.AlignmentType;
         var BorderStyle = D.BorderStyle, ImageRun = D.ImageRun;
         var children = [];
+
+        // Map alignment strings to docx AlignmentType
+        var alignMap = {
+            'LEFT': AlignmentType.LEFT,
+            'CENTER': AlignmentType.CENTER,
+            'RIGHT': AlignmentType.RIGHT,
+            'BOTH': AlignmentType.BOTH,
+        };
 
         children.push(new Paragraph({
             alignment: AlignmentType.CENTER, spacing: { after: 100 },
@@ -340,13 +461,33 @@ window.ExportEngines = {
         for (var idx = 0; idx < questions.length; idx++) {
             var q = questions[idx];
             var isObj = q.tipo === 'objetiva' || q.tipo === 'v_f' || q.tipo === 'somatoria';
-            var enunciadoRuns = await this.processMixedContent(q.enunciado, q.imagens || [], TextRun, ImageRun);
+
+            // ── Get paragraph groups with alignment for enunciado ──
+            var enunciadoGroups = await this.processMixedContentWithParagraphs(q.enunciado, q.imagens || [], TextRun, ImageRun);
+
+            // First paragraph: prepend question number
+            var firstGroup = enunciadoGroups[0] || { alignment: null, runs: [] };
+            var numberRun = new TextRun({ text: (idx + 1) + ') ', bold: true, size: 22, font: 'Arial' });
 
             children.push(new Paragraph({
-                spacing: { before: 250, after: 120 },
-                children: [new TextRun({ text: (idx + 1) + ') ', bold: true, size: 22, font: 'Arial' })].concat(enunciadoRuns)
+                spacing: { before: 250, after: (enunciadoGroups.length > 1 ? 40 : 120) },
+                alignment: firstGroup.alignment ? alignMap[firstGroup.alignment] : undefined,
+                children: [numberRun].concat(firstGroup.runs)
             }));
 
+            // Remaining paragraphs (continuation of enunciado with different alignment)
+            for (var pg = 1; pg < enunciadoGroups.length; pg++) {
+                var group = enunciadoGroups[pg];
+                if (group.runs.length > 0) {
+                    children.push(new Paragraph({
+                        spacing: { before: 40, after: (pg === enunciadoGroups.length - 1 ? 120 : 40) },
+                        alignment: group.alignment ? alignMap[group.alignment] : undefined,
+                        children: group.runs
+                    }));
+                }
+            }
+
+            // Standalone images from imagens array (not embedded in enunciado)
             if (q.imagens && q.imagens.length > 0) {
                 for (var im = 0; im < q.imagens.length; im++) {
                     if (!(q.enunciado || '').includes('[IMAGEM_' + im + ']')) {
@@ -367,6 +508,7 @@ window.ExportEngines = {
                 }
             }
 
+            // Alternativas (flat runs — alignment not needed)
             if (isObj && q.alternativas && q.alternativas.length > 0) {
                 for (var ai = 0; ai < q.alternativas.length; ai++) {
                     var alt = q.alternativas[ai];

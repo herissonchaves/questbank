@@ -1,35 +1,31 @@
-// QuestBank — RichTextToolbar Component (v2)
-// Improved toolbar with:
-//   - Undo/Redo buttons
-//   - Better image insertion with proper data attributes
-//   - Color picker for text
-//   - List buttons (ordered/unordered)
-//   - Active state indicators for formatting buttons
-//   - Clean tooltips
+// QuestBank — RichTextToolbar Component (v2.1)
+// Fixes: font size dropdown now works, select mousedown not blocked
+// Features: undo/redo, active states, lists, alignment
 
 const RichTextToolbar = ({ onEquation, onImage, onUndo, onRedo }) => {
     const exec = (command, value = null) => {
         document.execCommand(command, false, value);
     };
 
-    // Track active formatting state
     const [activeStates, setActiveStates] = React.useState({});
 
     React.useEffect(() => {
         const updateStates = () => {
-            setActiveStates({
-                bold: document.queryCommandState('bold'),
-                italic: document.queryCommandState('italic'),
-                underline: document.queryCommandState('underline'),
-                superscript: document.queryCommandState('superscript'),
-                subscript: document.queryCommandState('subscript'),
-                justifyLeft: document.queryCommandState('justifyLeft'),
-                justifyCenter: document.queryCommandState('justifyCenter'),
-                justifyRight: document.queryCommandState('justifyRight'),
-                justifyFull: document.queryCommandState('justifyFull'),
-                insertOrderedList: document.queryCommandState('insertOrderedList'),
-                insertUnorderedList: document.queryCommandState('insertUnorderedList'),
-            });
+            try {
+                setActiveStates({
+                    bold: document.queryCommandState('bold'),
+                    italic: document.queryCommandState('italic'),
+                    underline: document.queryCommandState('underline'),
+                    superscript: document.queryCommandState('superscript'),
+                    subscript: document.queryCommandState('subscript'),
+                    justifyLeft: document.queryCommandState('justifyLeft'),
+                    justifyCenter: document.queryCommandState('justifyCenter'),
+                    justifyRight: document.queryCommandState('justifyRight'),
+                    justifyFull: document.queryCommandState('justifyFull'),
+                    insertOrderedList: document.queryCommandState('insertOrderedList'),
+                    insertUnorderedList: document.queryCommandState('insertUnorderedList'),
+                });
+            } catch (e) {}
         };
         document.addEventListener('selectionchange', updateStates);
         return () => document.removeEventListener('selectionchange', updateStates);
@@ -42,10 +38,43 @@ const RichTextToolbar = ({ onEquation, onImage, onUndo, onRedo }) => {
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
         }`;
 
+    // Prevent default on mousedown for BUTTONS only (not selects)
+    // This keeps focus in the contentEditable so execCommand works
+    const preventBlur = (e) => {
+        const tag = e.target.tagName.toLowerCase();
+        // Allow select and option elements to work normally
+        if (tag === 'select' || tag === 'option') return;
+        e.preventDefault();
+    };
+
+    // Font size handler: save selection, apply, restore
+    const handleFontSize = (e) => {
+        const val = e.target.value;
+        if (!val) return;
+
+        // Get the focused editor and restore selection
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            // execCommand requires focus on the contentEditable
+            const range = sel.getRangeAt(0);
+            const editor = range.startContainer.parentElement
+                ? range.startContainer.parentElement.closest('.visual-editor')
+                : null;
+            if (editor) {
+                editor.focus();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        document.execCommand('fontSize', false, val);
+        e.target.value = '';
+    };
+
     return (
         <div
             className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border border-b-0 border-gray-200 rounded-t-xl select-none"
-            onMouseDown={(e) => e.preventDefault()}
+            onMouseDown={preventBlur}
         >
             {/* Undo / Redo */}
             <div className="flex items-center gap-0.5 pr-2 border-r border-gray-300">
@@ -95,9 +124,25 @@ const RichTextToolbar = ({ onEquation, onImage, onUndo, onRedo }) => {
                     x<sub>2</sub>
                 </button>
                 <select
-                    onChange={(e) => { if (e.target.value) exec('fontSize', e.target.value); e.target.value = ''; }}
+                    onChange={handleFontSize}
+                    onMouseDown={(e) => {
+                        // Save current selection before select steals focus
+                        e.stopPropagation();
+                        const sel = window.getSelection();
+                        if (sel && sel.rangeCount > 0) {
+                            window.__savedRange = sel.getRangeAt(0).cloneRange();
+                        }
+                    }}
+                    onFocus={() => {
+                        // Restore selection when select gets focus
+                        if (window.__savedRange) {
+                            const sel = window.getSelection();
+                            // Don't restore here — wait for onChange
+                        }
+                    }}
                     className="text-xs bg-transparent outline-none h-8 px-1 text-gray-600 hover:bg-gray-200 rounded cursor-pointer"
                     title="Tamanho da Fonte"
+                    defaultValue=""
                 >
                     <option value="">Tamanho</option>
                     <option value="1">Muito Pequeno</option>
