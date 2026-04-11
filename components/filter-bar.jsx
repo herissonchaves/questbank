@@ -4,7 +4,7 @@
 const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, resultCount, totalCount, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
 
     const [showAdvanced, setShowAdvanced] = React.useState(false);
-    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.regiao || filters.tag || filters.codigo || ignoreUsed;
+    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.regiao || filters.tag || filters.codigo || ignoreUsed || filters.orderByRecent;
 
     return (
         <div className="flex flex-col gap-2 p-3 border-b border-gray-200">
@@ -158,6 +158,22 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
 
                     {/* Divider */}
                     <div className="w-px h-5 bg-gray-200 mx-1"></div>
+
+                    {/* Order by Recent */}
+                    <button
+                        onClick={() => onFilterChange('orderByRecent', !filters.orderByRecent)}
+                        className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                            filters.orderByRecent
+                                ? 'bg-sky-50 border-sky-200 text-sky-700 shadow-sm'
+                                : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                        title="Mostrar questões mais recentes primeiro"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                        </svg>
+                        Mais recentes
+                    </button>
 
                     {/* Ignore used questions */}
                     <label className="flex items-center gap-1.5 cursor-pointer group">

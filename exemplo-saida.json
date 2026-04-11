@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "questions": [
+    {
+      "id": "ENEM-2020-Q42",
+      "enunciado": "O uso de equipamentos elétricos custa dinheiro e libera carbono na atmosfera. Entretanto, diferentes usinas de energia apresentam custos econômicos e ambientais distintos. O gráfico mostra o custo, em centavo de real, e a quantidade de carbono liberado, dependendo da fonte utilizada para converter energia.\n\nEm relação aos custos associados às fontes energéticas apresentadas, a energia obtida a partir do vento é",
+      "tipo": "objetiva",
+      "disciplina": "Física",
+      "topico": "Energia",
+      "conteudo": "Fontes de energia",
+      "assunto": "Energia eólica e impacto ambiental",
+      "dificuldade": "medio",
+      "banca": "ENEM",
+      "ano": 2020,
+      "gabarito": "E",
+      "alternativas": [
+        {"letra": "A", "texto": "mais cara que a energia nuclear e emite maior quantidade de carbono."},
+        {"letra": "B", "texto": "a segunda fonte mais cara e é livre de emissões de carbono."},
+        {"letra": "C", "texto": "mais cara que a energia solar e ambas são livres de emissões de carbono."},
+        {"letra": "D", "texto": "mais barata que as demais e emite grandes quantidades de carbono."},
+        {"letra": "E", "texto": "a fonte que gera energia mais barata e livre de emissões de carbono."}
+      ],
+      "imagens": [],
+      "regiao": "Nacional",
+      "tags": ["vestibular", "ENEM", "energia", "meio ambiente", "1001"]
+    },
+    {
+      "id": "A-ENEM-2020-Q42",
+      "enunciado": "O gráfico abaixo mostra o custo e a quantidade de carbono liberado por diferentes fontes de energia.\n\n<strong>Analisando o gráfico, o que podemos afirmar sobre a energia eólica (vento)?</strong>",
+      "tipo": "objetiva",
+      "disciplina": "Física",
+      "topico": "Energia",
+      "conteudo": "Fontes de energia",
+      "assunto": "Energia eólica e impacto ambiental",
+      "dificuldade": "facil",
+      "banca": "ENEM",
+      "ano": 2020,
+      "gabarito": "B",
+      "alternativas": [
+        {"letra": "A", "texto": "É a energia mais cara do gráfico e não emite carbono."},
+        {"letra": "B", "texto": "É a energia mais barata do gráfico e não emite carbono."},
+        {"letra": "C", "texto": "É mais barata que a nuclear, mas emite muito carbono."}
+      ],
+      "imagens": [],
+      "regiao": "Nacional",
+      "tags": ["vestibular", "ENEM", "energia", "meio ambiente", "adaptada", "NEE", "A1001"]
+    },
+    {
+      "id": "UNICAMP-2025-D3",
+      "enunciado": "Explique o conceito de energia potencial gravitacional e derive a expressão para a energia potencial gravitacional de um corpo de massa m a uma altura h da superfície terrestre.",
+      "tipo": "discursiva",
+      "disciplina": "Física",
+      "topico": "Mecânica",
+      "conteudo": "Energia",
+      "assunto": "Energia Potencial Gravitacional",
+      "dificuldade": "dificil",
+      "banca": "UNICAMP",
+      "ano": 2025,
+      "gabarito": "Ep = mgh, onde m é a massa, g é a aceleração gravitacional e h é a altura.",
+      "tags": ["energia", "gravitação", "discursiva", "1002"]
+    },
+    {
+      "id": "A-UNICAMP-2025-D3",
+      "enunciado": "A energia potencial gravitacional é a energia que um objeto tem por estar a uma certa altura.\n\n<strong>Qual é a fórmula da energia potencial gravitacional? Use: m = massa, g = gravidade, h = altura.</strong>",
+      "tipo": "discursiva",
+      "disciplina": "Física",
+      "topico": "Mecânica",
+      "conteudo": "Energia",
+      "assunto": "Energia Potencial Gravitacional",
+      "dificuldade": "medio",
+      "banca": "UNICAMP",
+      "ano": 2025,
+      "gabarito": "Ep = m × g × h",
+      "tags": ["energia", "gravitação", "discursiva", "adaptada", "NEE", "A1002"]
+    }
+  ]
+}

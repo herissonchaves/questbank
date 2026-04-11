@@ -10,7 +10,7 @@ const initialState = {
     questions: [],
     selectedIds: [],
     activeSubjects: [],
-    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '' },
+    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '', orderByRecent: false },
     ignoreUsed: false,
     modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null },
     loading: true,
@@ -93,7 +93,7 @@ function reducer(state, action) {
             return { ...state, filters: { ...state.filters, [action.key]: action.value } };
 
         case 'CLEAR_FILTERS':
-            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '' } };
+            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', regiao: '', tag: '', codigo: '', orderByRecent: false } };
 
         case 'TOGGLE_IGNORE_USED':
             return { ...state, ignoreUsed: !state.ignoreUsed };
@@ -214,9 +214,9 @@ const App = () => {
         [state.selectedIds]
     );
 
-    // Filter questions by subjects + filters + ignoreUsed (only regular questions)
+    // Filter questions by subjects + filters + ignoreUsed + order by recent (only regular questions)
     const filteredQuestions = useMemo(() => {
-        return regularQuestions.filter(q => {
+        let result = regularQuestions.filter(q => {
             // Subject filter
             if (!QBTaxonomy.questionMatchesSubjects(q, state.activeSubjects)) return false;
 
@@ -248,6 +248,16 @@ const App = () => {
 
             return true;
         });
+
+        if (state.filters.orderByRecent) {
+            result = [...result].sort((a, b) => {
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return dateB - dateA;
+            });
+        }
+
+        return result;
     }, [regularQuestions, state.activeSubjects, state.filters, state.ignoreUsed]);
 
     // Build filtered taxonomy tree for showing filtered counts
