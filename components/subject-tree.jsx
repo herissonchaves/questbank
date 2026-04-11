@@ -5,18 +5,6 @@ const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange }) =
     const [expanded, setExpanded] = React.useState({});
     const [search, setSearch] = React.useState('');
 
-    // Auto-expand first two levels on mount
-    React.useEffect(() => {
-        const initial = {};
-        Object.keys(tree).forEach(k => {
-            initial[k] = true;
-            Object.keys(tree[k].children || {}).forEach(k2 => {
-                initial[k + '>' + k2] = true;
-            });
-        });
-        setExpanded(prev => ({ ...prev, ...initial }));
-    }, [Object.keys(tree).join(',')]);
-
     const toggleExpand = (path, e) => {
         if (e) e.stopPropagation();
         setExpanded(prev => ({ ...prev, [path]: !prev[path] }));
@@ -62,7 +50,7 @@ const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange }) =
     const renderNode = (key, node, parentPath, level) => {
         const fullPath = parentPath ? `${parentPath}>${key}` : key;
         const hasChildren = node.children && Object.keys(node.children).length > 0;
-        const isExpanded = expanded[fullPath] !== false;
+        const isExpanded = !!expanded[fullPath];
         const state = QBTaxonomy.getNodeState(fullPath, node, activeSubjects);
 
         if (!nodeMatchesSearch(key, node)) return null;
