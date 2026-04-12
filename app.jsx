@@ -128,7 +128,7 @@ const App = () => {
         if (undoStackRef.current.length === 0) return;
         
         const lastAction = undoStackRef.current[undoStackRef.current.length - 1];
-        if (lastAction.type !== 'TAXONOMY_MOVE') return;
+        if (lastAction.type !== 'TAXONOMY_MOVE' && lastAction.type !== 'TAXONOMY_RENAME') return;
         
         const prevStates = lastAction.previousStates;
         try {
@@ -248,6 +248,62 @@ const App = () => {
                 console.error(err);
                 showToast('Erro ao arrastar categoria.', 'error');
             }
+        }
+    };
+
+    const handleRenameTaxonomyNode = async (nodePath, newName, level) => {
+        const parts = nodePath.split('>');
+        const oldName = parts[parts.length - 1];
+        const fieldNames = ['disciplina', 'tópico', 'conteúdo', 'assunto'];
+
+        if (oldName === newName) return;
+
+        if (!window.confirm(`Renomear ${fieldNames[level]} de "${oldName}" para "${newName}"?\nTodas as questões associadas serão atualizadas.`)) return;
+
+        try {
+            const d = parts[0];
+            const t = parts[1];
+            const c = parts[2];
+            const a = parts[3];
+
+            let collection = db.questions.where('disciplina').equals(d);
+
+            const questionsToUpdate = await collection.filter(q => {
+                if (level >= 1 && q.topico !== t) return false;
+                if (level >= 2 && q.conteudo !== c) return false;
+                if (level >= 3 && q.assunto !== a) return false;
+                return true;
+            }).toArray();
+
+            if (questionsToUpdate.length === 0) {
+                showToast('Nenhuma questão encontrada para renomear.', 'error');
+                return;
+            }
+
+            // Save snapshot for undo
+            const previousStates = questionsToUpdate.map(q => ({
+                id: q.id,
+                disciplina: q.disciplina,
+                topico: q.topico,
+                conteudo: q.conteudo,
+                assunto: q.assunto
+            }));
+
+            const fieldKey = ['disciplina', 'topico', 'conteudo', 'assunto'][level];
+
+            await db.transaction('rw', db.questions, async () => {
+                for (const q of questionsToUpdate) {
+                    await db.questions.update(q.id, { [fieldKey]: newName });
+                }
+            });
+
+            setUndoStack(prev => [...prev, { type: 'TAXONOMY_RENAME', previousStates }]);
+
+            showToast(`Renomeado! ${questionsToUpdate.length} questões atualizadas. Ctrl+Z para desfazer.`, 'success');
+            loadQuestions();
+        } catch (err) {
+            console.error('Rename error:', err);
+            showToast('Erro ao renomear categoria.', 'error');
         }
     };
 
@@ -718,6 +774,7 @@ const App = () => {
                         activeSubjects={state.activeSubjects}
                         onSubjectsChange={(subjects) => dispatch({ type: 'SET_SUBJECTS', payload: subjects })}
                         onMoveNode={handleMoveTaxonomyNode}
+                        onRenameNode={handleRenameTaxonomyNode}
                     />
                 </aside>
 
