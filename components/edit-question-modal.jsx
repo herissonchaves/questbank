@@ -389,6 +389,66 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                                 />
                             </div>
 
+                            {/* Tags editáveis */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                                    <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    Tags <span className="text-gray-400 font-normal">(opcional)</span>
+                                </label>
+                                <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[40px] focus-within:ring-2 focus-within:ring-indigo-500/30 focus-within:border-indigo-400 transition-all">
+                                    {((form.tags || []).filter(t => !t.match(/^\d{8}$/) && !t.match(/^A\d{8}$/))).map((tag, i) => (
+                                        <span key={i} className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
+                                            #{tag}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const systemTags = (form.tags || []).filter(t => t.match(/^\d{8}$/) || t.match(/^A\d{8}$/));
+                                                    const userTags = (form.tags || []).filter(t => !t.match(/^\d{8}$/) && !t.match(/^A\d{8}$/));
+                                                    update('tags', [...systemTags, ...userTags.filter((_, idx) => idx !== i)]);
+                                                }}
+                                                className="text-indigo-300 hover:text-indigo-600 transition-colors ml-0.5"
+                                                title="Remover tag"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <input
+                                        type="text"
+                                        placeholder={(form.tags || []).filter(t => !t.match(/^\d{8}$/) && !t.match(/^A\d{8}$/)).length === 0 ? "Ex: vestibular, termodinamica..." : "Nova tag..."}
+                                        className="flex-1 min-w-[120px] bg-transparent text-xs text-gray-700 placeholder-gray-400 focus:outline-none py-0.5"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ',') {
+                                                e.preventDefault();
+                                                const val = e.target.value.trim().replace(/,/g, '');
+                                                if (val && !(form.tags || []).includes(val)) {
+                                                    update('tags', [...(form.tags || []), val]);
+                                                }
+                                                e.target.value = '';
+                                            } else if (e.key === 'Backspace' && !e.target.value) {
+                                                const userTags = (form.tags || []).filter(t => !t.match(/^\d{8}$/) && !t.match(/^A\d{8}$/));
+                                                const systemTags = (form.tags || []).filter(t => t.match(/^\d{8}$/) || t.match(/^A\d{8}$/));
+                                                if (userTags.length > 0) {
+                                                    update('tags', [...systemTags, ...userTags.slice(0, -1)]);
+                                                }
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim().replace(/,/g, '');
+                                            if (val && !(form.tags || []).includes(val)) {
+                                                update('tags', [...(form.tags || []), val]);
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-1">Pressione Enter ou vírgula para adicionar. Tags internas do sistema são preservadas automaticamente.</p>
+                            </div>
+
                             {/* Button: Criar versão adaptada (only if no adapted version exists and not an adapted question itself) */}
                             {!checkingAdapted && !hasExistingAdapted && !isAdaptedQuestion && (
                                 <div className="pt-2 border-t border-gray-100">

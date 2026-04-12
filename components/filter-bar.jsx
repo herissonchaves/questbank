@@ -4,7 +4,7 @@
 const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, resultCount, totalCount, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
 
     const [showAdvanced, setShowAdvanced] = React.useState(false);
-    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.codigo || filters.orderById || ignoreUsed || filters.orderByRecent || filters.resolucao;
+    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.codigo || filters.orderById || ignoreUsed || filters.orderByRecent || filters.resolucao || filters.tag;
 
     return (
         <div className="flex flex-col gap-2 p-3 border-b border-gray-200">
@@ -216,6 +216,34 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
                             Ignorar já usadas
                         </span>
                     </label>
+
+                    {/* Divider */}
+                    <div className="w-px h-5 bg-gray-200 mx-1"></div>
+
+                    {/* Tag filter */}
+                    <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        <input
+                            type="text"
+                            value={filters.tag || ''}
+                            onChange={(e) => onFilterChange('tag', e.target.value)}
+                            placeholder="Filtrar por tag..."
+                            className={`bg-gray-50 border rounded-lg px-2.5 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all w-36 ${filters.tag ? 'border-indigo-300 bg-indigo-50/50' : 'border-gray-200'}`}
+                        />
+                        {filters.tag && (
+                            <button
+                                onClick={() => onFilterChange('tag', '')}
+                                className="text-indigo-400 hover:text-indigo-600 transition-colors"
+                                title="Limpar filtro de tag"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

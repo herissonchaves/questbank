@@ -10,7 +10,7 @@ const initialState = {
     questions: [],
     selectedIds: [],
     activeSubjects: [],
-    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '' },
+    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '', tag: '' },
     ignoreUsed: false,
     modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null },
     loading: true,
@@ -93,7 +93,7 @@ function reducer(state, action) {
             return { ...state, filters: { ...state.filters, [action.key]: action.value } };
 
         case 'CLEAR_FILTERS':
-            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '' } };
+            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '', tag: '' } };
 
         case 'TOGGLE_IGNORE_USED':
             return { ...state, ignoreUsed: !state.ignoreUsed };
@@ -229,6 +229,13 @@ const App = () => {
             // Resolução filter
             if (state.filters.resolucao === 'com' && (!q.resolucao_link || q.resolucao_link.trim() === "")) return false;
             if (state.filters.resolucao === 'sem' && q.resolucao_link && q.resolucao_link.trim() !== "") return false;
+
+            // Tag filter
+            if (state.filters.tag) {
+                const tagTerms = state.filters.tag.toLowerCase().split(/[,\s]+/).filter(Boolean);
+                const qTags = (q.tags || []).map(t => t.toLowerCase());
+                if (!tagTerms.every(term => qTags.some(t => t.includes(term)))) return false;
+            }
 
             return true;
         });

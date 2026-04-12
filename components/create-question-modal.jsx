@@ -96,7 +96,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
         ano: '',
         dificuldade: 'nao_definida',
         regiao: '',
-        tags: '',
+        tags: [],
         resolucao_link: '',
     };
 
@@ -324,8 +324,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
 
         setSaving(true);
         try {
-            // Parse tags from comma/space string and add the question tag
-            const userTags = (form.tags || '').split(/[,\s]+/).filter(Boolean);
+            // Parse tags from the array (user tags), keep system internal tag too
+            const userTags = Array.isArray(form.tags) ? form.tags : (form.tags || '').split(/[,\s]+/).filter(Boolean);
             const allTags = [...new Set([...userTags, questionTag])];
 
             // Build the regular question object
@@ -742,6 +742,57 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                             <option value="dificil">Dificil</option>
                                         </select>
                                     </div>
+                                </div>
+                            </div>
+                            {/* Tags */}
+                            <div>
+                                <h4 className="text-sm font-bold text-gray-800 mb-1.5 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    Tags <span className="text-xs text-gray-400 font-normal">(opcional)</span>
+                                </h4>
+                                <p className="text-[11px] text-gray-400 mb-2">Palavras-chave para filtros avançados. Pressione Enter ou vírgula para adicionar.</p>
+                                <div className={`flex flex-wrap gap-1.5 p-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[40px] focus-within:ring-2 focus-within:ring-indigo-500/30 focus-within:border-indigo-400 transition-all`}>
+                                    {(form.tags || []).map((tag, i) => (
+                                        <span key={i} className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
+                                            #{tag}
+                                            <button
+                                                type="button"
+                                                onClick={() => update('tags', form.tags.filter((_, idx) => idx !== i))}
+                                                className="text-indigo-300 hover:text-indigo-600 transition-colors ml-0.5"
+                                                title="Remover tag"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <input
+                                        type="text"
+                                        placeholder={(form.tags || []).length === 0 ? "Ex: vestibular, termodinamica, calor..." : "Nova tag..."}
+                                        className="flex-1 min-w-[120px] bg-transparent text-xs text-gray-700 placeholder-gray-400 focus:outline-none py-0.5"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ',') {
+                                                e.preventDefault();
+                                                const val = e.target.value.trim().replace(/,/g, '');
+                                                if (val && !(form.tags || []).includes(val)) {
+                                                    update('tags', [...(form.tags || []), val]);
+                                                }
+                                                e.target.value = '';
+                                            } else if (e.key === 'Backspace' && !e.target.value && (form.tags || []).length > 0) {
+                                                update('tags', (form.tags || []).slice(0, -1));
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim().replace(/,/g, '');
+                                            if (val && !(form.tags || []).includes(val)) {
+                                                update('tags', [...(form.tags || []), val]);
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </div>
 

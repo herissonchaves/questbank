@@ -1,5 +1,6 @@
-// QuestBank Service Worker — Cache-First Strategy (v5)
-const CACHE_NAME = 'questbank-v12';
+// QuestBank Service Worker — Network-First Strategy (v7 - Tags Feature)
+// Changed to network-first to ensure fresh files always load
+const CACHE_NAME = 'questbank-v14';
 
 const APP_SHELL = [
     './',
@@ -24,28 +25,6 @@ const APP_SHELL = [
     './components/create-question-modal.jsx',
     './components/stats-panel.jsx',
     './manifest.json',
-    
-    // External Libraries
-    'https://cdn.tailwindcss.com',
-    'https://unpkg.com/react@18/umd/react.production.min.js',
-    'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-    'https://unpkg.com/@babel/standalone@7/babel.min.js',
-    'https://unpkg.com/dexie@3/dist/dexie.js',
-    'https://unpkg.com/docx@8.5.0/build/index.umd.js',
-    'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
-    'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
-    
-    // KaTeX
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Main-Regular.woff2',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Math-Italic.woff2',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Size1-Regular.woff2',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/fonts/KaTeX_Size2-Regular.woff2',
-    
-    // MathJax
-    'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
 ];
 
 const CDN_URLS = [
@@ -56,50 +35,64 @@ const CDN_URLS = [
     'https://unpkg.com/docx@8.5.0/build/index.umd.js',
     'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
     'https://cdn.tailwindcss.com',
+    'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js',
+    'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js',
 ];
 
-// Install — cache app shell
+// Install — skip waiting so new SW activates immediately
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Caching app shell v2');
-            return cache.addAll(APP_SHELL);
-        })
-    );
+    console.log('[SW v14] Installing...');
     self.skipWaiting();
 });
 
-// Activate — clean old caches
+// Activate — delete ALL old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
+    console.log('[SW v14] Activating, clearing old caches...');
     event.waitUntil(
         caches.keys().then((keys) =>
-            Promise.all(
-                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-            )
-        )
+            Promise.all(keys.map((key) => {
+                console.log('[SW v14] Deleting cache:', key);
+                return caches.delete(key);
+            }))
+        ).then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
-// Fetch — cache-first for app shell & CDN, network-first for others
+// Fetch — Network-first for local files, cache-first for CDN
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    if (url.origin === self.location.origin || CDN_URLS.some(cdn => event.request.url.startsWith(cdn))) {
+    // CDN resources: cache-first (they rarely change)
+    if (CDN_URLS.some(cdn => event.request.url.startsWith(cdn))) {
         event.respondWith(
             caches.match(event.request).then((cached) => {
                 if (cached) return cached;
-
                 return fetch(event.request).then((response) => {
                     if (!response || response.status !== 200) return response;
-
-                    const responseClone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
-                    });
-
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
                     return response;
-                }).catch(() => {
+                });
+            })
+        );
+        return;
+    }
+
+    // Local app files: network-first (always get fresh code)
+    if (url.origin === self.location.origin) {
+        event.respondWith(
+            fetch(event.request).then((response) => {
+                if (!response || response.status !== 200) return response;
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                return response;
+            }).catch(() => {
+                // Fallback to cache if offline
+                return caches.match(event.request).then(cached => {
+                    if (cached) return cached;
                     if (event.request.destination === 'document') {
                         return caches.match('./index.html');
                     }
