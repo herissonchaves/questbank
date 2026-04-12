@@ -1,9 +1,11 @@
 // QuestBank — SubjectTree Component
 // Dynamic hierarchical tree with checkboxes, search, cascading selection, filtered counts (white theme)
 
-const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange }) => {
+const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange, onMoveNode }) => {
     const [expanded, setExpanded] = React.useState({});
     const [search, setSearch] = React.useState('');
+    const [dragState, setDragState] = React.useState({ isDragging: false, nodePath: null, level: null });
+    const [dragOverPath, setDragOverPath] = React.useState(null);
 
     const toggleExpand = (path, e) => {
         if (e) e.stopPropagation();
@@ -62,9 +64,46 @@ const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange }) =
         const filteredCount = getFilteredCount(key, parentPath, level);
         const showFilteredCount = filteredCount !== null && filteredCount !== node.count;
 
+        // Drag and drop logic
+        const isHoveringValidLevel = dragState.isDragging && dragState.level === level + 1;
+        const isSelfOrDescendant = dragState.nodePath && fullPath.startsWith(dragState.nodePath);
+        const isValidDropTarget = isHoveringValidLevel && !isSelfOrDescendant;
+        const isDragOver = dragOverPath === fullPath && isValidDropTarget;
+
         return (
             <div key={fullPath} className={indentClass}>
-                <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-gray-100 cursor-pointer group transition-all duration-150">
+                <div 
+                    className={`flex items-center gap-1.5 py-1 px-2 rounded-lg cursor-pointer group transition-all duration-150 ${
+                        isDragOver ? 'bg-brand-100 ring-2 ring-brand-400 border-dashed border border-brand-500' : 'hover:bg-gray-100'
+                    } ${dragState.nodePath === fullPath ? 'opacity-40 border-dashed border border-gray-300' : ''}`}
+                    draggable={true}
+                    onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        setDragState({ isDragging: true, nodePath: fullPath, level });
+                    }}
+                    onDragOver={(e) => {
+                        if (isValidDropTarget) {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                            if (dragOverPath !== fullPath) setDragOverPath(fullPath);
+                        }
+                    }}
+                    onDragLeave={(e) => {
+                        if (dragOverPath === fullPath) setDragOverPath(null);
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        if (isValidDropTarget && onMoveNode) {
+                            onMoveNode(dragState.nodePath, fullPath, dragState.level);
+                        }
+                        setDragOverPath(null);
+                        setDragState({ isDragging: false, nodePath: null, level: null });
+                    }}
+                    onDragEnd={() => {
+                        setDragOverPath(null);
+                        setDragState({ isDragging: false, nodePath: null, level: null });
+                    }}
+                >
                     {/* Expand/collapse chevron */}
                     {hasChildren ? (
                         <button

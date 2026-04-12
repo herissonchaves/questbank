@@ -119,6 +119,41 @@ const App = () => {
     const [toast, setToast] = useState(null);
     const searchRef = useRef(null);
 
+    // Taxonomy Drag & Drop Undo Stack
+    const [undoStack, setUndoStack] = useState([]);
+    const undoStackRef = useRef(undoStack);
+    useEffect(() => { undoStackRef.current = undoStack; }, [undoStack]);
+
+    const handleUndoLastAction = useCallback(async () => {
+        if (undoStackRef.current.length === 0) return;
+        
+        const lastAction = undoStackRef.current[undoStackRef.current.length - 1];
+        if (lastAction.type !== 'TAXONOMY_MOVE') return;
+        
+        const prevStates = lastAction.previousStates;
+        try {
+            await db.transaction('rw', db.questions, async () => {
+                for (const snap of prevStates) {
+                    await db.questions.update(snap.id, {
+                        disciplina: snap.disciplina,
+                        topico: snap.topico,
+                        conteudo: snap.conteudo,
+                        assunto: snap.assunto
+                    });
+                }
+            });
+            
+            setUndoStack(prev => prev.slice(0, -1));
+            showToast(`Ação desfeita. ${prevStates.length} questões restauradas.`, 'success');
+            loadQuestions(); // refresh UI
+        } catch (err) {
+            console.error('Error undoing action:', err);
+            showToast('Erro ao desfazer ação.', 'error');
+        }
+    }, []);
+    const undoRef = useRef(handleUndoLastAction);
+    useEffect(() => { undoRef.current = handleUndoLastAction; }, [handleUndoLastAction]);
+
     useEffect(() => {
         loadQuestions();
     }, []);
@@ -130,6 +165,11 @@ const App = () => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                 e.preventDefault();
                 if (searchRef.current) searchRef.current.focus();
+            }
+            // Ctrl+Z → undo taxonomy move
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undoRef.current();
             }
             // Ctrl+I → open import
             if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
@@ -154,6 +194,62 @@ const App = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [state.modals]);
+
+    const handleMoveTaxonomyNode = async (sourcePath, targetPath, sourceLevel) => {
+        const sourceParts = sourcePath.split('>');
+        const targetParts = targetPath.split('>');
+        
+        const nodeName = sourceParts[sourceParts.length - 1];
+        
+        if (window.confirm(`Tem certeza que deseja mover "${nodeName}" para dentro de "${targetParts[targetParts.length-1]}"?\nEssa ação atualizará em lote todas as questões dessa etapa.`)) {
+            try {
+                const d = sourceParts[0];
+                const t = sourceParts[1];
+                const c = sourceParts[2];
+                const a = sourceParts[3];
+                
+                let collection = db.questions.where('disciplina').equals(d);
+                
+                const questionsToUpdate = await collection.filter(q => {
+                    if (sourceLevel >= 1 && q.topico !== t) return false;
+                    if (sourceLevel >= 2 && q.conteudo !== c) return false;
+                    if (sourceLevel >= 3 && q.assunto !== a) return false;
+                    return true;
+                }).toArray();
+                
+                if (questionsToUpdate.length === 0) return;
+                
+                // Save snap for undo
+                const previousStates = questionsToUpdate.map(q => ({
+                    id: q.id,
+                    disciplina: q.disciplina,
+                    topico: q.topico,
+                    conteudo: q.conteudo,
+                    assunto: q.assunto
+                }));
+                
+                await db.transaction('rw', db.questions, async () => {
+                    for (const q of questionsToUpdate) {
+                        const updates = { disciplina: targetParts[0] || q.disciplina };
+                        
+                        if (sourceLevel >= 1) updates.topico = sourceLevel === 1 ? nodeName : (targetParts[1] || q.topico);
+                        if (sourceLevel >= 2) updates.conteudo = sourceLevel === 2 ? nodeName : (targetParts[2] || q.conteudo);
+                        if (sourceLevel >= 3) updates.assunto = sourceLevel === 3 ? nodeName : (targetParts[3] || q.assunto);
+                        
+                        await db.questions.update(q.id, updates);
+                    }
+                });
+                
+                setUndoStack(prev => [...prev, { type: 'TAXONOMY_MOVE', previousStates }]);
+                
+                showToast(`Sucesso! ${questionsToUpdate.length} questões alteradas. Pressione Ctrl+Z para desfazer.`, 'success');
+                loadQuestions();
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao arrastar categoria.', 'error');
+            }
+        }
+    };
 
     const loadQuestions = async () => {
         try {
@@ -621,6 +717,7 @@ const App = () => {
                         filteredTree={filteredTaxonomyTree}
                         activeSubjects={state.activeSubjects}
                         onSubjectsChange={(subjects) => dispatch({ type: 'SET_SUBJECTS', payload: subjects })}
+                        onMoveNode={handleMoveTaxonomyNode}
                     />
                 </aside>
 
