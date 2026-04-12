@@ -409,12 +409,13 @@ window.ExportEngines = {
         saveAs(content, zipName);
     },
 
-    // ── Motor DOCX (with alignment support) ──
+    // ── Motor DOCX (with alignment support + Word auto-numbering) ──
     async generateDocx(questions, cfg) {
         var D = docx;
         var Document = D.Document, Packer = D.Packer, Paragraph = D.Paragraph;
         var TextRun = D.TextRun, AlignmentType = D.AlignmentType;
         var BorderStyle = D.BorderStyle, ImageRun = D.ImageRun;
+        var LevelFormat = D.LevelFormat;
         var children = [];
 
         // Map alignment strings to docx AlignmentType
@@ -425,38 +426,56 @@ window.ExportEngines = {
             'BOTH': AlignmentType.BOTH,
         };
 
-        children.push(new Paragraph({
-            alignment: AlignmentType.CENTER, spacing: { after: 100 },
-            children: [new TextRun({ text: cfg.instituicao || '', bold: true, size: 24, font: 'Arial' })]
-        }));
-        children.push(new Paragraph({
-            alignment: AlignmentType.CENTER, spacing: { after: 100 },
-            children: [new TextRun({ text: cfg.titulo || 'Prova', bold: true, size: 28, font: 'Arial' })]
-        }));
-
-        if (cfg.professor || cfg.data) {
-            var infoTexts = [];
-            if (cfg.professor) infoTexts.push('Prof.: ' + cfg.professor);
-            if (cfg.data) {
-                var dp = cfg.data.split('-');
-                if (dp.length === 3) infoTexts.push('Data: ' + dp[2] + '/' + dp[1] + '/' + dp[0]);
-                else infoTexts.push('Data: ' + cfg.data);
+        // ── Build numbering config: questions (decimal) + alternatives (upper letter per question) ──
+        var numberingConfig = [
+            {
+                reference: "question-numbering",
+                levels: [{
+                    level: 0,
+                    format: LevelFormat.DECIMAL,
+                    text: "%1.",
+                    alignment: AlignmentType.LEFT,
+                    style: {
+                        paragraph: { indent: { left: 720, hanging: 360 } },
+                        run: { font: "Arial", size: 22, bold: false }
+                    }
+                }]
             }
-            children.push(new Paragraph({
-                alignment: AlignmentType.CENTER, spacing: { after: 200 },
-                children: [new TextRun({ text: infoTexts.join('    |    '), size: 20, font: 'Arial', color: '555555' })]
-            }));
+        ];
+
+        // Each question gets its own alternatives numbering reference (so it restarts A, B, C for each)
+        for (var ni = 0; ni < questions.length; ni++) {
+            numberingConfig.push({
+                reference: "alt-numbering-" + ni,
+                levels: [{
+                    level: 0,
+                    format: LevelFormat.UPPER_LETTER,
+                    text: "%1)",
+                    alignment: AlignmentType.LEFT,
+                    style: {
+                        paragraph: { indent: { left: 760, hanging: 360 } },
+                        run: { font: "Arial", size: 22, bold: false }
+                    }
+                }]
+            });
         }
 
-        children.push(new Paragraph({
-            spacing: { before: 200, after: 100 },
-            children: [new TextRun({ text: 'Nome: _____________________________________________   Turma: ________', size: 22, font: 'Arial' })]
-        }));
-        children.push(new Paragraph({
-            spacing: { before: 100, after: 300 },
-            border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } },
-            children: []
-        }));
+        // Gabarito numbering
+        numberingConfig.push({
+            reference: "gabarito-numbering",
+            levels: [{
+                level: 0,
+                format: LevelFormat.DECIMAL,
+                text: "%1.",
+                alignment: AlignmentType.LEFT,
+                style: {
+                    paragraph: { indent: { left: 720, hanging: 360 } },
+                    run: { font: "Arial", size: 22, bold: false }
+                }
+            }]
+        });
+
+        // ── No header section — questions start directly ──
 
         for (var idx = 0; idx < questions.length; idx++) {
             var q = questions[idx];
@@ -465,14 +484,14 @@ window.ExportEngines = {
             // ── Get paragraph groups with alignment for enunciado ──
             var enunciadoGroups = await this.processMixedContentWithParagraphs(q.enunciado, q.imagens || [], TextRun, ImageRun);
 
-            // First paragraph: prepend question number
+            // First paragraph: uses Word auto-numbering (no manual number prefix)
             var firstGroup = enunciadoGroups[0] || { alignment: null, runs: [] };
-            var numberRun = new TextRun({ text: (idx + 1) + ') ', bold: true, size: 22, font: 'Arial' });
 
             children.push(new Paragraph({
-                spacing: { before: 250, after: (enunciadoGroups.length > 1 ? 40 : 120) },
-                alignment: firstGroup.alignment ? alignMap[firstGroup.alignment] : undefined,
-                children: [numberRun].concat(firstGroup.runs)
+                numbering: { reference: "question-numbering", level: 0 },
+                spacing: { before: 250, after: 40 },
+                alignment: firstGroup.alignment ? alignMap[firstGroup.alignment] : AlignmentType.BOTH,
+                children: firstGroup.runs
             }));
 
             // Remaining paragraphs (continuation of enunciado with different alignment)
@@ -480,7 +499,7 @@ window.ExportEngines = {
                 var group = enunciadoGroups[pg];
                 if (group.runs.length > 0) {
                     children.push(new Paragraph({
-                        spacing: { before: 40, after: (pg === enunciadoGroups.length - 1 ? 120 : 40) },
+                        spacing: { before: 40, after: 40 },
                         alignment: group.alignment ? alignMap[group.alignment] : undefined,
                         children: group.runs
                     }));
@@ -508,14 +527,15 @@ window.ExportEngines = {
                 }
             }
 
-            // Alternativas (flat runs — alignment not needed)
+            // Alternativas — Word auto-numbering (upper letter: A), B), C)...)
             if (isObj && q.alternativas && q.alternativas.length > 0) {
                 for (var ai = 0; ai < q.alternativas.length; ai++) {
                     var alt = q.alternativas[ai];
                     var altRuns = await this.processMixedContent(alt.texto, q.imagens || [], TextRun, ImageRun);
                     children.push(new Paragraph({
-                        spacing: { before: 40, after: 40 }, indent: { left: 400 },
-                        children: [new TextRun({ text: alt.letra + ') ', bold: true, size: 22, font: 'Arial' })].concat(altRuns)
+                        numbering: { reference: "alt-numbering-" + idx, level: 0 },
+                        spacing: { before: 40, after: 40 },
+                        children: altRuns
                     }));
                 }
             }
@@ -544,9 +564,9 @@ window.ExportEngines = {
                 for (var gi = 0; gi < questions.length; gi++) {
                     if (questions[gi].gabarito) {
                         children.push(new Paragraph({
+                            numbering: { reference: "gabarito-numbering", level: 0 },
                             spacing: { before: 60, after: 60 },
                             children: [
-                                new TextRun({ text: (gi + 1) + ') ', bold: true, size: 22, font: 'Arial' }),
                                 new TextRun({ text: String(questions[gi].gabarito), size: 22, font: 'Arial' })
                             ]
                         }));
@@ -556,6 +576,7 @@ window.ExportEngines = {
         }
 
         var doc = new Document({
+            numbering: { config: numberingConfig },
             sections: [{ properties: { page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } } }, children: children }]
         });
         var blob = await Packer.toBlob(doc);
