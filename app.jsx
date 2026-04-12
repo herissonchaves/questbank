@@ -10,7 +10,7 @@ const initialState = {
     questions: [],
     selectedIds: [],
     activeSubjects: [],
-    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', semResolucao: false },
+    filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '' },
     ignoreUsed: false,
     modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null },
     loading: true,
@@ -93,7 +93,7 @@ function reducer(state, action) {
             return { ...state, filters: { ...state.filters, [action.key]: action.value } };
 
         case 'CLEAR_FILTERS':
-            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', semResolucao: false } };
+            return { ...state, filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '' } };
 
         case 'TOGGLE_IGNORE_USED':
             return { ...state, ignoreUsed: !state.ignoreUsed };
@@ -226,8 +226,9 @@ const App = () => {
             if (state.filters.dificuldade && q.dificuldade !== state.filters.dificuldade) return false;
             if (state.filters.tipo && q.tipo !== state.filters.tipo) return false;
             
-            // Sem Resolução filter
-            if (state.filters.semResolucao && q.resolucao_link && q.resolucao_link.trim() !== "") return false;
+            // Resolução filter
+            if (state.filters.resolucao === 'com' && (!q.resolucao_link || q.resolucao_link.trim() === "")) return false;
+            if (state.filters.resolucao === 'sem' && q.resolucao_link && q.resolucao_link.trim() !== "") return false;
 
             return true;
         });
