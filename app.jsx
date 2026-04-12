@@ -321,6 +321,19 @@ const App = () => {
         }
     }, []);
 
+    const handleDeleteSelected = useCallback(async () => {
+        if (state.selectedIds.length === 0) return;
+        if (!confirm(`Tem certeza que deseja excluir as ${state.selectedIds.length} questões selecionadas do banco de dados? Esta ação não pode ser desfeita.`)) return;
+        try {
+            await db.questions.bulkDelete(state.selectedIds);
+            dispatch({ type: 'CLEAR_SELECTED' });
+            await loadQuestions();
+            showToast(`${state.selectedIds.length} questões excluídas.`, 'success');
+        } catch (err) {
+            showToast('Erro ao excluir questões.', 'error');
+        }
+    }, [state.selectedIds]);
+
     const handleEditQuestion = useCallback((question) => {
         dispatch({ type: 'SET_EDIT_QUESTION', payload: question });
     }, []);
@@ -636,6 +649,7 @@ const App = () => {
                         onShuffle={handleShuffle}
                         onOrderByDifficulty={handleOrderByDifficulty}
                         onClear={() => dispatch({ type: 'CLEAR_SELECTED' })}
+                        onDeleteSelected={handleDeleteSelected}
                         onExport={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'export' })}
                     />
                 </aside>

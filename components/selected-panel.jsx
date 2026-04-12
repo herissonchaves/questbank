@@ -1,7 +1,7 @@
 // QuestBank — SelectedPanel Component
 // Selected questions for the exam with drag & drop reordering + shuffle
 
-const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onOrderByDifficulty, onClear, onExport }) => {
+const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onOrderByDifficulty, onClear, onDeleteSelected, onExport }) => {
     const [dragIndex, setDragIndex] = React.useState(null);
     const [dragOverIndex, setDragOverIndex] = React.useState(null);
 
@@ -187,9 +187,20 @@ const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onOrderByDif
                             <span className="w-px h-4 bg-gray-200" />
                             <button
                                 onClick={onClear}
-                                className="flex-1 py-1.5 text-xs text-gray-400 hover:text-rose-500 transition-colors"
+                                className="flex-1 py-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
                             >
-                                Limpar seleção
+                                Limpar
+                            </button>
+                            <span className="w-px h-4 bg-gray-200" />
+                            <button
+                                onClick={onDeleteSelected}
+                                className="flex-1 py-1.5 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors flex items-center justify-center gap-1"
+                                title="Excluir do banco"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Excluir
                             </button>
                         </div>
                     </div>
