@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "latex2questbank"
+version = "0.1.0"
+description = "Converte arquivos .tex no formato QuestBank em JSON importável"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "herisson" }]
+license = { text = "MIT" }
+
+[project.scripts]
+latex2questbank = "latex2questbank.cli:main"
+questbank-server = "latex2questbank.server:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["latex2questbank*"]

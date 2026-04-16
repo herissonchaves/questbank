@@ -1,0 +1,3 @@
+[console_scripts]
+latex2questbank = latex2questbank.cli:main
+questbank-server = latex2questbank.server:main

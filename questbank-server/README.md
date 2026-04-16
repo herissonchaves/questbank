@@ -1,0 +1,125 @@
+# latex2questbank
+
+Conversor e servidor local que transforma arquivos `.tex` (formato QuestBank)
+em JSON importável pelo app QuestBank.
+
+## Por quê?
+
+Editar um banco de questões em JSON direto é tedioso — cada `\` de LaTeX
+precisa virar `\\`, cada quebra de linha precisa virar `\n`, e fórmulas ficam
+ilegíveis. Em LaTeX o mesmo banco fica curto, legível, e editável em qualquer
+editor (VSCode, Overleaf, TeXstudio). Este pacote fecha o ciclo:
+
+```
+.tex  →  [parser Python]  →  .json QuestBank  →  importa no app
+```
+
+O app QuestBank reconhece automaticamente arquivos `.tex` na tela de
+importação e dispara a conversão via este servidor local.
+
+## Instalação
+
+Requer Python 3.9+ (só stdlib — nenhuma dependência externa).
+
+```bash
+cd questbank-server
+pip install -e .
+```
+
+Isso cria dois comandos:
+
+- `latex2questbank` — CLI de conversão direta (.tex → .json).
+- `questbank-server` — servidor HTTP local para o app.
+
+## Uso — CLI
+
+```bash
+latex2questbank exemplo.tex -o exemplo.json
+```
+
+## Uso — servidor (para o app)
+
+```bash
+questbank-server                # porta padrão 8765, bind em 127.0.0.1
+questbank-server --port 9000    # porta custom
+```
+
+Mantenha o terminal aberto enquanto importa. O app detecta o servidor
+automaticamente em `http://127.0.0.1:8765/health`.
+
+## Endpoints
+
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| `GET` | `/health` | — | `{ "ok": true, "service": "latex2questbank" }` |
+| `POST` | `/convert-tex` | texto LaTeX bruto **ou** `{"tex": "..."}` | QuestBank v1.0 JSON |
+
+Erros de parsing retornam 422 com `{ error, line, questao_id }`.
+
+## Formato LaTeX suportado
+
+Veja [`exemplo.tex`](exemplo.tex) para a referência completa. Resumo:
+
+```latex
+\begin{questao}{ID}
+  \meta{banca}{ENEM}
+  \meta{ano}{2020}
+  \meta{disciplina}{Física}
+  \meta{topico}{...}
+  \meta{conteudo}{...}
+  \meta{assunto}{...}
+  \meta{dificuldade}{medio}       % facil | medio | dificil
+  \meta{tipo}{objetiva}           % objetiva | discursiva
+  \meta{tags}{tag1, tag2}         % opcional
+
+  \enunciado{
+    Texto da questão.
+    Pode ter $\frac{a}{b}$, $$F = ma$$, \textbf{negrito},
+    \textsuperscript{2}, \imagem{foto.png}, tabelas tabular...
+  }
+
+  \begin{alternativas}
+    \alt{A}{texto A}
+    \alt{B}{texto B}
+  \end{alternativas}
+
+  \gabarito{B}
+  \resolucao{https://...}         % opcional
+\end{questao}
+```
+
+### Regras de conversão
+
+| LaTeX | HTML gerado |
+|---|---|
+| Linha em branco no corpo | `<p>...</p>` |
+| `$x$` / `$$x$$` | Preservado (KaTeX) |
+| `\textbf{x}` | `<strong>x</strong>` |
+| `\textit{x}` / `\emph{x}` | `<em>x</em>` |
+| `\textsuperscript{x}` | `<sup>x</sup>` |
+| `\textsubscript{x}` | `<sub>x</sub>` |
+| `\imagem{foo.png}` | `<p>[IMAGEM]</p>` + entrada em `imagens` |
+| `tabular` | `<table>` com primeira linha como `<th>` |
+| `---` / `--` | `—` / `–` |
+| `\_\_\_\_` | `____` (linha de resposta) |
+
+### Adaptadas (NEE)
+
+Questão adaptada é uma `\begin{questao}{A-XXX}` normal — o prefixo `A-`
+no id basta. Cada questão repete seus metadados.
+
+### Imagens
+
+`\imagem{caminho/relativo.png}` registra o caminho em `imagens[]` e insere
+um marcador `[IMAGEM]` no enunciado. O app aceitará a imagem quando você
+anexá-la manualmente.
+
+## Troubleshooting
+
+**Erro `$ sem fechamento correspondente`** — conte os `$`; eles vêm em pares.
+
+**Erro `ID duplicado`** — cada `\begin{questao}{ID}` deve ter ID único no
+arquivo.
+
+**Erro `gabarito X não corresponde a nenhuma alternativa`** — a letra em
+`\gabarito{}` precisa bater com uma `\alt{LETRA}{...}`.

@@ -175,4 +175,58 @@ const QBImport = {
             reader.readAsText(file);
         });
     },
+
+    // -----------------------------------------------------------------
+    // Suporte a .tex — delega ao servidor local latex2questbank
+    // -----------------------------------------------------------------
+
+    LATEX_SERVER: 'http://127.0.0.1:8765',
+
+    /**
+     * Verifica se o servidor LaTeX local está rodando.
+     * Retorna { ok, version } ou { ok: false, error }.
+     */
+    async checkLatexServer() {
+        try {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 1500);
+            const res = await fetch(this.LATEX_SERVER + '/health', { signal: ctrl.signal });
+            clearTimeout(t);
+            if (!res.ok) return { ok: false, error: `status ${res.status}` };
+            const data = await res.json();
+            return { ok: true, version: data.version || '?' };
+        } catch (err) {
+            return { ok: false, error: err.message || 'servidor inacessível' };
+        }
+    },
+
+    /**
+     * Lê um arquivo .tex e envia para o servidor local converter em JSON.
+     * Retorna os dados no formato QuestBank v1.0 ou lança um Error amigável.
+     */
+    async readTexFile(file) {
+        const text = await file.text();
+        let res;
+        try {
+            res = await fetch(this.LATEX_SERVER + '/convert-tex', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                body: text,
+            });
+        } catch (err) {
+            throw new Error(
+                'Servidor LaTeX não está rodando. Abra um terminal e execute:\n' +
+                '   questbank-server\n' +
+                '(veja questbank-server/README.md para instalação)'
+            );
+        }
+        const data = await res.json().catch(() => ({ error: 'resposta inválida' }));
+        if (!res.ok) {
+            const parts = [data.error || 'erro desconhecido'];
+            if (data.questao_id) parts.push(`questão: ${data.questao_id}`);
+            if (data.line) parts.push(`linha: ${data.line}`);
+            throw new Error(parts.join(' — '));
+        }
+        return data;
+    },
 };

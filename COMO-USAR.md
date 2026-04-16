@@ -178,3 +178,9 @@ Os dados ficam salvos apenas no SEU navegador (IndexedDB). Ninguém mais tem ace
 
 **Posso usar em mais de um computador?**
 Sim, mas os dados não sincronizam automaticamente. Use a função de backup para transferir dados entre computadores.
+
+
+Latex:
+
+cd C:\Users\heris\Documents\Antigravity\questbank\questbank-server && pip install -e .
+questbank-server (deixe o terminal aberto).

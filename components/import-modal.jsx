@@ -7,7 +7,21 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
     const [validation, setValidation] = React.useState(null);
     const [importing, setImporting] = React.useState(false);
     const [result, setResult] = React.useState(null);
+    const [latexServer, setLatexServer] = React.useState({ checked: false, ok: false });
     const fileInputRef = React.useRef(null);
+
+    // Checa servidor LaTeX ao abrir o modal (e a cada 10s enquanto aberto)
+    React.useEffect(() => {
+        if (!isOpen) return;
+        let active = true;
+        const check = async () => {
+            const s = await QBImport.checkLatexServer();
+            if (active) setLatexServer({ checked: true, ok: s.ok, version: s.version });
+        };
+        check();
+        const id = setInterval(check, 10000);
+        return () => { active = false; clearInterval(id); };
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -24,8 +38,12 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
     };
 
     const handleFile = async (selectedFile) => {
-        if (!selectedFile || !selectedFile.name.endsWith('.json')) {
-            setValidation({ valid: false, errors: ['Selecione um arquivo .json'], warnings: [], stats: {} });
+        if (!selectedFile) return;
+        const name = selectedFile.name.toLowerCase();
+        const isJson = name.endsWith('.json');
+        const isTex = name.endsWith('.tex');
+        if (!isJson && !isTex) {
+            setValidation({ valid: false, errors: ['Selecione um arquivo .json ou .tex'], warnings: [], stats: {} });
             return;
         }
 
@@ -33,9 +51,15 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
         setResult(null);
 
         try {
-            const data = await QBImport.readFile(selectedFile);
+            let data;
+            if (isTex) {
+                // converte via servidor Python local
+                data = await QBImport.readTexFile(selectedFile);
+            } else {
+                data = await QBImport.readFile(selectedFile);
+            }
             const validationResult = QBImport.validate(data);
-            setValidation({ ...validationResult, data });
+            setValidation({ ...validationResult, data, source: isTex ? 'tex' : 'json' });
         } catch (err) {
             setValidation({ valid: false, errors: [err.message], warnings: [], stats: {} });
         }
@@ -75,7 +99,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Importar Questões</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">Upload de arquivo JSON no padrão QuestBank v1.0</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Arquivo <b>.json</b> (padrão v1.0) ou <b>.tex</b> (requer servidor local)</p>
                     </div>
                     <button
                         onClick={handleClose}
@@ -108,7 +132,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept=".json"
+                                    accept=".json,.tex"
                                     onChange={(e) => handleFile(e.target.files[0])}
                                     className="hidden"
                                 />
@@ -126,11 +150,27 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                                         <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
-                                        <p className="text-sm text-gray-500">Arraste o arquivo JSON aqui</p>
+                                        <p className="text-sm text-gray-500">Arraste um arquivo <b>.json</b> ou <b>.tex</b></p>
                                         <p className="text-xs text-gray-400 mt-1">ou clique para selecionar</p>
                                     </div>
                                 )}
                             </div>
+
+                            {/* Status do servidor LaTeX */}
+                            {latexServer.checked && (
+                                <div className={`mt-3 flex items-center gap-2 text-xs px-3 py-2 rounded-lg border ${
+                                    latexServer.ok
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                        : 'bg-amber-50 border-amber-200 text-amber-700'
+                                }`}>
+                                    <span className={`w-2 h-2 rounded-full ${latexServer.ok ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                    {latexServer.ok ? (
+                                        <span>Servidor LaTeX conectado (v{latexServer.version}) — arquivos <b>.tex</b> podem ser importados.</span>
+                                    ) : (
+                                        <span>Servidor LaTeX offline. Para importar <b>.tex</b>, rode <code className="bg-amber-100 px-1 rounded">questbank-server</code> no terminal.</span>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Validation results */}
                             {validation && (

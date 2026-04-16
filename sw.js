@@ -1,6 +1,6 @@
 // QuestBank Service Worker — Network-First Strategy (v7 - Tags Feature)
 // Changed to network-first to ensure fresh files always load
-const CACHE_NAME = 'questbank-v14';
+const CACHE_NAME = 'questbank-v15';
 
 const APP_SHELL = [
     './',

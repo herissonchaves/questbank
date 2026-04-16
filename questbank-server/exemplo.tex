@@ -1,0 +1,119 @@
+% ==========================================================================
+%  Arquivo de exemplo — formato LaTeX do QuestBank
+%  Converter:  latex2questbank exemplo.tex -o exemplo.json
+% ==========================================================================
+
+\begin{questao}{000052}
+  \meta{tipo}{objetiva}
+  \meta{banca}{ENEM}
+  \meta{ano}{2020}
+  \meta{disciplina}{Física}
+  \meta{topico}{Energia}
+  \meta{conteudo}{Fontes de energia}
+  \meta{assunto}{Energia eólica e impacto ambiental}
+  \meta{dificuldade}{medio}
+  \meta{tags}{vestibular, ENEM, energia}
+
+  \enunciado{
+    O uso de equipamentos elétricos custa dinheiro e libera carbono na
+    atmosfera. Entretanto, diferentes usinas de energia apresentam custos
+    econômicos e ambientais distintos.
+
+    \imagem{grafico-energia.png}
+
+    Em relação aos custos associados às fontes energéticas apresentadas,
+    a energia obtida a partir do vento é
+  }
+
+  \begin{alternativas}
+    \alt{A}{mais cara que a energia nuclear e emite maior quantidade de carbono.}
+    \alt{B}{a segunda fonte mais cara e é livre de emissões de carbono.}
+    \alt{C}{mais cara que a energia solar e ambas são livres de emissões.}
+    \alt{D}{mais barata que as demais e emite grandes quantidades de carbono.}
+    \alt{E}{a fonte que gera energia mais barata e livre de emissões.}
+  \end{alternativas}
+
+  \gabarito{E}
+\end{questao}
+
+% ----------------------- questão com fórmulas matemáticas -------------------
+
+\begin{questao}{000073}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Dinâmica}
+  \meta{assunto}{Segunda Lei de Newton}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Um corpo de massa $m = 2\,\text{kg}$ é submetido a uma força resultante
+    $\vec{F} = 10\,\text{N}$. A aceleração do corpo, em m/s\textsuperscript{2}, é:
+
+    $$a = \frac{F}{m}$$
+  }
+
+  \begin{alternativas}
+    \alt{A}{$2\,\text{m/s}^2$}
+    \alt{B}{$5\,\text{m/s}^2$}
+    \alt{C}{$10\,\text{m/s}^2$}
+    \alt{D}{$20\,\text{m/s}^2$}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% ----------------------- questão discursiva ---------------------------------
+
+\begin{questao}{000091}
+  \meta{tipo}{discursiva}
+  \meta{banca}{UNICAMP}
+  \meta{ano}{2025}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Energia}
+  \meta{assunto}{Energia Potencial Gravitacional}
+  \meta{dificuldade}{dificil}
+
+  \enunciado{
+    Explique o conceito de \textbf{energia potencial gravitacional} e
+    derive a expressão para a energia potencial gravitacional de um corpo
+    de massa $m$ a uma altura $h$ da superfície terrestre.
+  }
+
+  \gabarito{$E_p = m g h$, onde $m$ é a massa, $g$ a aceleração gravitacional e $h$ a altura.}
+\end{questao}
+
+% ----------------------- questão adaptada (prefixo A-) ----------------------
+
+\begin{questao}{A-000052}
+  \meta{tipo}{objetiva}
+  \meta{banca}{ENEM}
+  \meta{ano}{2020}
+  \meta{disciplina}{Física}
+  \meta{topico}{Energia}
+  \meta{conteudo}{Fontes de energia}
+  \meta{assunto}{Energia eólica e impacto ambiental}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE, ENEM}
+
+  \enunciado{
+    O gráfico abaixo mostra o custo e a quantidade de carbono liberado por
+    diferentes fontes de energia.
+
+    \imagem{grafico-energia.png}
+
+    \textbf{Analisando o gráfico, o que podemos afirmar sobre a energia
+    eólica (vento)?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{É a energia mais cara do gráfico e não emite carbono.}
+    \alt{B}{É a energia mais barata do gráfico e não emite carbono.}
+    \alt{C}{É mais barata que a nuclear, mas emite muito carbono.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
