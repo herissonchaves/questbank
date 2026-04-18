@@ -276,6 +276,7 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
     React.useEffect(() => {
         if (!selectedImg) return;
         const handler = (e) => {
+            if (e.target.tagName === 'INPUT') return;
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 e.preventDefault();
                 selectedImg.remove();
@@ -296,10 +297,10 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
     // ── Render resize handles ──
     const renderResizeHandles = () => {
         if (!selectedImg || !editorRef.current) return null;
-        const editorRect = editorRef.current.getBoundingClientRect();
+        const containerRect = editorRef.current.parentElement.getBoundingClientRect();
         const imgRect = selectedImg.getBoundingClientRect();
-        const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
-        const left = imgRect.left - editorRect.left + editorRef.current.scrollLeft;
+        const top = imgRect.top - containerRect.top;
+        const left = imgRect.left - containerRect.left;
         const width = imgRect.width;
         const height = imgRect.height;
         const hs = 10;
@@ -320,16 +321,62 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                     border: '2px solid #4f46e5', borderRadius: '2px',
                     pointerEvents: 'none', zIndex: 10,
                 }} />
-                <div style={{
-                    position: 'absolute',
-                    top: top + height + 4, left: left + width/2,
-                    transform: 'translateX(-50%)',
-                    background: '#4f46e5', color: '#fff',
-                    fontSize: '10px', fontWeight: 600,
-                    padding: '1px 6px', borderRadius: '4px',
-                    whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 11,
-                }}>
-                    {Math.round(imgRect.width)} x {Math.round(imgRect.height)}
+                <div 
+                    onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+                    style={{
+                        position: 'absolute',
+                        top: top + height + 4, left: left + width/2,
+                        transform: 'translateX(-50%)',
+                        background: '#4f46e5', color: '#fff',
+                        fontSize: '10px', fontWeight: 600,
+                        padding: '1px 6px', borderRadius: '4px',
+                        whiteSpace: 'nowrap', zIndex: 11,
+                        display: 'flex', alignItems: 'center', gap: '2px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}
+                    title="Tecle Enter para confirmar a largura"
+                >
+                    <input 
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        style={{
+                            width: '35px', background: 'transparent', color: '#fff', 
+                            border: 'none', outline: 'none', fontSize: '10px', fontWeight: 600, 
+                            textAlign: 'right', padding: 0, margin: 0
+                        }}
+                        defaultValue={Math.round(imgRect.width)}
+                        onKeyDown={(e) => {
+                            e.stopPropagation();
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const newW = parseInt(e.target.value, 10);
+                                if (!isNaN(newW) && newW > 0) {
+                                    const aspectRatio = imgRect.width / imgRect.height;
+                                    const newH = Math.round(newW / aspectRatio);
+                                    selectedImg.style.width = newW + 'px';
+                                    selectedImg.style.height = newH + 'px';
+                                    selectedImg.style.maxWidth = 'none';
+                                    selectedImg.style.maxHeight = 'none';
+                                    selectedImg.setAttribute('data-width', newW);
+                                    selectedImg.setAttribute('data-height', newH);
+                                    
+                                    if (editorRef.current) {
+                                        const newHtml = editorRef.current.innerHTML;
+                                        lastHtml.current = newHtml;
+                                        isInternalChange.current = true;
+                                        onChange(newHtml);
+                                        pushHistory(newHtml);
+                                    }
+                                    
+                                    setSelectedImg(null);
+                                    requestAnimationFrame(() => setSelectedImg(selectedImg));
+                                }
+                            }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                    />
+                    <span style={{ cursor: 'default' }}>&times; {Math.round(imgRect.height)}</span>
                 </div>
                 {handles.map((h) => (
                     <div
@@ -355,6 +402,7 @@ const VisualEditor = ({ value, onChange, placeholder, className, forwardedRef })
                 onInput={(e) => { handleInput(); checkEmpty(); }}
                 onBlur={(e) => { handleInput(); checkEmpty(); }}
                 onKeyDown={handleKeyDown}
+                onScroll={() => { if (selectedImg) setResizing(prev => prev); }} // Force re-render on scroll to keep handles aligned
                 onClick={handleEditorClick}
                 onPaste={handlePaste}
                 onCompositionStart={() => { isComposing.current = true; }}
