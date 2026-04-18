@@ -3,7 +3,7 @@
 // Supports both objetiva and discursiva question types
 
 const QBImport = {
-    REQUIRED_FIELDS: ['id', 'enunciado', 'disciplina', 'topico', 'conteudo', 'assunto', 'tipo', 'dificuldade'],
+    REQUIRED_FIELDS: ['enunciado', 'disciplina', 'topico', 'conteudo', 'assunto', 'tipo', 'dificuldade'],
     VALID_TIPOS: ['objetiva', 'discursiva'],
     VALID_DIFICULDADES: ['facil', 'medio', 'dificil', 'nao_definida'],
 
@@ -118,18 +118,70 @@ const QBImport = {
      * Returns: { imported, duplicates, total }
      */
     async importToDb(questions) {
-        const existingIds = new Set((await db.questions.toArray()).map(q => q.id));
+        const allQuestions = await db.questions.toArray();
+        
+        let maxId = 0;
+        for (const q of allQuestions) {
+            const m1 = String(q.id).match(/^\d+/);
+            const m2 = String(q.id).match(/^A(\d+)/);
+            if (m1) maxId = Math.max(maxId, parseInt(m1[0], 10));
+            if (m2) maxId = Math.max(maxId, parseInt(m2[1], 10));
+        }
+
+        const existingEnunciados = new Set(allQuestions.map(q => q.enunciado.trim()));
         const toInsert = [];
         let duplicates = 0;
+        let nextId = maxId + 1;
+        const idMapping = {};
 
         for (const q of questions) {
-            if (existingIds.has(q.id)) {
+            if (existingEnunciados.has(q.enunciado.trim())) {
                 duplicates++;
                 continue;
             }
+            existingEnunciados.add(q.enunciado.trim());
+
+            let newId;
+            let oldId = q.id ? String(q.id).trim() : '';
+
+            // Verifica se é uma questão adaptada e qual o ID de referência dela (regular)
+            let isAdapted = false;
+            let baseOldId = '';
+
+            if (oldId.includes('auto-')) {
+                // Trata logs/pares do parser LaTeX
+                if (oldId.startsWith('Aauto-')) {
+                    isAdapted = true;
+                    baseOldId = 'auto-' + oldId.substring(6);
+                }
+            } else if (oldId.startsWith('A-')) {
+                isAdapted = true;
+                baseOldId = oldId.substring(2);
+            } else if (oldId.startsWith('A') && !oldId.startsWith('A-')) {
+                // Apenas inicia com A (ex: A000052)
+                isAdapted = true;
+                baseOldId = oldId.substring(1);
+            }
+
+            if (isAdapted) {
+                // Questão adaptada: vincula à questão regular correspondente
+                if (baseOldId && idMapping[baseOldId]) {
+                    newId = 'A' + idMapping[baseOldId];
+                } else {
+                    // Fallback se a regular não foi importada antes (ou falhou validação)
+                    newId = 'A' + nextId;
+                }
+            } else {
+                // Questão regular: ignora o ID do arquivo (seja qual for) e usa sequencial do banco
+                newId = nextId.toString();
+                if (oldId) {
+                    idMapping[oldId] = newId; // Salva o novo ID para a adaptada achar
+                }
+                nextId++;
+            }
 
             toInsert.push({
-                id: q.id,
+                id: newId,
                 enunciado: q.enunciado,
                 disciplina: q.disciplina,
                 topico: q.topico,
@@ -177,10 +229,21 @@ const QBImport = {
     },
 
     // -----------------------------------------------------------------
-    // Suporte a .tex — delega ao servidor local latex2questbank
+    // Suporte a .zip (LaTeX + imagens) — delega .tex ao servidor local
     // -----------------------------------------------------------------
 
     LATEX_SERVER: 'http://127.0.0.1:8765',
+
+    /** Mapa extensão → MIME type para imagens comuns */
+    _mimeType(filename) {
+        const ext = (filename.split('.').pop() || '').toLowerCase();
+        const map = {
+            png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+            gif: 'image/gif', svg: 'image/svg+xml', webp: 'image/webp',
+            bmp: 'image/bmp', ico: 'image/x-icon',
+        };
+        return map[ext] || 'application/octet-stream';
+    },
 
     /**
      * Verifica se o servidor LaTeX local está rodando.
@@ -201,22 +264,59 @@ const QBImport = {
     },
 
     /**
-     * Lê um arquivo .tex e envia para o servidor local converter em JSON.
-     * Retorna os dados no formato QuestBank v1.0 ou lança um Error amigável.
+     * Lê um arquivo .zip contendo um .tex + imagens.
+     * 1. Extrai o .tex e as imagens do zip
+     * 2. Envia o .tex ao servidor Python para parsing
+     * 3. Substitui {arquivo: "nome.png"} por data URIs base64
+     * Retorna os dados no formato QuestBank v1.0.
      */
-    async readTexFile(file) {
-        const text = await file.text();
+    async readZipFile(file) {
+        if (typeof JSZip === 'undefined') {
+            throw new Error('Biblioteca JSZip não encontrada. Verifique o index.html.');
+        }
+
+        // 1. Abrir o zip
+        const zipData = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(zipData);
+
+        // 2. Localizar o .tex dentro do zip (pode estar na raiz ou em subpasta)
+        let texFileName = null;
+        let texContent = null;
+        const imageFiles = {}; // basename → JSZip entry
+
+        zip.forEach((relativePath, entry) => {
+            if (entry.dir) return;
+            const basename = relativePath.split('/').pop().toLowerCase();
+            if (basename.endsWith('.tex') && !texFileName) {
+                texFileName = relativePath;
+            }
+            // Indexar imagens por basename (case-insensitive)
+            const imgExts = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'];
+            if (imgExts.some(ext => basename.endsWith(ext))) {
+                imageFiles[basename] = entry;
+                // Também indexar sem extensão alterada
+                imageFiles[relativePath.split('/').pop().toLowerCase()] = entry;
+            }
+        });
+
+        if (!texFileName) {
+            throw new Error('Nenhum arquivo .tex encontrado dentro do .zip.');
+        }
+
+        texContent = await zip.file(texFileName).async('string');
+
+        // 3. Enviar .tex ao servidor para parsing
         let res;
         try {
             res = await fetch(this.LATEX_SERVER + '/convert-tex', {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-                body: text,
+                body: texContent,
             });
         } catch (err) {
             throw new Error(
                 'Servidor LaTeX não está rodando. Abra um terminal e execute:\n' +
-                '   questbank-server\n' +
+                '   python -m latex2questbank\n' +
                 '(veja questbank-server/README.md para instalação)'
             );
         }
@@ -227,6 +327,36 @@ const QBImport = {
             if (data.line) parts.push(`linha: ${data.line}`);
             throw new Error(parts.join(' — '));
         }
+
+        // 4. Converter imagens referenciadas em base64 data URIs
+        if (data.questions && Array.isArray(data.questions)) {
+            for (const q of data.questions) {
+                if (!q.imagens || !Array.isArray(q.imagens)) continue;
+                const resolvedImages = [];
+                for (const img of q.imagens) {
+                    const arquivo = (img && typeof img === 'object') ? img.arquivo : img;
+                    if (!arquivo || typeof arquivo !== 'string') continue;
+                    const lookupKey = arquivo.toLowerCase();
+                    const entry = imageFiles[lookupKey];
+                    if (entry) {
+                        const arrayBuf = await entry.async('arraybuffer');
+                        const bytes = new Uint8Array(arrayBuf);
+                        let binary = '';
+                        for (let i = 0; i < bytes.length; i++) {
+                            binary += String.fromCharCode(bytes[i]);
+                        }
+                        const b64 = btoa(binary);
+                        const mime = this._mimeType(arquivo);
+                        resolvedImages.push(`data:${mime};base64,${b64}`);
+                    } else {
+                        // Imagem não encontrada no zip — manter referência original como aviso
+                        resolvedImages.push(`[IMAGEM NÃO ENCONTRADA: ${arquivo}]`);
+                    }
+                }
+                q.imagens = resolvedImages;
+            }
+        }
+
         return data;
     },
 };

@@ -34,7 +34,8 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
         }
     }); // re-run on full expansions
 
-    // Processar [IMAGEM_X] interceptando a string:
+    // Processar imagens inline e HTML no enunciado:
+    // Suporta: base64 data URIs (novo), {arquivo: "..."} legado, e marcadores [IMAGEM]
     const processInlineImagesAndHtml = (text, imgArray, truncate = false) => {
         let processedText = text || '';
 
@@ -43,13 +44,30 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
             processedText = window.QBHtmlSanitizer.cleanForDisplay(processedText);
         }
 
-        // Se houver array imagens iterar
+        // Resolver imagens — tanto [IMAGEM_X] quanto [IMAGEM] (do parser LaTeX)
         if (imgArray && imgArray.length > 0) {
+            // Substituir [IMAGEM_X] indexados
             for (let i = 0; i < imgArray.length; i++) {
                 const marker = `\\[IMAGEM_${i}\\]`;
                 const regex = new RegExp(marker, 'g');
-                processedText = processedText.replace(regex, `<br><img class="max-w-[80%] max-h-48 rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgArray[i]}" alt="Imagem inline ${i}" /><br>`);
+                const imgSrc = _resolveImageSrc(imgArray[i]);
+                if (imgSrc) {
+                    processedText = processedText.replace(regex, `<br><img class="max-w-[80%] max-h-48 rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgSrc}" alt="Imagem ${i}" /><br>`);
+                }
             }
+
+            // Substituir [IMAGEM] genéricos (do parser LaTeX) com a próxima imagem disponível
+            let imgIdx = 0;
+            processedText = processedText.replace(/\[IMAGEM\]/g, () => {
+                if (imgIdx < imgArray.length) {
+                    const imgSrc = _resolveImageSrc(imgArray[imgIdx]);
+                    imgIdx++;
+                    if (imgSrc) {
+                        return `<br><img class="max-w-[80%] max-h-48 rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgSrc}" alt="Imagem" /><br>`;
+                    }
+                }
+                return '';
+            });
         }
 
         if (truncate) {
@@ -58,6 +76,22 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
         }
 
         return <div dangerouslySetInnerHTML={{ __html: processedText }} />;
+    };
+
+    // Helper: resolve fonte da imagem (base64 string, {arquivo} object, ou string genérica)
+    const _resolveImageSrc = (img) => {
+        if (!img) return null;
+        // String: pode ser data URI base64, URL, ou texto de erro
+        if (typeof img === 'string') {
+            if (img.startsWith('data:') || img.startsWith('http')) return img;
+            if (img.startsWith('[IMAGEM NÃO ENCONTRADA')) return null;
+            return img; // fallback: tenta usar como src direto
+        }
+        // Object legado: {arquivo: "nome.png"}
+        if (typeof img === 'object' && img.arquivo) {
+            return null; // sem dados binários no formato legado
+        }
+        return null;
     };
 
     return (
@@ -233,21 +267,32 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                         {processInlineImagesAndHtml(displayQ.enunciado, displayQ.imagens)}
                     </div>
 
-                    {/* Images fallback */}
+                    {/* Images fallback — mostra imagens que não foram renderizadas inline */}
                     {displayQ.imagens && displayQ.imagens.length > 0 && (() => {
-                        const fallbackImages = displayQ.imagens.filter((_, i) => !(displayQ.enunciado || '').includes(`[IMAGEM_${i}]`));
+                        const enun = displayQ.enunciado || '';
+                        const fallbackImages = displayQ.imagens.filter((img, i) => {
+                            // Pula se já foi renderizada via [IMAGEM_X]
+                            if (enun.includes(`[IMAGEM_${i}]`)) return false;
+                            // Pula se já foi renderizada via [IMAGEM] genérico
+                            if (enun.includes('[IMAGEM]')) return false;
+                            // Só mostra se tem src válido
+                            return !!_resolveImageSrc(img);
+                        });
                         if (fallbackImages.length === 0) return null;
 
                         return (
                             <div className="flex flex-wrap gap-2 my-2">
-                                {fallbackImages.map((img, i) => (
-                                    <img
-                                        key={i}
-                                        src={img}
-                                        alt={`Fallback Imagem`}
-                                        className="max-w-[80%] max-h-48 rounded-lg border border-gray-200 shadow-sm"
-                                    />
-                                ))}
+                                {fallbackImages.map((img, i) => {
+                                    const src = _resolveImageSrc(img);
+                                    return src ? (
+                                        <img
+                                            key={i}
+                                            src={src}
+                                            alt={`Imagem da questão`}
+                                            className="max-w-[80%] max-h-48 rounded-lg border border-gray-200 shadow-sm"
+                                        />
+                                    ) : null;
+                                })}
                             </div>
                         )
                     })()}

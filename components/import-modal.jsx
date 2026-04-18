@@ -1,5 +1,5 @@
 // QuestBank — ImportModal Component
-// Upload JSON file with drag & drop, validation, and import (white theme)
+// Upload JSON or ZIP (LaTeX + images) with drag & drop, validation, and import (white theme)
 
 const ImportModal = ({ isOpen, onClose, onImport }) => {
     const [isDragging, setIsDragging] = React.useState(false);
@@ -8,6 +8,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
     const [importing, setImporting] = React.useState(false);
     const [result, setResult] = React.useState(null);
     const [latexServer, setLatexServer] = React.useState({ checked: false, ok: false });
+    const [processing, setProcessing] = React.useState(false);
     const fileInputRef = React.useRef(null);
 
     // Checa servidor LaTeX ao abrir o modal (e a cada 10s enquanto aberto)
@@ -30,6 +31,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
         setValidation(null);
         setImporting(false);
         setResult(null);
+        setProcessing(false);
     };
 
     const handleClose = () => {
@@ -41,27 +43,42 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
         if (!selectedFile) return;
         const name = selectedFile.name.toLowerCase();
         const isJson = name.endsWith('.json');
+        const isZip = name.endsWith('.zip');
         const isTex = name.endsWith('.tex');
-        if (!isJson && !isTex) {
-            setValidation({ valid: false, errors: ['Selecione um arquivo .json ou .tex'], warnings: [], stats: {} });
+
+        if (isTex) {
+            setValidation({
+                valid: false,
+                errors: ['Arquivos .tex não são mais aceitos diretamente. Compacte o .tex junto com as imagens em um arquivo .zip e tente novamente.'],
+                warnings: [],
+                stats: {},
+            });
+            return;
+        }
+
+        if (!isJson && !isZip) {
+            setValidation({ valid: false, errors: ['Selecione um arquivo .json ou .zip'], warnings: [], stats: {} });
             return;
         }
 
         setFile(selectedFile);
         setResult(null);
+        setProcessing(true);
 
         try {
             let data;
-            if (isTex) {
-                // converte via servidor Python local
-                data = await QBImport.readTexFile(selectedFile);
+            if (isZip) {
+                // Extrai .tex + imagens do zip, converte via servidor Python
+                data = await QBImport.readZipFile(selectedFile);
             } else {
                 data = await QBImport.readFile(selectedFile);
             }
             const validationResult = QBImport.validate(data);
-            setValidation({ ...validationResult, data, source: isTex ? 'tex' : 'json' });
+            setValidation({ ...validationResult, data, source: isZip ? 'zip' : 'json' });
         } catch (err) {
             setValidation({ valid: false, errors: [err.message], warnings: [], stats: {} });
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -99,7 +116,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Importar Questões</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">Arquivo <b>.json</b> (padrão v1.0) ou <b>.tex</b> (requer servidor local)</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Arquivo <b>.json</b> (padrão v1.0) ou <b>.zip</b> (LaTeX + imagens)</p>
                     </div>
                     <button
                         onClick={handleClose}
@@ -132,12 +149,21 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept=".json,.tex"
+                                    accept=".json,.zip"
                                     onChange={(e) => handleFile(e.target.files[0])}
                                     className="hidden"
                                 />
 
-                                {file ? (
+                                {processing ? (
+                                    <div className="flex flex-col items-center">
+                                        <svg className="w-8 h-8 text-brand-500 mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                        </svg>
+                                        <p className="text-sm font-medium text-gray-800">Processando arquivo...</p>
+                                        <p className="text-xs text-gray-400 mt-1">Extraindo questões e imagens</p>
+                                    </div>
+                                ) : file ? (
                                     <div className="flex flex-col items-center">
                                         <svg className="w-8 h-8 text-emerald-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -150,7 +176,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                                         <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
-                                        <p className="text-sm text-gray-500">Arraste um arquivo <b>.json</b> ou <b>.tex</b></p>
+                                        <p className="text-sm text-gray-500">Arraste um arquivo <b>.json</b> ou <b>.zip</b></p>
                                         <p className="text-xs text-gray-400 mt-1">ou clique para selecionar</p>
                                     </div>
                                 )}
@@ -165,12 +191,17 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                                 }`}>
                                     <span className={`w-2 h-2 rounded-full ${latexServer.ok ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                     {latexServer.ok ? (
-                                        <span>Servidor LaTeX conectado (v{latexServer.version}) — arquivos <b>.tex</b> podem ser importados.</span>
+                                        <span>Servidor LaTeX conectado (v{latexServer.version}) — arquivos <b>.zip</b> com LaTeX podem ser importados.</span>
                                     ) : (
-                                        <span>Servidor LaTeX offline. Para importar <b>.tex</b>, rode <code className="bg-amber-100 px-1 rounded">questbank-server</code> no terminal.</span>
+                                        <span>Servidor LaTeX offline. Para importar <b>.zip</b> com LaTeX, rode <code className="bg-amber-100 px-1 rounded">python -m latex2questbank</code> no terminal.</span>
                                     )}
                                 </div>
                             )}
+
+                            {/* Formato .zip info */}
+                            <div className="mt-3 text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                                <span className="font-semibold text-gray-500">Formato .zip:</span> Coloque o arquivo <code className="bg-gray-100 px-1 rounded">.tex</code> e as imagens na mesma pasta, compacte em <code className="bg-gray-100 px-1 rounded">.zip</code> e importe aqui.
+                            </div>
 
                             {/* Validation results */}
                             {validation && (
@@ -254,7 +285,7 @@ const ImportModal = ({ isOpen, onClose, onImport }) => {
                             </button>
                             <button
                                 onClick={handleImport}
-                                disabled={!validation?.validQuestions?.length || importing}
+                                disabled={!validation?.validQuestions?.length || importing || processing}
                                 className="px-5 py-2 text-sm font-semibold rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-all duration-200 btn-press disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-brand-500/20 flex items-center gap-2"
                             >
                                 {importing ? (

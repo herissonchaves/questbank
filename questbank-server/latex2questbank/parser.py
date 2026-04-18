@@ -145,6 +145,8 @@ def _split_questoes(text: str) -> List[Tuple[str, int, str]]:
     """Retorna lista de (id, linha_inicio, corpo_do_bloco)."""
     blocks = []
     pos = 0
+    auto_counter = 0
+    last_regular_auto_id = None
     while True:
         m = _QUESTAO_BEGIN_RE.search(text, pos)
         if not m:
@@ -159,7 +161,19 @@ def _split_questoes(text: str) -> List[Tuple[str, int, str]]:
         qid, after_id = _read_braced(text, i)
         qid = qid.strip()
         if not qid:
-            raise ParseError("ID da questão vazio", line=line_begin)
+            # ID vazio é permitido — o QuestBank atribui automaticamente na importação
+            auto_counter += 1
+            qid = f"auto-{auto_counter}"
+            last_regular_auto_id = qid
+        elif qid in ("A-", "A"):
+            # Questão adaptada (NEE) vinculada à questão regular anterior
+            if last_regular_auto_id:
+                qid = f"A{last_regular_auto_id}"
+            else:
+                auto_counter += 1
+                qid = f"Aauto-{auto_counter}"
+        else:
+            last_regular_auto_id = None
         # procura \end{questao}
         m_end = _QUESTAO_END_RE.search(text, after_id)
         if not m_end:

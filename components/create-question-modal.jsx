@@ -63,9 +63,17 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
     const [saving, setSaving] = React.useState(false);
     const [includeAdapted, setIncludeAdapted] = React.useState(false);
 
-    // Generate unique numeric ID
+    // Generate unique numeric ID sequentially based on existing questions
     const generateId = () => {
-        return Math.floor(10000000 + Math.random() * 90000000).toString();
+        const qs = existingQuestions || [];
+        let max = 0;
+        for (const q of qs) {
+            const m1 = String(q.id).match(/^\d+/);
+            const m2 = String(q.id).match(/^A(\d+)/);
+            if (m1) max = Math.max(max, parseInt(m1[0], 10));
+            if (m2) max = Math.max(max, parseInt(m2[1], 10));
+        }
+        return (max === 0 ? 1 : max + 1).toString();
     };
 
     const generateTag = () => {

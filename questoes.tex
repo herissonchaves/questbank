@@ -1,0 +1,2255 @@
+% saida/questoes.tex — gerado pelo agente
+% Fontes: lancamento vertical.docx e Capítulo 6 – Lançamento horizontal e lançamento oblíquo.docx
+% 41 questões regulares + 41 adaptadas (NEE/AEE) = 82 blocos totais
+% IDs em branco — o QuestBank atribui automaticamente na importação
+
+% ============================================================
+% ARQUIVO 1: Lançamento vertical — Exercícios Resolvidos (Queda Livre)
+% ============================================================
+
+% --- Questão ER-QL-01 (sem banca — exercício do livro) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Em um experimento para se observar a queda dos corpos, dois sensores, A e B, foram abandonados de uma altura de 180 m sob ação exclusiva da aceleração da gravidade, cujo valor é $10\,\text{m/s}^2$. Ao tocar o solo, cada sensor envia um sinal que é detectado por um computador central que registra o tempo de queda. Dois segundos após abandonar o sensor A, larga-se o sensor B da mesma posição.
+
+    \imagem{er-ql01-sensores.png}
+
+    a) Após o sensor A ser abandonado, quanto tempo, em segundos, o computador leva para detectar o seu sinal?
+
+    b) Quando o computador detecta o sinal do sensor A, em qual altura, em metros, estava o sensor B em relação ao solo?
+  }
+
+  \gabarito{O sensor A leva 6 s para atingir o solo. Nesse instante, o sensor B caiu durante 4 s e percorreu 80 m, estando a 100 m do solo.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Dois sensores são soltos de 180 m de altura em queda livre ($g = 10\,\text{m/s}^2$). O sensor B é solto 2 s após o sensor A.
+    \imagem{er-ql01-sensores.png}
+    Use a fórmula $h = \frac{g \cdot t^2}{2}$ para calcular o tempo de queda do sensor A e a posição do sensor B quando A chega ao solo.
+
+    \textbf{Quanto tempo o sensor A leva para atingir o solo? A que altura estará o sensor B nesse instante?}
+  }
+
+  \gabarito{O sensor A leva 6 s. O sensor B está a 100 m do solo.}
+\end{questao}
+
+% --- Questão ER-QL-02 (sem banca — exercício do livro) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Uma torneira mal fechada pinga em intervalos de tempo iguais. A figura a seguir mostra a situação no instante em que uma das gotas está se soltando. Supondo que cada pingo abandone a torneira com velocidade nula e desprezando a resistência do ar, determine a razão A/B entre a distância A e B mostrada na figura.
+
+    \imagem{er-ql02-torneira-gotas.png}
+  }
+
+  \gabarito{A/B = 3. Na queda livre, as distâncias percorridas em intervalos iguais seguem a proporção 1:3:5:7..., portanto A = 3B.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{er-ql02-torneira-gotas.png}
+
+    A figura mostra gotas que pingam de uma torneira em intervalos iguais. As distâncias A e B indicam os espaços entre gotas consecutivas em queda livre.
+
+    Na queda livre, as distâncias percorridas em intervalos iguais de tempo seguem os números ímpares: 1, 3, 5, 7...
+
+    \textbf{Qual é o valor da razão A/B?}
+  }
+
+  \gabarito{A/B = 3.}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 1: Lançamento vertical — AGORA É COM @VOCÊ (Queda Livre)
+% ============================================================
+
+% --- Questão ACV-QL-01 (sem banca — Galileu Torre de Pisa) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    O experimento científico de Galileu Galilei na Torre de Pisa é conhecido como um dos mais relevantes da história. Não há evidências concretas a respeito de sua realização, sendo a principal referência uma contestada citação na biografia de Galileu escrita por Vincenzo Viviani 12 anos após a morte do cientista. Entretanto, é um fato que se um experimento, que teria sido realizado em 1591, é descrito e comentado até hoje, isso mostra o quanto Galileu é importante para a história da Física e como as consequências desse hipotético experimento são significativas.
+
+    Segundo relatos, Galileu Galilei soltou do alto da Torre de Pisa duas esferas com mesmo tamanho e massas diferentes. As esferas caíram com uma desprezível diferença no tempo de queda, contrariando a expectativa aristotélica, de que a esfera mais pesada cairia com maior velocidade. Com essas informações, que conclusão importante a respeito da queda dos corpos pode ser obtida?
+  }
+
+  \gabarito{A conclusão é que, desprezando a resistência do ar, todos os corpos caem com a mesma aceleração gravitacional, independentemente de suas massas.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Galileu soltou duas esferas de massas diferentes do alto da Torre de Pisa. As duas chegaram ao chão quase ao mesmo tempo, mostrando que a massa não influencia a velocidade de queda.
+
+    Esse experimento contrariou a ideia antiga de que objetos mais pesados caem mais rápido.
+
+    \textbf{Que conclusão sobre a queda dos corpos esse experimento permite obter?}
+  }
+
+  \gabarito{Todos os corpos caem com a mesma aceleração gravitacional, independentemente da massa.}
+\end{questao}
+
+% --- Questão ACV-QL-02 (sem banca — bola de basquete) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Uma bola de basquete cai em queda livre após ficar momentaneamente em repouso sobre o aro da tabela. Considerando que a altura do aro até o chão da quadra é de 3,2 m e que no local a aceleração da gravidade seja $10\,\text{m/s}^2$, responda ao que se pede.
+
+    Calcule a velocidade, em m/s, com que a bola atinge o chão da quadra.
+
+    Indique quanto tempo a bola leva, em segundos, para atingir o solo.
+  }
+
+  \gabarito{v = 8 m/s e t = 0,8 s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma bola de basquete cai do aro, que está a 3,2 m de altura, partindo do repouso (velocidade inicial = 0). A aceleração da gravidade é $10\,\text{m/s}^2$.
+
+    Use $v^2 = 2 \cdot g \cdot h$ para a velocidade e $v = g \cdot t$ para o tempo.
+
+    \textbf{Qual a velocidade com que a bola chega ao chão e quanto tempo ela leva para cair?}
+  }
+
+  \gabarito{v = 8 m/s e t = 0,8 s.}
+\end{questao}
+
+% --- Questão ACV-QL-03 (sem banca — câmera no prédio) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Um grupo de estudantes realizou um teste envolvendo queda livre no prédio da escola. Sob supervisão de seus professores e adotando procedimentos de segurança, como isolar e impedir a passagem de pessoas na parte inferior do prédio para evitar acidentes, os estudantes soltam, da base de uma janela, um objeto e tentam gravar a sua passagem pela janela do andar de baixo, onde se encontra uma câmera de vídeo que captura 120 quadros por segundo.
+
+    \imagem{acv-ql03-predio-janela.png}
+
+    Em quantos quadros ocorre o registro da passagem do objeto? Considere $g = 10\,\text{m/s}^2$.
+  }
+
+  \gabarito{O número de quadros depende da altura entre as janelas e da altura da janela inferior (dados da figura). Calcula-se o tempo de passagem pela janela usando cinemática e multiplica-se por 120 quadros/s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{acv-ql03-predio-janela.png}
+
+    A figura mostra um prédio com duas janelas. Um objeto é solto da janela superior e uma câmera na janela inferior grava 120 quadros por segundo.
+
+    Para encontrar o número de quadros, calcule o tempo que o objeto leva para passar pela janela inferior e multiplique por 120.
+
+    \textbf{Em quantos quadros a câmera registra a passagem do objeto?}
+  }
+
+  \gabarito{Depende das medidas da figura. Calcula-se o tempo de passagem pela janela e multiplica-se por 120.}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 1: Lançamento vertical — Exercícios Resolvidos (Lançamento Vertical para Cima)
+% ============================================================
+
+% --- Questão ER-LV-01 (sem banca — moeda do juiz) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Um juiz de futebol lança verticalmente uma moeda para cima com velocidade de 2 m/s.
+
+    Considerando $g = 10\,\text{m/s}^2$, calcule
+
+    o tempo de permanência da moeda no ar, em segundos, até voltar à mão do juiz.
+
+    a altura máxima atingida pela moeda, em metros.
+  }
+
+  \gabarito{Tempo total = 0,4 s. Altura máxima = 0,2 m.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um juiz lança uma moeda para cima com velocidade de 2 m/s. A gravidade desacelera a moeda ($g = 10\,\text{m/s}^2$).
+
+    O tempo de subida é $t = v_0 / g$ e o tempo total é o dobro disso. A altura máxima pode ser calculada com $h = v_0^2 / (2g)$.
+
+    \textbf{Qual é o tempo que a moeda fica no ar e qual a altura máxima que ela atinge?}
+  }
+
+  \gabarito{Tempo = 0,4 s. Altura = 0,2 m.}
+\end{questao}
+
+% --- Questão ER-LV-02 (UPF) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UPF}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Durante um experimento, um estudante joga uma bola de tênis verticalmente para cima e observa sua trajetória até retornar à sua mão.
+
+    Desprezando a resistência do ar, qual gráfico melhor representa a velocidade (v) da bola em relação ao tempo de movimento (t) durante todo o percurso?
+
+    \imagem{er-lv02-graficos-upf.png}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Gráfico A}
+    \alt{B}{Gráfico B}
+    \alt{C}{Gráfico C}
+    \alt{D}{Gráfico D}
+    \alt{E}{Gráfico E}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UPF}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{er-lv02-graficos-upf.png}
+
+    Os gráficos mostram diferentes formas de representar a velocidade de uma bola lançada para cima em função do tempo, durante todo o percurso (subida e descida).
+
+    Na subida, a velocidade começa positiva e diminui até zero (ponto mais alto). Na descida, a velocidade aumenta no sentido oposto e fica negativa.
+
+    \textbf{Qual gráfico representa uma reta que começa positiva, cruza o zero e fica negativa?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Gráfico A (reta decrescente que cruza o zero).}
+    \alt{B}{Gráfico C (parábola).}
+    \alt{C}{Gráfico D (velocidade sempre positiva).}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 1: Lançamento vertical — AGORA É COM @VOCÊ (Lançamento Vertical para Cima)
+% ============================================================
+
+% --- Questão ACV-LV-01 (sem banca — altura da árvore) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Para tentar descobrir a altura de uma árvore, dois amigos fazem o seguinte teste: um deles jogou uma pequena bola para cima até a altura aproximada do topo da árvore, enquanto o segundo mediu o tempo total para a bola subir até o topo e retornar à mão de quem a lançou. Sendo 1,8 s o tempo total que a bola ficou no ar, desprezando-se a resistência do ar e considerando a aceleração da gravidade igual a $10\,\text{m/s}^2$, responda ao que se pede.
+
+    Qual a altura da árvore?
+
+    Com qual velocidade a bola foi lançada?
+  }
+
+  \gabarito{Altura = 4,05 m. Velocidade de lançamento = 9 m/s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma bola é lançada para cima até a altura de uma árvore e volta à mão em 1,8 s no total. A gravidade é $10\,\text{m/s}^2$.
+
+    O tempo de subida é metade do tempo total: 0,9 s. A velocidade de lançamento é $v_0 = g \cdot t_{subida}$ e a altura é $h = v_0^2 / (2g)$.
+
+    \textbf{Qual a altura da árvore e a velocidade de lançamento da bola?}
+  }
+
+  \gabarito{Altura = 4,05 m. Velocidade = 9 m/s.}
+\end{questao}
+
+% --- Questão ACV-LV-02 (sem banca — plataforma de mergulho, duas pedras) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para baixo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Do alto de uma plataforma de mergulho, duas pedras são lançadas para baixo. Uma delas foi solta a partir do repouso e atinge a piscina depois de 2 s. A segunda, lançada com velocidade inicial não nula, atinge a piscina depois de 1,8 s. Desprezando-se a resistência do ar e considerando $g = 10\,\text{m/s}^2$, qual o valor da velocidade de lançamento, em m/s, da segunda pedra?
+  }
+
+  \gabarito{A altura da plataforma é h = g·t²/2 = 10·4/2 = 20 m. Para a segunda pedra: 20 = v₀·1,8 + 5·(1,8)² = 1,8·v₀ + 16,2, logo v₀ ≈ 2,1 m/s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para baixo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Duas pedras são lançadas para baixo de uma plataforma de mergulho. A primeira é solta do repouso e cai em 2 s. A segunda é lançada com velocidade inicial e cai em 1,8 s. ($g = 10\,\text{m/s}^2$.)
+
+    Primeiro calcule a altura da plataforma usando os dados da primeira pedra. Depois use essa altura para encontrar a velocidade inicial da segunda.
+
+    \textbf{Qual é a velocidade de lançamento da segunda pedra?}
+  }
+
+  \gabarito{Aproximadamente 2,1 m/s.}
+\end{questao}
+
+% --- Questão ACV-LV-03 (sem banca — sensor em Marte) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Uma empresa de tecnologia aeroespacial está projetando um dispositivo que irá recolher amostras da atmosfera de Marte. O dispositivo lança um sensor verticalmente para cima com certa velocidade inicial. No ponto mais alto atingido pelo sensor, um pequeno paraquedas se abre e algumas medições são realizadas durante a queda. Primeiramente, o dispositivo foi testado na superfície da Terra com a mesma velocidade inicial projetada para o lançamento a ser realizado em Marte.
+
+    Qual deve ser a razão entre a altura máxima esperada para ser alcançada em Marte e a altura obtida na Terra? Para fins práticos, despreze a resistência do ar nos dois planetas e considere a gravidade na Terra como $10\,\text{m/s}^2$ e a de Marte igual a $4\,\text{m/s}^2$.
+  }
+
+  \gabarito{A razão H\_Marte / H\_Terra = g\_Terra / g\_Marte = 10/4 = 2,5.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um sensor é lançado para cima com a mesma velocidade na Terra e em Marte. A altura máxima é $h = v_0^2 / (2g)$.
+
+    Como a velocidade é a mesma, a altura é inversamente proporcional à gravidade. $g_{Terra} = 10\,\text{m/s}^2$ e $g_{Marte} = 4\,\text{m/s}^2$.
+
+    \textbf{Qual é a razão entre a altura máxima em Marte e na Terra?}
+  }
+
+  \gabarito{2,5 (a altura em Marte é 2,5 vezes maior).}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 1: Lançamento vertical — Atividades Propostas
+% ============================================================
+
+% --- Questão LV-01 (UEA 2022) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UEA}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    A Nasa Space Power Facility é um laboratório que possui a maior câmara de vácuo do mundo. No interior dessa câmara foi conduzido um experimento utilizando uma bola de boliche e uma pena. Ambas foram erguidas a uma mesma altura, e a câmara foi evacuada. Após esse procedimento, em ausência de ar, a bola de boliche e a pena foram abandonadas simultaneamente.
+
+    Disponível em: www.nasa.gov. (adaptado)
+
+    Ao final desse experimento, observou-se que
+  }
+
+  \begin{alternativas}
+    \alt{A}{a bola atingiu o solo primeiro por ter massa maior que a da pena, mesmo com a ausência de ar.}
+    \alt{B}{a pena permaneceu parada onde estava e a bola atingiu o solo.}
+    \alt{C}{a pena e a bola adquiriram uma aceleração, durante a queda, menor do que a da gravidade local.}
+    \alt{D}{a pena, por ser menor que a bola, atingiu o solo primeiro.}
+    \alt{E}{a bola e a pena atingiram o solo simultaneamente.}
+  \end{alternativas}
+
+  \gabarito{E}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UEA}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um laboratório possui uma câmara gigante sem ar (vácuo). Dentro dela, uma bola de boliche e uma pena foram soltas ao mesmo tempo da mesma altura.
+
+    A câmara não tem ar, o que elimina a resistência ao movimento dos objetos.
+
+    \textbf{O que aconteceu com a bola de boliche e a pena ao final do experimento?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{A bola caiu primeiro porque é mais pesada.}
+    \alt{B}{A pena caiu primeiro porque é menor.}
+    \alt{C}{As duas atingiram o solo ao mesmo tempo.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+% --- Questão LV-02 (PUC-RJ 2023) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{PUC-RJ}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Uma bola de massa 2,0 kg é lançada verticalmente para cima, a partir do solo. Após 0,5 s, sua velocidade é a metade daquela de lançamento. Com qual velocidade, em m/s, a bola é lançada?
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+  }
+
+  \begin{alternativas}
+    \alt{A}{2,0}
+    \alt{B}{5,0}
+    \alt{C}{10}
+    \alt{D}{20}
+    \alt{E}{50}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{PUC-RJ}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma bola é lançada para cima. Depois de 0,5 s, a velocidade da bola é a metade da velocidade com que foi lançada.
+
+    A gravidade desacelera a bola à razão de $10\,\text{m/s}^2$.
+
+    \textbf{Qual era a velocidade de lançamento da bola, em m/s?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{5,0}
+    \alt{B}{10}
+    \alt{C}{20}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LV-03 (FGV) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FGV}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Uma pedra foi arremessada verticalmente para cima, a partir do solo, e permaneceu no ar por 4 s até regressar ao solo. Desprezando a resistência do ar e adotando $g = 10\,\text{m/s}^2$, a altura máxima atingida por essa pedra foi
+  }
+
+  \begin{alternativas}
+    \alt{A}{5 m.}
+    \alt{B}{10 m.}
+    \alt{C}{15 m.}
+    \alt{D}{20 m.}
+    \alt{E}{25 m.}
+  \end{alternativas}
+
+  \gabarito{D}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FGV}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma pedra foi lançada para cima a partir do solo e voltou ao solo após 4 s no ar. A gravidade é $g = 10\,\text{m/s}^2$.
+
+    Como o movimento é simétrico, a pedra leva 2 s para subir e 2 s para descer.
+
+    \textbf{Qual foi a altura máxima atingida pela pedra?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{10 m.}
+    \alt{B}{20 m.}
+    \alt{C}{25 m.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LV-04 (UTFPR 2023) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UTFPR}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Assinale o gráfico que melhor representa a velocidade em função do tempo durante uma queda livre desprezando a resistência do ar.
+
+    \imagem{lv04-graficos-queda-livre.png}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Gráfico A}
+    \alt{B}{Gráfico B}
+    \alt{C}{Gráfico C}
+    \alt{D}{Gráfico D}
+    \alt{E}{Gráfico E}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UTFPR}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lv04-graficos-queda-livre.png}
+
+    Os gráficos acima mostram diferentes formas de relacionar a velocidade ($v$) com o tempo ($t$) de um objeto em queda livre. Na queda livre, sem resistência do ar, a velocidade começa em zero e cresce de forma constante enquanto o objeto cai.
+
+    \textbf{Qual gráfico representa corretamente a velocidade crescendo de forma constante a partir do repouso?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Gráfico A (reta que parte do zero e cresce).}
+    \alt{B}{Gráfico C (linha horizontal, velocidade constante).}
+    \alt{C}{Gráfico E (curva decrescente).}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+% --- Questão LV-05 (UNISINOS) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UNISINOS}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Uma pequena pedra é abandonada do repouso do alto de uma ponte, 45 m acima do nível da água de um rio que passa por baixo dela. A pedra cai dentro de uma pequena embarcação que se move com velocidade constante e que estava a 12 m de distância do ponto de impacto, no instante em que a pedra foi solta. O módulo da velocidade com que a embarcação se move no rio é
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+  }
+
+  \begin{alternativas}
+    \alt{A}{1 m/s.}
+    \alt{B}{2 m/s.}
+    \alt{C}{3 m/s.}
+    \alt{D}{4 m/s.}
+    \alt{E}{5 m/s.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UNISINOS}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma pedra cai em queda livre de uma ponte a 45 m de altura. A pedra cai exatamente dentro de um barco que estava a 12 m do ponto de impacto quando a pedra foi solta.
+
+    O barco se move com velocidade constante. A pedra leva um tempo determinado para cair, e durante esse mesmo tempo o barco percorre 12 m.
+
+    \textbf{Qual é a velocidade do barco?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{2 m/s.}
+    \alt{B}{3 m/s.}
+    \alt{C}{4 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LV-06 (UERJ 2023) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UERJ}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    O Sistema Solar é formado por planetas que apresentam diferentes acelerações da gravidade. Admita que um corpo é solto em queda livre na Terra a uma altura \textbf{h} e atinge a superfície do planeta com velocidade de 5 m/s. Admita ainda um planeta P, também do Sistema Solar, em que o mesmo corpo é solto, à mesma altura \textbf{h}, e atinge velocidade final de 8 m/s.
+
+    Sabe-se que o quadrado da velocidade com a qual um corpo em queda livre atinge a superfície é diretamente proporcional à aceleração da gravidade do planeta. Considere os valores aproximados apresentados na tabela.
+
+    \begin{tabular}{cc}
+    Planeta & Aceleração da gravidade (m/s\textsuperscript{2}) \\
+    Júpiter & 25 \\
+    Marte & 4 \\
+    Netuno & 11 \\
+    Terra & 10 \\
+    Vênus & 9 \\
+    \end{tabular}
+
+    Com base nessas informações, o planeta que apresenta a aceleração da gravidade mais próxima à do planeta P é
+  }
+
+  \begin{alternativas}
+    \alt{A}{Júpiter.}
+    \alt{B}{Marte.}
+    \alt{C}{Netuno.}
+    \alt{D}{Vênus.}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UERJ}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    A tabela abaixo mostra a aceleração da gravidade em diferentes planetas do Sistema Solar.
+
+    \begin{tabular}{cc}
+    Planeta & Aceleração da gravidade (m/s\textsuperscript{2}) \\
+    Júpiter & 25 \\
+    Marte & 4 \\
+    Netuno & 11 \\
+    Terra & 10 \\
+    Vênus & 9 \\
+    \end{tabular}
+
+    A tabela organiza os planetas e suas respectivas acelerações gravitacionais, que determinam a velocidade com que objetos caem em cada planeta.
+
+    Um objeto cai na Terra e chega com 5 m/s. No planeta P chega com 8 m/s. Como $v^2$ é proporcional a $g$, o planeta P tem $g \approx 25{,}6\,\text{m/s}^2$.
+
+    \textbf{Qual planeta tem a gravidade mais próxima à do planeta P?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Júpiter (25 m/s\textsuperscript{2}).}
+    \alt{B}{Netuno (11 m/s\textsuperscript{2}).}
+    \alt{C}{Vênus (9 m/s\textsuperscript{2}).}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+% --- Questão LV-07 (FMC) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FMC}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{dificil}
+
+  \enunciado{
+    Uma pedra é abandonada na beira de um abismo e, desprezando-se a resistência do ar, cai sob a ação apenas da força gravitacional. Dois segundos após, uma segunda pedra é abandonada da mesma posição e, nesse instante, a distância entre as duas pedras é \textbf{d}. Dois segundos após a segunda pedra ser abandonada, a distância entre elas será
+  }
+
+  \begin{alternativas}
+    \alt{A}{d.}
+    \alt{B}{2d.}
+    \alt{C}{3d.}
+    \alt{D}{4d.}
+    \alt{E}{5d.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FMC}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Duas pedras são soltas em queda livre da beira de um abismo. A segunda pedra é solta 2 s depois da primeira. No momento em que a segunda é solta, a distância entre elas é \textbf{d}.
+
+    A pedra que cai há mais tempo se afasta cada vez mais da outra, pois a gravidade acelera ambas igualmente, mas a primeira já tem velocidade maior.
+
+    \textbf{Passados mais 2 s após a segunda pedra ser solta, qual será a distância entre as duas pedras?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{d.}
+    \alt{B}{2d.}
+    \alt{C}{3d.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+% --- Questão LV-08 (UECE 2022) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UECE}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Um objeto em queda livre percorre uma distância X durante o primeiro segundo de queda. Desprezando as forças resistivas e considerando a aceleração da gravidade constante ao longo de todo o percurso, a distância percorrida por esse objeto durante o quarto segundo da queda corresponde a
+  }
+
+  \begin{alternativas}
+    \alt{A}{3X.}
+    \alt{B}{5X.}
+    \alt{C}{4X.}
+    \alt{D}{7X.}
+  \end{alternativas}
+
+  \gabarito{D}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UECE}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Queda livre}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um objeto em queda livre percorre uma distância X no primeiro segundo. Em cada segundo seguinte, a distância percorrida aumenta de forma crescente, pois o objeto está acelerando.
+
+    Na queda livre, a distância percorrida no $n$-ésimo segundo é proporcional ao número ímpar correspondente: 1X, 3X, 5X, 7X, ...
+
+    \textbf{Qual é a distância percorrida pelo objeto durante o quarto segundo de queda?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{5X.}
+    \alt{B}{7X.}
+    \alt{C}{9X.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LV-09 (EEAR) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{EEAR}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{dificil}
+
+  \enunciado{
+    Um professor cronometra o tempo ``$t_S$'' que um objeto (considerado um ponto material) lançado a partir do solo, verticalmente para cima e com uma velocidade inicial, leva para realizar um deslocamento $\Delta x_S$ até atingir a altura máxima. Em seguida, o professor mede, em relação à altura máxima, o deslocamento de descida $\Delta x_D$ ocorrido em um intervalo de tempo igual a 1/4 de ``$t_S$'' cronometrado inicialmente.
+
+    \textbf{Dado:} Considere o módulo da aceleração da gravidade constante e que, durante todo o movimento do objeto, não há nenhum tipo de atrito.
+
+    A razão $\dfrac{\Delta x_S}{\Delta x_D}$ é igual a
+  }
+
+  \begin{alternativas}
+    \alt{A}{2.}
+    \alt{B}{4.}
+    \alt{C}{8.}
+    \alt{D}{16.}
+  \end{alternativas}
+
+  \gabarito{D}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{EEAR}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical para cima}
+  \meta{dificuldade}{medio}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um objeto é lançado para cima e leva um tempo $t_S$ para chegar à altura máxima, percorrendo a distância $\Delta x_S$. A partir da altura máxima, o objeto começa a cair. Mede-se o deslocamento de descida $\Delta x_D$ ocorrido em um tempo igual a $t_S / 4$.
+
+    Na descida, o objeto parte do repouso e o tempo de descida é 4 vezes menor que o tempo de subida.
+
+    \textbf{Qual é a razão $\dfrac{\Delta x_S}{\Delta x_D}$?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{4.}
+    \alt{B}{8.}
+    \alt{C}{16.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+% --- Questão LV-10 (UPE) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UPE}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical}
+  \meta{dificuldade}{dificil}
+
+  \enunciado{
+    Do alto de um edifício de altura 20,0 m, deixou-se cair, desde o repouso, uma pequena esfera de aço; ao mesmo tempo, no chão desse edifício, na mesma linha imaginária, lançou-se para cima outra esfera de aço com velocidade $v_0$. Qual é aproximadamente a velocidade $v_0$, em m/s, da segunda esfera para que elas se encontrem na meia altura do edifício?
+
+    \textbf{Dados:} $g = 10\,\text{m/s}^2$ e $\sqrt{2} = 1{,}4$.
+  }
+
+  \begin{alternativas}
+    \alt{A}{4}
+    \alt{B}{10}
+    \alt{C}{14}
+    \alt{D}{20}
+    \alt{E}{25}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UPE}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento vertical}
+  \meta{dificuldade}{medio}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma esfera de aço cai em queda livre do topo de um edifício de 20 m. Ao mesmo tempo, uma segunda esfera é lançada do chão para cima com velocidade $v_0$. As duas partem juntas e devem se encontrar na metade da altura do edifício (10 m).
+
+    A esfera que cai leva um certo tempo para descer 10 m. A esfera lançada para cima deve estar em 10 m de altura nesse mesmo instante.
+
+    \textbf{Qual é aproximadamente a velocidade de lançamento $v_0$ da segunda esfera? Dados: $g = 10\,\text{m/s}^2$ e $\sqrt{2} = 1{,}4$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{10 m/s.}
+    \alt{B}{14 m/s.}
+    \alt{C}{20 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 2: Lançamento horizontal — Exercícios (seção inicial)
+% ============================================================
+
+% --- Questão EX-LH-01 (sem banca — disco e cachorro) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Uma pessoa lança horizontalmente um disco para seu cachorro pegar. No mesmo instante, o animal inicia um movimento para alcançar o brinquedo e permanece abaixo dele o tempo todo até conseguir pegá-lo antes que atinja o solo.
+
+    \imagem{ex-lh01-disco-cachorro.png}
+
+    Nessas condições, considerando que não há resistência do ar, o movimento do cachorro é
+  }
+
+  \begin{alternativas}
+    \alt{A}{uniforme, uma vez que a velocidade horizontal do disco é constante ao longo do movimento.}
+    \alt{B}{acelerado, pois deve acompanhar o disco, que tem sua velocidade crescente com a descida.}
+    \alt{C}{acelerado, porque a velocidade horizontal do disco aumenta com o tempo.}
+    \alt{D}{retardado, devido ao movimento do disco ser parabólico.}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{ex-lh01-disco-cachorro.png}
+
+    A figura mostra uma pessoa lançando um disco horizontalmente e um cachorro correndo abaixo dele para pegá-lo.
+
+    No lançamento horizontal, a velocidade na direção horizontal permanece constante (sem resistência do ar). O cachorro está sempre abaixo do disco, acompanhando sua projeção horizontal.
+
+    \textbf{Como é o movimento do cachorro enquanto ele está abaixo do disco?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Uniforme, pois a velocidade horizontal do disco é constante.}
+    \alt{B}{Acelerado, pois a velocidade total do disco aumenta.}
+    \alt{C}{Retardado, pois o disco desacelera horizontalmente.}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+% --- Questão EX-LH-02 (sem banca — plataforma de mergulho 5 m) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Em um parque aquático, há uma plataforma de mergulho cuja altura é 5 m. Posicionada no início dela, uma pessoa irá correr a 2 m/s até sua ponta, para, então, lançar-se em um mergulho. Ao deixar a plataforma, a pessoa possui apenas o movimento horizontal, ou seja, ela não salta verticalmente.
+
+    \imagem{ex-lh02-plataforma-mergulho.png}
+
+    Desprezando a resistência do ar e as dimensões da pessoa e considerando $g = 10\,\text{m/s}^2$, determine
+
+    o tempo que a pessoa levará para chegar à água.
+
+    a distância horizontal percorrida durante a queda.
+  }
+
+  \gabarito{t = 1 s. Distância horizontal = 2 m.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{ex-lh02-plataforma-mergulho.png}
+
+    A figura mostra uma plataforma de mergulho de 5 m de altura. A pessoa corre a 2 m/s e sai horizontalmente da ponta.
+
+    Use $h = g \cdot t^2 / 2$ para o tempo de queda e $d = v_x \cdot t$ para a distância horizontal.
+
+    \textbf{Quanto tempo a pessoa leva para chegar à água e qual a distância horizontal percorrida?}
+  }
+
+  \gabarito{t = 1 s. Distância = 2 m.}
+\end{questao}
+
+% --- Questão EX-LH-03 (sem banca — drone solta pacote 20 m) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Entregas por meio do uso de \textit{drones} estão cada vez mais comuns em centros urbanos de países com maior grau de industrialização. Como procedimento geral, um \textit{drone} é carregado com a encomenda em uma central de entregas e pilotado remotamente até o local de desembarque. Ao chegar ao destino, a encomenda é solta a uma pequena altura.
+
+    \imagem{ex-lh03-drone-pacote.png}
+
+    Imagine que, em virtude de algum problema na programação do \textit{drone}, ele solte um pacote a uma altura de 20 m. Considerando que, no momento em que o pacote foi solto, o \textit{drone} se deslocava a 10 m/s na direção horizontal, determine, no instante em que o pacote atinge o solo,
+
+    a velocidade vertical do pacote.
+
+    a velocidade total do pacote.
+
+    a tangente do ângulo entre a velocidade total do pacote e a horizontal.
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+  }
+
+  \gabarito{v\_y = 20 m/s. v\_total = √(10² + 20²) = √500 ≈ 22,4 m/s. tg(θ) = 20/10 = 2.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{ex-lh03-drone-pacote.png}
+
+    A figura mostra um drone que solta um pacote a 20 m de altura enquanto se desloca horizontalmente a 10 m/s.
+
+    Primeiro calcule o tempo de queda usando $h = g \cdot t^2 / 2$. Depois calcule a velocidade vertical com $v_y = g \cdot t$ e a velocidade total com o Teorema de Pitágoras.
+
+    \textbf{Qual é a velocidade vertical, a velocidade total e o ângulo ao atingir o solo?}
+  }
+
+  \gabarito{v\_y = 20 m/s. v\_total ≈ 22,4 m/s. tg(θ) = 2.}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 2: Lançamento horizontal — AGORA É COM @VOCÊ
+% ============================================================
+
+% --- Questão ACV-LH-01 (sem banca — sombra da bola de handebol) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Um garoto está treinando handebol e lança horizontalmente a bola, que cai em direção ao solo. Ele está jogando em uma quadra a céu aberto, em um dia com o Sol a pino, ou seja, a posição do Sol está bem acima da sua cabeça. Como é possível descrever o movimento da sombra da bola no chão?
+  }
+
+  \gabarito{Com o Sol a pino, a sombra corresponde à projeção horizontal. Como a velocidade horizontal é constante no lançamento horizontal, a sombra se move com velocidade constante (MRU).}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um garoto lança horizontalmente uma bola de handebol com o Sol bem acima da cabeça. A sombra da bola no chão é a projeção do movimento horizontal.
+
+    No lançamento horizontal, a velocidade na direção do solo (horizontal) é constante.
+
+    \textbf{Como a sombra da bola se move no chão?}
+  }
+
+  \gabarito{A sombra se move em linha reta com velocidade constante (movimento uniforme).}
+\end{questao}
+
+% --- Questão ACV-LH-02 (sem banca — penhasco 11,25 m) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Um praticante de esportes radicais salta em um lago profundo do topo de um penhasco cuja altura é 11,25 m. Ele se lança para frente com velocidade horizontal de 2 m/s, suficiente para se afastar da base durante a queda. Sendo o penhasco aproximadamente vertical, com qual distância da base do penhasco o esportista atingirá a água?
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+
+    \imagem{acv-lh02-penhasco.png}
+  }
+
+  \gabarito{t = √(2h/g) = √(2·11,25/10) = √2,25 = 1,5 s. d = v\_x · t = 2 · 1,5 = 3 m.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{acv-lh02-penhasco.png}
+
+    A figura mostra um penhasco de 11,25 m de altura. Uma pessoa salta horizontalmente com velocidade de 2 m/s.
+
+    Calcule o tempo de queda com $h = g \cdot t^2 / 2$ e depois a distância horizontal com $d = v_x \cdot t$.
+
+    \textbf{A que distância da base do penhasco a pessoa cairá na água?}
+  }
+
+  \gabarito{3 m.}
+\end{questao}
+
+% --- Questão ACV-LH-03 (sem banca — dardo 45°) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Um dardo é lançado horizontalmente com velocidade de 1 m/s e, ao atingir o alvo, fixa-se no alvo formando um ângulo de 45°. Determine o tempo durante o qual o dardo permaneceu em voo antes de atingir o alvo.
+
+    \textbf{Dados:} $g = 10\,\text{m/s}^2$; $\mathrm{tg}\,45° = 1$.
+
+    \imagem{acv-lh03-dardo.png}
+  }
+
+  \gabarito{tg(45°) = v\_y / v\_x = 1, logo v\_y = v\_x = 1 m/s. Como v\_y = g·t, t = 1/10 = 0,1 s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{acv-lh03-dardo.png}
+
+    A figura mostra um dardo lançado horizontalmente a 1 m/s que se fixa no alvo formando 45° com a horizontal.
+
+    A 45°, a velocidade vertical é igual à horizontal ($\mathrm{tg}\,45° = 1$). Como $v_y = g \cdot t$, basta encontrar $t$.
+
+    \textbf{Quanto tempo o dardo ficou no ar?}
+  }
+
+  \gabarito{0,1 s.}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 2: Lançamento oblíquo — Exercícios Resolvidos
+% ============================================================
+
+% --- Questão ER-LO-01 (sem banca — tiro de meta futebol) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Em um jogo de futebol, o goleiro efetua um tiro de meta, lançando a bola além do meio do campo, conforme mostra a figura a seguir.
+
+    \imagem{er-lo01-tiro-meta.png}
+
+    Desprezando a resistência do ar, complete as lacunas de cada item com as palavras ``maior que'', ``menor que'' ou ``igual a''.
+
+    A velocidade da bola, no ponto mais alto, é \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ sua velocidade no lançamento.
+
+    A velocidade da bola, no ponto mais alto, é \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ zero.
+
+    A velocidade da bola, logo após o lançamento, é \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ sua velocidade ao atingir a mesma altura no outro lado do campo.
+
+    O tempo de subida da bola até o ponto mais alto é \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ o tempo de descida do ponto mais alto até a mesma altura de lançamento do outro lado do campo.
+  }
+
+  \gabarito{Menor que. Maior que. Igual a. Igual a.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{er-lo01-tiro-meta.png}
+
+    A figura mostra a trajetória de uma bola chutada em um tiro de meta. A bola sobe, atinge um ponto mais alto e depois desce.
+
+    No ponto mais alto, a velocidade vertical é zero, mas a horizontal continua. O lançamento oblíquo é simétrico: o tempo de subida é igual ao de descida.
+
+    \textbf{No ponto mais alto, a velocidade da bola é maior, menor ou igual a zero? E comparada com a velocidade de lançamento?}
+  }
+
+  \gabarito{No ponto mais alto a velocidade é menor que a de lançamento, mas maior que zero (há componente horizontal). Velocidade no lançamento é igual à velocidade na mesma altura do outro lado. Tempo de subida é igual ao de descida.}
+\end{questao}
+
+% --- Questão ER-LO-02 (sem banca — lançamento de dardo 67,6 m) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Uma atleta realiza um lançamento de dardo que atinge 67,6 m de alcance, isto é, em 67,6 m, o dardo retorna à altura inicial da qual foi lançado. Desprezando a resistência do ar e considerando que o ângulo de lançamento foi de 45° e que $g = 10\,\text{m/s}^2$, determine
+
+    a velocidade inicial do lançamento.
+
+    o tempo total de voo do dardo até atingir o alcance obtido com o lançamento.
+  }
+
+  \gabarito{Alcance = v₀²·sen(2·45°)/g = v₀²/10 = 67,6, logo v₀² = 676, v₀ = 26 m/s. Tempo total = 2·v₀·sen45°/g = 2·26·(√2/2)/10 ≈ 3,68 s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Uma atleta lança um dardo a 45° e ele percorre 67,6 m antes de voltar à mesma altura. ($g = 10\,\text{m/s}^2$.)
+
+    Para ângulo de 45°, o alcance máximo é $A = v_0^2 / g$. Use essa fórmula para encontrar $v_0$.
+
+    \textbf{Qual é a velocidade inicial do dardo e o tempo total de voo?}
+  }
+
+  \gabarito{v₀ = 26 m/s. Tempo total ≈ 3,68 s.}
+\end{questao}
+
+% --- Questão ER-LO-03 (sem banca — basquete 45° cesta) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Um jogador de basquete lança uma bola que está a 2 m de altura com uma velocidade que forma um ângulo de 45° com a horizontal. A bola atinge o aro da cesta, que está a 3 m de altura, 2 s após o lançamento, conforme é mostrado na imagem a seguir.
+
+    \imagem{er-lo03-basquete-cesta.png}
+
+    Desprezando a resistência do ar e considerando $g = 10\,\text{m/s}^2$, determine
+
+    a velocidade inicial do lançamento.
+
+    os componentes vertical e horizontal da velocidade no instante $t = 2\,\text{s}$.
+  }
+
+  \gabarito{Δy = 1 m = v₀·sen45°·2 - 5·4 = v₀·√2 - 20, logo v₀ = 21/√2 ≈ 14,85 m/s. v\_x = v₀·cos45° ≈ 10,5 m/s. v\_y = v₀·sen45° - g·2 ≈ 10,5 - 20 = -9,5 m/s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{er-lo03-basquete-cesta.png}
+
+    A figura mostra um jogador lançando uma bola a 45° de 2 m de altura. A bola atinge a cesta (3 m de altura) 2 s depois.
+
+    A diferença de altura é 1 m. Use a equação $\Delta y = v_{0y} \cdot t - \frac{g \cdot t^2}{2}$ para encontrar $v_{0y}$ e depois $v_0$.
+
+    \textbf{Qual é a velocidade inicial do lançamento e as componentes da velocidade em $t = 2$ s?}
+  }
+
+  \gabarito{v₀ ≈ 14,85 m/s. v\_x ≈ 10,5 m/s. v\_y ≈ -9,5 m/s.}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 2: Lançamento oblíquo — AGORA É COM @VOCÊ
+% ============================================================
+
+% --- Questão ACV-LO-01 (sem banca — golfe 30°) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Em determinada tacada de golfe, a bola é lançada com velocidade inicial de 30 m/s, formando um ângulo de 30° com a horizontal.
+
+    \imagem{acv-lo01-golfe.png}
+
+    Desprezando a resistência do ar e considerando $g = 10\,\text{m/s}^2$, determine o tempo e a velocidade no ponto mais alto da trajetória.
+
+    \textbf{Dados:} $\mathrm{sen}\,30° = \frac{1}{2}$; $\cos 30° = \frac{\sqrt{3}}{2}$.
+  }
+
+  \gabarito{No ponto mais alto, v\_y = 0. v₀\_y = 30·sen30° = 15 m/s. t\_subida = 15/10 = 1,5 s. Velocidade no ponto mais alto = v₀\_x = 30·cos30° = 15√3 ≈ 25,98 m/s.}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{acv-lo01-golfe.png}
+
+    A figura mostra uma bola de golfe lançada a 30° com velocidade de 30 m/s.
+
+    No ponto mais alto, a velocidade vertical é zero e resta apenas a componente horizontal ($v_0 \cdot \cos 30°$). O tempo para chegar ao ponto mais alto é $t = v_{0y} / g$.
+
+    \textbf{Quanto tempo a bola leva para chegar ao ponto mais alto e qual sua velocidade nesse ponto?}
+  }
+
+  \gabarito{t = 1,5 s. Velocidade no ponto mais alto ≈ 26 m/s (componente horizontal).}
+\end{questao}
+
+% --- Questão ACV-LO-02 (sem banca — futebol 3 lançamentos) ---
+
+\begin{questao}{}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Durante um treino, um jogador de futebol efetua três lançamentos com mesma altura máxima, como mostra a figura a seguir.
+
+    \imagem{acv-lo02-tres-lancamentos.png}
+
+    Classifique, em ordem crescente, as velocidades nos pontos mais altos e o tempo necessário para a bola atingir o solo, em cada lançamento.
+  }
+
+  \gabarito{Todos atingem a mesma altura máxima, então a componente vertical inicial é a mesma. Como o ângulo varia, lançamentos mais rasantes têm maior velocidade horizontal. Velocidade no ponto mais alto (ordem crescente): lançamento mais vertical < intermediário < mais rasante. Tempo para atingir o solo: todos iguais (mesma altura máxima implica mesmo tempo de subida/descida).}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{discursiva}
+  \meta{banca}{Desconhecida}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{acv-lo02-tres-lancamentos.png}
+
+    A figura mostra três lançamentos de bola que atingem a mesma altura máxima, mas com ângulos diferentes.
+
+    No ponto mais alto, só resta a velocidade horizontal. Lançamentos mais rasantes têm maior velocidade horizontal. Como a altura máxima é a mesma, o tempo de subida e descida é igual para todos.
+
+    \textbf{Classifique as velocidades no ponto mais alto e os tempos de queda, em ordem crescente.}
+  }
+
+  \gabarito{Velocidade no ponto mais alto: mais vertical < intermediário < mais rasante. Tempos de queda: todos iguais.}
+\end{questao}
+
+% ============================================================
+% ARQUIVO 2: Lançamento horizontal e lançamento oblíquo — Atividades Propostas
+% ============================================================
+
+% --- Questão LH-01 (FUVEST 2020) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{2020}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+
+  \enunciado{
+    Um \textit{drone} voando na horizontal em relação ao solo (como indicado pelo sentido da seta na figura) deixa cair um pacote de livros.
+
+    \imagem{lh01-drone-trajetorias.png}
+
+    A melhor descrição da trajetória realizada pelo pacote de livros, segundo um observador em repouso no solo, é dada pelo percurso descrito na
+  }
+
+  \begin{alternativas}
+    \alt{A}{trajetória 1.}
+    \alt{B}{trajetória 2.}
+    \alt{C}{trajetória 3.}
+    \alt{D}{trajetória 4.}
+    \alt{E}{trajetória 5.}
+  \end{alternativas}
+
+  \gabarito{D}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{2020}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh01-drone-trajetorias.png}
+
+    A figura mostra um drone voando horizontalmente e cinco opções de trajetória para um pacote que ele solta. As trajetórias indicam diferentes formas de o pacote cair.
+
+    Quando o pacote é solto, ele mantém a velocidade horizontal do drone e ao mesmo tempo começa a cair por causa da gravidade.
+
+    \textbf{Qual trajetória representa um arco curvado para baixo, combinando movimento horizontal constante com queda acelerada?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{Trajetória 2 (reta inclinada).}
+    \alt{B}{Trajetória 4 (arco parabólico curvo para baixo).}
+    \alt{C}{Trajetória 5 (queda vertical).}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-02 (MACKENZIE) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{MACKENZIE}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    A figura a seguir representa um motociclista em movimento horizontal que decola de um ponto 80 cm acima do solo, pousando a 6 m de distância.
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+
+    \imagem{lh02-motociclista.png}
+
+    A velocidade, no momento da decolagem, em metros por segundo, é igual a
+  }
+
+  \begin{alternativas}
+    \alt{A}{5.}
+    \alt{B}{10.}
+    \alt{C}{15.}
+    \alt{D}{20.}
+    \alt{E}{25.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{MACKENZIE}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh02-motociclista.png}
+
+    A figura mostra um motociclista que decola horizontalmente de um ponto a 80 cm de altura e pousa a 6 m de distância no solo.
+
+    O motociclista começa o salto com apenas a velocidade horizontal (sem componente vertical). A gravidade faz ele descer enquanto avança horizontalmente.
+
+    \textbf{Qual é a velocidade do motociclista no momento da decolagem? Dado: $g = 10\,\text{m/s}^2$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{10 m/s.}
+    \alt{B}{15 m/s.}
+    \alt{C}{20 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-03 (PUC-RJ) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{PUC-RJ}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Da borda de um penhasco, Maria lança uma pedra horizontalmente para a frente. A pedra cai de uma altura de 45 m e aterrissa a uma distância horizontal de 11,4 m do ponto de lançamento. Desprezando efeitos de resistência do ar, com qual velocidade, em m/s, a pedra foi lançada por Maria?
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+  }
+
+  \begin{alternativas}
+    \alt{A}{3,8}
+    \alt{B}{4,6}
+    \alt{C}{5,7}
+    \alt{D}{6,3}
+    \alt{E}{7,6}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{PUC-RJ}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Maria lança uma pedra horizontalmente da borda de um penhasco de 45 m de altura. A pedra pousa a 11,4 m de distância horizontal.
+
+    A pedra mantém a velocidade horizontal constante enquanto cai. O tempo de queda depende apenas da altura.
+
+    \textbf{Com qual velocidade horizontal Maria lançou a pedra? Dado: $g = 10\,\text{m/s}^2$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{3,8 m/s.}
+    \alt{B}{5,7 m/s.}
+    \alt{C}{7,6 m/s.}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+% --- Questão LH-04 (FICSAE 2021) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FICSAE}
+  \meta{ano}{2021}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Em uma aula de tênis, um aprendiz, quando foi sacar, lançou a bola verticalmente para cima e a golpeou com a raquete exatamente no instante em que ela parou no ponto mais alto, a 2,45 m de altura em relação ao piso da quadra. Imediatamente após esse movimento, a bola partiu com uma velocidade inicial horizontal $v_0$ e tocou o solo a 16,8 m de distância da vertical que passava pelo ponto de partida.
+
+    \imagem{lh04-saque-tenis.png}
+
+    Disponível em: https://free3d.com. Acesso em: 9 ago. 2024. (adaptado)
+
+    Adotando $g = 10\,\text{m/s}^2$ e desprezando a resistência do ar e a rotação da bola ao longo de seu trajeto, o módulo de $v_0$ quando a bola perdeu contato com a raquete foi de
+  }
+
+  \begin{alternativas}
+    \alt{A}{20 m/s.}
+    \alt{B}{24 m/s.}
+    \alt{C}{22 m/s.}
+    \alt{D}{28 m/s.}
+    \alt{E}{26 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FICSAE}
+  \meta{ano}{2021}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh04-saque-tenis.png}
+
+    A figura mostra um jogador de tênis sacando. Ele golpeia a bola a 2,45 m de altura, dando a ela uma velocidade horizontal $v_0$. A bola pousa a 16,8 m de distância.
+
+    A bola sai com velocidade somente horizontal. A gravidade a puxa para baixo enquanto ela avança horizontalmente.
+
+    \textbf{Qual é a velocidade horizontal $v_0$ com que a bola saiu da raquete? Dado: $g = 10\,\text{m/s}^2$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{20 m/s.}
+    \alt{B}{24 m/s.}
+    \alt{C}{28 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-05 (UNESP 2022) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UNESP}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Em treinamento para uma prova de trave olímpica, uma atleta faz uma saída do aparelho, representada em quatro imagens numeradas de I a IV, em que o ponto vermelho representa o centro de massa do corpo da atleta. A imagem I representa o instante em que a atleta perde contato com a trave, quando seu centro de massa apresenta velocidade horizontal $v_0$. A imagem IV representa o instante em que ela toca o solo.
+
+    \imagem{lh05-trave-olimpica.png}
+
+    Disponível em: https://docplayer.com.br. Acesso em: 9 ago. 2024. (adaptado)
+
+    Considerando que nesse movimento somente a força peso atua sobre a atleta, e adotando $g = 10\,\text{m/s}^2$, o valor de $v_0$ é
+  }
+
+  \begin{alternativas}
+    \alt{A}{6,0 m/s.}
+    \alt{B}{3,0 m/s.}
+    \alt{C}{5,0 m/s.}
+    \alt{D}{2,0 m/s.}
+    \alt{E}{4,0 m/s.}
+  \end{alternativas}
+
+  \gabarito{E}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UNESP}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento horizontal}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh05-trave-olimpica.png}
+
+    A figura mostra quatro posições da atleta: na imagem I ela sai horizontalmente da trave com velocidade $v_0$, e na imagem IV ela toca o solo. As imagens intermediárias mostram o caminho percorrido.
+
+    Após deixar a trave, o centro de massa da atleta faz um lançamento horizontal --- ela mantém a velocidade $v_0$ horizontalmente enquanto cai por causa da gravidade.
+
+    \textbf{Usando $g = 10\,\text{m/s}^2$ e as medidas mostradas na figura, qual é o valor de $v_0$?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{3,0 m/s.}
+    \alt{B}{4,0 m/s.}
+    \alt{C}{6,0 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-06 (FCMSCSP 2022) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FCMSCSP}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Como mostra a imagem a seguir, em uma competição de saltos ornamentais, uma atleta salta de uma plataforma e realiza movimentos de rotação. Porém, seu centro de massa, sob ação exclusiva da gravidade, descreve uma trajetória parabólica após ter sido lançado obliquamente da plataforma.
+
+    \imagem{lh06-saltos-ornamentais.png}
+
+    Disponível em: https://sites.google.com. Acesso em: 9 ago. 2024. (adaptado)
+
+    Considere que a aceleração gravitacional seja igual a $10\,\text{m/s}^2$ e que, no momento em que a atleta saltou para cima, seu centro de massa estava a 11 m da superfície da água, chegando à água 2,0 s após o salto. A componente vertical da velocidade do centro de massa dessa atleta quando ela deixou a plataforma era
+  }
+
+  \begin{alternativas}
+    \alt{A}{4,5 m/s.}
+    \alt{B}{1,5 m/s.}
+    \alt{C}{0,5 m/s.}
+    \alt{D}{2,5 m/s.}
+    \alt{E}{8,5 m/s.}
+  \end{alternativas}
+
+  \gabarito{A}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FCMSCSP}
+  \meta{ano}{2022}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh06-saltos-ornamentais.png}
+
+    A figura mostra uma atleta de saltos ornamentais saindo de uma plataforma localizada a 11 m acima da água. Ela chega à água 2,0 s após o salto.
+
+    A atleta salta obliquamente --- ela tem uma componente vertical de velocidade para cima e uma horizontal. A gravidade ($10\,\text{m/s}^2$) age somente sobre o eixo vertical.
+
+    \textbf{Qual é a componente vertical da velocidade do centro de massa da atleta no momento do salto?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{1,5 m/s.}
+    \alt{B}{4,5 m/s.}
+    \alt{C}{8,5 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-07 (FUVEST) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Um projétil é lançado com velocidade inicial $\vec{v}_0 = v_{0x}\,\hat{i} + 30\,\hat{j}$, com componentes em unidades de m/s. Qual deve ser o valor da componente $v_{0x}$ para que o projétil atinja um alvo a 300 m de distância e que esteja na mesma altura do ponto de seu lançamento?
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+  }
+
+  \begin{alternativas}
+    \alt{A}{10 m/s}
+    \alt{B}{20 m/s}
+    \alt{C}{50 m/s}
+    \alt{D}{80 m/s}
+    \alt{E}{100 m/s}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    Um projétil é lançado com velocidade vertical de 30 m/s e velocidade horizontal $v_{0x}$ (desconhecida). O alvo está a 300 m de distância horizontal na mesma altura do lançamento.
+
+    Como o alvo está na mesma altura, o percurso é simétrico: o projétil sobe e desce em tempos iguais. Com $g = 10\,\text{m/s}^2$ e $v_{0y} = 30\,\text{m/s}$, o tempo total de voo é 6 s.
+
+    \textbf{Qual deve ser $v_{0x}$ para o projétil percorrer 300 m em 6 s?}
+  }
+
+  \begin{alternativas}
+    \alt{A}{20 m/s.}
+    \alt{B}{50 m/s.}
+    \alt{C}{100 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-08 (FEMPAR 2024) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FEMPAR}
+  \meta{ano}{2024}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+
+  \enunciado{
+    Uma esfera de pequenas dimensões é lançada de uma elevação localizada a 25 m de altura, com uma velocidade $\vec{v}_0$ de módulo igual a 20 m/s e ângulo de tiro $\theta = 45°$. A esfera chega ao solo com uma velocidade $\vec{v}$. A figura mostra a trajetória da esfera entre o instante do lançamento e o instante em que chega ao solo, supondo a resistência do ar desprezível.
+
+    \textbf{Dado:} $g = 10\,\text{m/s}^2$.
+
+    \imagem{lh08-esfera-obliquo.png}
+
+    O módulo da velocidade $\vec{v}$ com que a esfera chega ao solo é de
+  }
+
+  \begin{alternativas}
+    \alt{A}{25 m/s.}
+    \alt{B}{30 m/s.}
+    \alt{C}{40 m/s.}
+    \alt{D}{45 m/s.}
+    \alt{E}{60 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FEMPAR}
+  \meta{ano}{2024}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{facil}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh08-esfera-obliquo.png}
+
+    A figura mostra a trajetória de uma esfera lançada de uma plataforma a 25 m de altura com velocidade de 20 m/s a 45°. A esfera sobe, atinge o ponto mais alto e então desce até o solo.
+
+    Como não há atrito, a energia mecânica é conservada: a esfera chega ao solo com mais energia cinética do que tinha ao ser lançada (pois desceu 25 m).
+
+    \textbf{Qual é o módulo da velocidade com que a esfera chega ao solo? Dado: $g = 10\,\text{m/s}^2$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{25 m/s.}
+    \alt{B}{30 m/s.}
+    \alt{C}{40 m/s.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
+
+% --- Questão LH-09 (UFGD 2023) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UFGD}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{dificil}
+
+  \enunciado{
+    A Mostra Brasileira de Foguetes (Mobfog) é realizada anualmente pela Universidade do Estado do Rio de Janeiro (UERJ), em parceria com a Agência Espacial Brasileira (AEB), entre alunos de todos os anos dos ensinos Fundamental e Médio em todo o território nacional. Em 2021, uma equipe participante realizou um lançamento oblíquo de foguete e obteve um alcance oficial de 200 metros. Como mostra a figura a seguir, a Mobfog considera apenas o alcance da base de lançamento (ponto A) até o ponto B, onde a linha do alcance forma 90 graus com a linha do ponto de chegada do foguete. Para auxiliar no cálculo do valor X do deslocamento efetivo da sombra da trajetória do foguete, um estudante mediu a distância do ponto de chegada do foguete (C) até o ponto B e obteve 150 metros.
+
+    \imagem{lh09-mobfog-foguete.png}
+
+    Tenha como base os dados apresentados e que a aceleração da gravidade é igual a $10\,\text{m/s}^2$, e que $\mathrm{sen}\,45° = \cos\,45° = \frac{\sqrt{2}}{2}$. Despreze a resistência do ar e considere que o ângulo de lançamento do foguete foi projetado para obtenção do alcance máximo. Dessa forma, é correto afirmar que a velocidade oblíqua de lançamento desse foguete foi de, aproximadamente,
+  }
+
+  \begin{alternativas}
+    \alt{A}{45 km/h.}
+    \alt{B}{50 km/h.}
+    \alt{C}{158 km/h.}
+    \alt{D}{161 km/h.}
+    \alt{E}{180 km/h.}
+  \end{alternativas}
+
+  \gabarito{D}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{UFGD}
+  \meta{ano}{2023}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh09-mobfog-foguete.png}
+
+    A figura mostra a trajetória de um foguete lançado obliquamente. O alcance oficial (distância AB) é 200 m, e a distância CB (do ponto de pouso ao ponto B) é 150 m.
+
+    Usando o Teorema de Pitágoras com os segmentos AB = 200 m e CB = 150 m, o deslocamento real AC (trajetória projetada no solo) é de 250 m. Para alcance máximo, o ângulo é 45°.
+
+    \textbf{Qual foi a velocidade de lançamento do foguete, aproximadamente em km/h? Dados: $g = 10\,\text{m/s}^2$; $\mathrm{sen}\,45° = \cos\,45° = \frac{\sqrt{2}}{2}$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{50 km/h.}
+    \alt{B}{158 km/h.}
+    \alt{C}{161 km/h.}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+% --- Questão LH-10 (FUVEST) ---
+
+\begin{questao}{}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{dificil}
+
+  \enunciado{
+    Um jogador de basquete arremessa uma bola da altura de 2 m com velocidade $\vec{v}_0 = (10\,\hat{i} + 10\,\hat{j})\,\text{m/s}$, estando a 4 m de distância da parede. A bola atinge a parede e tem apenas a componente horizontal da velocidade invertida, enquanto a componente vertical não é alterada, conforme mostrado na figura. Considere $g = 10\,\text{m/s}^2$ e que a resistência do ar é desprezível.
+
+    \imagem{lh10-basquete-parede.png}
+
+    Assinale a alternativa que indica o intervalo de distância da parede (D, em metros) em que a bola atingirá o chão.
+  }
+
+  \begin{alternativas}
+    \alt{A}{D < 10 m}
+    \alt{B}{10 m $\leq$ D $\leq$ 15 m}
+    \alt{C}{15 m < D $\leq$ 20 m}
+    \alt{D}{20 m < D $\leq$ 25 m}
+    \alt{E}{25 m < D $\leq$ 30 m}
+  \end{alternativas}
+
+  \gabarito{C}
+\end{questao}
+
+\begin{questao}{A-}
+  \meta{tipo}{objetiva}
+  \meta{banca}{FUVEST}
+  \meta{ano}{0}
+  \meta{disciplina}{Física}
+  \meta{topico}{Mecânica}
+  \meta{conteudo}{Cinemática}
+  \meta{assunto}{Lançamento oblíquo}
+  \meta{dificuldade}{medio}
+  \meta{tags}{adaptada, NEE}
+
+  \enunciado{
+    \imagem{lh10-basquete-parede.png}
+
+    A figura mostra um jogador arremessando uma bola a 2 m de altura com velocidade $\vec{v}_0 = (10\,\hat{i} + 10\,\hat{j})\,\text{m/s}$ em direção a uma parede a 4 m de distância. Ao bater na parede, somente a velocidade horizontal se inverte.
+
+    O eixo horizontal ($\hat{i}$) é a direção paralela ao solo. O eixo vertical ($\hat{j}$) é a direção de cima para baixo. Após colidir na parede, a bola retorna horizontalmente enquanto continua sujeita à gravidade.
+
+    \textbf{Em qual intervalo de distância da parede (D) a bola atingirá o chão? Dado: $g = 10\,\text{m/s}^2$.}
+  }
+
+  \begin{alternativas}
+    \alt{A}{D < 10 m.}
+    \alt{B}{15 m < D $\leq$ 20 m.}
+    \alt{C}{25 m < D $\leq$ 30 m.}
+  \end{alternativas}
+
+  \gabarito{B}
+\end{questao}
