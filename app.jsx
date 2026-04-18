@@ -324,14 +324,24 @@ const App = () => {
         
         // Pass 1: Assign adapted questions mapped to their regular counterpart's ID
         state.questions.forEach(q => {
-            if (String(q.id).startsWith('A-')) {
-                const regularId = String(q.id).substring(2); // Extracts "00001" from "A-00001"
+            const idStr = String(q.id);
+            let regularId = null;
+            if (idStr.startsWith('A-')) {
+                regularId = idStr.substring(2); // Extracts "00001" from "A-00001"
+            } else if (idStr.startsWith('A')) {
+                regularId = idStr.substring(1); // Extracts "11" from "A11"
+            }
+            
+            if (regularId) {
                 map[regularId] = q;
             }
         });
 
         // Pass 2: Filter out adapted questions from the regular list
-        const regular = state.questions.filter(q => !String(q.id).startsWith('A-'));
+        const regular = state.questions.filter(q => {
+            const idStr = String(q.id);
+            return !idStr.startsWith('A-') && !idStr.startsWith('A');
+        });
 
         return { adaptedMap: map, regularQuestions: regular };
     }, [state.questions]);
@@ -402,7 +412,12 @@ const App = () => {
 
         if (state.filters.orderById) {
             result = [...result].sort((a, b) => {
-                const parseId = (idStr) => parseInt(String(idStr).replace('A-', ''), 10) || 0;
+                const parseId = (idStr) => {
+                    let s = String(idStr);
+                    if (s.startsWith('A-')) s = s.substring(2);
+                    else if (s.startsWith('A')) s = s.substring(1);
+                    return parseInt(s.replace(/\\D/g, ''), 10) || 0;
+                };
                 const idA = a.id ? parseId(a.id) : 0;
                 const idB = b.id ? parseId(b.id) : 0;
                 return state.filters.orderById === 'asc' ? idA - idB : idB - idA;

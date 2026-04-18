@@ -211,40 +211,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
             {/* Expanded view */}
             {isExpanded && (
                 <div className="px-3 pb-3 animate-fade-in border-t border-gray-100 mt-0 max-w-full overflow-hidden">
-                    {/* Carousel tabs (if has adapted) */}
-                    {hasAdapted && (
-                        <div className="flex items-center gap-2 pt-3 pb-2">
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setCarouselPage(0); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${carouselPage === 0
-                                        ? 'bg-brand-50 border-brand-300 text-brand-700 shadow-sm'
-                                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                    }`}
-                            >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Regular
-                            </button>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setCarouselPage(1); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${carouselPage === 1
-                                        ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-sm'
-                                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                    }`}
-                            >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                Adaptada
-                            </button>
-                            {/* Carousel dots */}
-                            <div className="flex items-center gap-1 ml-auto">
-                                <div className={`w-2 h-2 rounded-full transition-colors ${carouselPage === 0 ? 'bg-brand-500' : 'bg-gray-300'}`} />
-                                <div className={`w-2 h-2 rounded-full transition-colors ${carouselPage === 1 ? 'bg-sky-500' : 'bg-gray-300'}`} />
-                            </div>
-                        </div>
-                    )}
+
 
                     {/* Adapted version label */}
                     {carouselPage === 1 && hasAdapted && (
@@ -403,6 +370,41 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                     {/* "Ver Adaptada" button at bottom of regular view (if no tabs were shown) */}
                     {!hasAdapted && carouselPage === 0 && (
                         <React.Fragment />
+                    )}
+
+                    {/* Carousel tabs (if has adapted) */}
+                    {hasAdapted && (
+                        <div className="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setCarouselPage(0); }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${carouselPage === 0
+                                        ? 'bg-brand-50 border-brand-300 text-brand-700 shadow-sm'
+                                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                    }`}
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Regular
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setCarouselPage(1); }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${carouselPage === 1
+                                        ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-sm'
+                                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                    }`}
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Adaptada
+                            </button>
+                            {/* Carousel dots */}
+                            <div className="flex items-center gap-1 ml-auto">
+                                <div className={`w-2 h-2 rounded-full transition-colors ${carouselPage === 0 ? 'bg-brand-500' : 'bg-gray-300'}`} />
+                                <div className={`w-2 h-2 rounded-full transition-colors ${carouselPage === 1 ? 'bg-sky-500' : 'bg-gray-300'}`} />
+                            </div>
+                        </div>
                     )}
 
                     {/* Action buttons (edit / delete) */}

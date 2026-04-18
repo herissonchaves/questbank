@@ -117,15 +117,18 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
     React.useEffect(() => {
         const checkAdapted = async () => {
             try {
-                // Skip check for adapted questions (already start with A-)
-                if (question.id && question.id.toString().startsWith('A-')) {
+                // Skip check for adapted questions (already start with A- or A)
+                const idStr = question.id ? question.id.toString() : '';
+                if (idStr.startsWith('A-') || (idStr.startsWith('A') && !idStr.startsWith('A-'))) {
                     setHasExistingAdapted(true);
                     setCheckingAdapted(false);
                     return;
                 }
-                const adaptedId = 'A-' + question.id;
-                const existing = await db.questions.get(adaptedId);
-                setHasExistingAdapted(!!existing);
+                const adaptedId1 = 'A-' + idStr;
+                const adaptedId2 = 'A' + idStr;
+                const existing1 = await db.questions.get(adaptedId1);
+                const existing2 = await db.questions.get(adaptedId2);
+                setHasExistingAdapted(!!(existing1 || existing2));
             } catch (e) {
                 console.error('Error checking adapted version:', e);
             }
