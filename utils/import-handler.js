@@ -280,6 +280,12 @@ const QBImport = {
         const zip = await JSZip.loadAsync(zipData);
 
         // 2. Localizar o .tex dentro do zip (pode estar na raiz ou em subpasta)
+        // Regras de prioridade:
+        //   1. Prefere questoes.tex (DSL nativa do QuestBank)
+        //   2. Aceita qualquer outro .tex que não seja main.tex
+        //   3. Ignora main.tex — é o wrapper LaTeX padrão para Overleaf
+        //      (contém \documentclass + definições das macros, não é DSL QuestBank)
+        const TEX_EXCLUDE = ['main.tex'];
         let texFileName = null;
         let texContent = null;
         const imageFiles = {}; // basename → JSZip entry
@@ -287,8 +293,11 @@ const QBImport = {
         zip.forEach((relativePath, entry) => {
             if (entry.dir) return;
             const basename = relativePath.split('/').pop().toLowerCase();
-            if (basename.endsWith('.tex') && !texFileName) {
-                texFileName = relativePath;
+            if (basename.endsWith('.tex') && !TEX_EXCLUDE.includes(basename)) {
+                // Prefere questoes.tex; senão usa o primeiro .tex válido encontrado
+                if (!texFileName || basename === 'questoes.tex') {
+                    texFileName = relativePath;
+                }
             }
             // Indexar imagens por basename (case-insensitive)
             const imgExts = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'];
@@ -300,7 +309,7 @@ const QBImport = {
         });
 
         if (!texFileName) {
-            throw new Error('Nenhum arquivo .tex encontrado dentro do .zip.');
+            throw new Error('Nenhum arquivo .tex encontrado dentro do .zip. Verifique se o ZIP contém questoes.tex.');
         }
 
         texContent = await zip.file(texFileName).async('string');
