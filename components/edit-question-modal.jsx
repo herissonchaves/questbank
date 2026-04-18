@@ -8,13 +8,84 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
         if (!question) return question;
         const q = { ...question };
         const clean = (x) => window.QBHtmlSanitizer ? window.QBHtmlSanitizer.cleanForEditor(x) : x;
-        if (q.enunciado) q.enunciado = clean(q.enunciado);
+        
+        let imagensCopia = q.imagens ? [...q.imagens] : [];
+        let consumedImages = new Set();
+        let globalImgIdx = 0;
+
+        const resolveImage = (imgSrc) => {
+            if (typeof imgSrc === 'string') {
+                if (imgSrc.startsWith('data:') || imgSrc.startsWith('http')) return imgSrc;
+            }
+            return null;
+        };
+
+        const replaceImages = (text) => {
+            let processed = text || '';
+            if (imagensCopia.length > 0) {
+                // Substituir [IMAGEM_X] indexados
+                for (let i = 0; i < imagensCopia.length; i++) {
+                    const marker = `\\[IMAGEM_${i}\\]`;
+                    const regex = new RegExp(marker, 'g');
+                    if (processed.match(regex)) {
+                        const src = resolveImage(imagensCopia[i]);
+                        if (src) {
+                            processed = processed.replace(regex, `<br><img src="${src}" data-width="400" data-height="auto" style="width:400px; height:auto; display:block; margin:10px auto; border-radius:4px; max-width:100%; cursor:pointer;" /><br>`);
+                            consumedImages.add(i);
+                        }
+                    }
+                }
+
+                // Substituir [IMAGEM] genéricos sequencialmente
+                processed = processed.replace(/\[IMAGEM\]/g, () => {
+                    // Encontrar a proxima imagem nao consumida
+                    while (globalImgIdx < imagensCopia.length && consumedImages.has(globalImgIdx)) {
+                        globalImgIdx++;
+                    }
+                    if (globalImgIdx < imagensCopia.length) {
+                        const src = resolveImage(imagensCopia[globalImgIdx]);
+                        consumedImages.add(globalImgIdx);
+                        globalImgIdx++;
+                        if (src) {
+                            return `<br><img src="${src}" data-width="400" data-height="auto" style="width:400px; height:auto; display:block; margin:10px auto; border-radius:4px; max-width:100%; cursor:pointer;" /><br>`;
+                        }
+                    }
+                    return '';
+                });
+            }
+            return processed;
+        };
+
+        if (q.enunciado) {
+            q.enunciado = replaceImages(clean(q.enunciado));
+        }
+        
         if (q.alternativas) {
             q.alternativas = q.alternativas.map(a => ({
                 ...a,
-                texto: a.texto ? clean(a.texto) : a.texto
+                texto: a.texto ? replaceImages(clean(a.texto)) : a.texto
             }));
         }
+
+        // Anexar fallback images nao renderizadas no final do enunciado
+        if (imagensCopia.length > 0) {
+            let unconsumedHtml = '';
+            for (let i = 0; i < imagensCopia.length; i++) {
+                if (!consumedImages.has(i)) {
+                    const src = resolveImage(imagensCopia[i]);
+                    if (src) {
+                        unconsumedHtml += `<br><img src="${src}" data-width="400" data-height="auto" style="width:400px; height:auto; display:block; margin:10px auto; border-radius:4px; max-width:100%; cursor:pointer;" /><br>`;
+                    }
+                }
+            }
+            if (unconsumedHtml) {
+                q.enunciado = (q.enunciado || '') + unconsumedHtml;
+            }
+        }
+        
+        // Esvaziar array original para consolidar conteudo HTML e evitar dupla renderizacao em outros lugares apos edicao
+        q.imagens = [];
+
         return q;
     }, [question]);
     const [form, setForm] = React.useState({ ...cleanQuestion });
