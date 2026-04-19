@@ -1,7 +1,7 @@
 // QuestBank — SelectedPanel Component
 // Selected questions for the exam with drag & drop reordering + shuffle
 
-const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onShuffleAlternatives, onOrderByDifficulty, onClear, onDeleteSelected, onExport }) => {
+const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onShuffleAlternatives, onOrderByDifficulty, onClear, onDeleteSelected, onExport, onOpenBulkTags }) => {
     const [dragIndex, setDragIndex] = React.useState(null);
     const [dragOverIndex, setDragOverIndex] = React.useState(null);
 
@@ -64,13 +64,25 @@ const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onShuffleAlt
                     </span>
                 </div>
                 {questions.length > 0 && (
-                    <div className="flex gap-2 mt-1.5">
-                        {typeCounts.objetiva > 0 && (
-                            <span className="text-[10px] text-gray-400">{typeCounts.objetiva} obj.</span>
-                        )}
-                        {typeCounts.discursiva > 0 && (
-                            <span className="text-[10px] text-violet-500">{typeCounts.discursiva} disc.</span>
-                        )}
+                    <div className="flex gap-2 mt-1.5 items-center">
+                        <div className="flex gap-2">
+                            {typeCounts.objetiva > 0 && (
+                                <span className="text-[10px] text-gray-400">{typeCounts.objetiva} obj.</span>
+                            )}
+                            {typeCounts.discursiva > 0 && (
+                                <span className="text-[10px] text-violet-500">{typeCounts.discursiva} disc.</span>
+                            )}
+                        </div>
+                        <button
+                            onClick={onOpenBulkTags}
+                            className="ml-auto flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-100 transition-colors"
+                            title="Editar tags das questões selecionadas"
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            Tags
+                        </button>
                     </div>
                 )}
             </div>

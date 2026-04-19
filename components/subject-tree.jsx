@@ -139,9 +139,8 @@ const SubjectTree = ({ tree, filteredTree, activeSubjects, onSubjectsChange, onM
         const showFilteredCount = filteredCount !== null && filteredCount !== node.count;
 
         // Drag and drop logic
-        const isHoveringValidLevel = dragState.isDragging && dragState.level === level + 1;
-        const isSelfOrDescendant = dragState.nodePath && fullPath.startsWith(dragState.nodePath);
-        const isValidDropTarget = isHoveringValidLevel && !isSelfOrDescendant;
+        const isSelfOrDescendant = dragState.nodePath && (fullPath === dragState.nodePath || fullPath.startsWith(dragState.nodePath + '>'));
+        const isValidDropTarget = dragState.isDragging && !isSelfOrDescendant && level < 3;
         const isDragOver = dragOverPath === fullPath && isValidDropTarget;
 
         // Is this node being edited?

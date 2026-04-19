@@ -12,7 +12,7 @@ const initialState = {
     activeSubjects: [],
     filters: { search: '', banca: '', ano: '', dificuldade: '', tipo: '', codigo: '', orderByRecent: false, orderById: '', resolucao: '', tag: '' },
     ignoreUsed: false,
-    modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null },
+    modals: { import: false, export: false, exams: false, stats: false, createQuestion: false, editQuestion: null, bulkEditTags: false },
     loading: true,
     mobileTab: 'questions', // 'subjects' | 'questions' | 'selected'
 };
@@ -230,11 +230,30 @@ const App = () => {
                 
                 await db.transaction('rw', db.questions, async () => {
                     for (const q of questionsToUpdate) {
-                        const updates = { disciplina: targetParts[0] || q.disciplina };
-                        
-                        if (sourceLevel >= 1) updates.topico = sourceLevel === 1 ? nodeName : (targetParts[1] || q.topico);
-                        if (sourceLevel >= 2) updates.conteudo = sourceLevel === 2 ? nodeName : (targetParts[2] || q.conteudo);
-                        if (sourceLevel >= 3) updates.assunto = sourceLevel === 3 ? nodeName : (targetParts[3] || q.assunto);
+                        const oldFields = [q.disciplina || '', q.topico || '', q.conteudo || '', q.assunto || ''];
+                        const newFields = ['', '', '', ''];
+                        const targetLen = targetParts.length;
+                        const shift = targetLen - sourceLevel;
+
+                        for (let i = 0; i < 4; i++) {
+                            if (i < targetLen) {
+                                newFields[i] = targetParts[i] || '';
+                            } else if (i === targetLen) {
+                                newFields[i] = nodeName;
+                            } else {
+                                const oldIndex = i - shift;
+                                if (oldIndex >= 0 && oldIndex < 4) {
+                                    newFields[i] = oldFields[oldIndex];
+                                }
+                            }
+                        }
+
+                        const updates = {
+                            disciplina: newFields[0] || '',
+                            topico: newFields[1] || '',
+                            conteudo: newFields[2] || '',
+                            assunto: newFields[3] || ''
+                        };
                         
                         await db.questions.update(q.id, updates);
                     }
@@ -569,6 +588,44 @@ const App = () => {
         }
     }, [state.selectedIds]);
 
+    const handleBulkEditTags = useCallback(async (actionType, parsedTags) => {
+        if (state.selectedIds.length === 0) return;
+        
+        try {
+            const selectedQ = await db.questions.filter(q => state.selectedIds.includes(q.id)).toArray();
+            let updatedCount = 0;
+
+            await db.transaction('rw', db.questions, async () => {
+                for (const q of selectedQ) {
+                    let currentTags = q.tags || [];
+                    let newTags = [...currentTags];
+
+                    if (actionType === 'add') {
+                        parsedTags.forEach(t => {
+                            if (!newTags.includes(t)) newTags.push(t);
+                        });
+                    } else if (actionType === 'remove') {
+                        newTags = newTags.filter(t => !parsedTags.includes(t));
+                    } else if (actionType === 'replace') {
+                        // Keep internal system tags
+                        const systemTags = currentTags.filter(t => t.match(/^\d{8}$/) || t.match(/^A\d{8}$/));
+                        newTags = [...systemTags, ...parsedTags];
+                    }
+
+                    await db.questions.update(q.id, { tags: newTags });
+                    updatedCount++;
+                }
+            });
+
+            dispatch({ type: 'TOGGLE_MODAL', modal: 'bulkEditTags' });
+            showToast(`Tags modificadas em ${updatedCount} questões!`, 'success');
+            await loadQuestions();
+        } catch (err) {
+            console.error(err);
+            showToast('Erro ao editar tags em lote.', 'error');
+        }
+    }, [state.selectedIds]);
+
     const handleEditQuestion = useCallback((question) => {
         dispatch({ type: 'SET_EDIT_QUESTION', payload: question });
     }, []);
@@ -889,6 +946,7 @@ const App = () => {
                         onClear={() => dispatch({ type: 'CLEAR_SELECTED' })}
                         onDeleteSelected={handleDeleteSelected}
                         onExport={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'export' })}
+                        onOpenBulkTags={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'bulkEditTags' })}
                     />
                 </aside>
             </main>
@@ -914,6 +972,13 @@ const App = () => {
                 selectedQuestions={selectedQuestions}
                 onExamSaved={handleExamSaved}
                 adaptedMap={adaptedMap}
+            />
+
+            <BulkEditTagsModal
+                isOpen={state.modals.bulkEditTags}
+                onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'bulkEditTags' })}
+                onSave={handleBulkEditTags}
+                selectedQuestions={selectedQuestions}
             />
 
             <ExamsPanel
