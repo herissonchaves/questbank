@@ -236,17 +236,8 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                     // Load image to get natural dimensions
                     const img = new Image();
                     img.onload = () => {
-                        let w = img.naturalWidth;
-                        let h = img.naturalHeight;
-                        // Constrain to max 400px wide, keeping aspect ratio
-                        if (w > 400) {
-                            h = Math.round(h * (400 / w));
-                            w = 400;
-                        }
-                        if (h > 400) {
-                            w = Math.round(w * (400 / h));
-                            h = 400;
-                        }
+                        let w = 100;
+                        let h = Math.round(img.naturalHeight * (100 / img.naturalWidth));
                         const html = `<img src="${b64}" data-width="${w}" data-height="${h}" style="width:${w}px; height:${h}px; display:block; margin:10px auto; border-radius:4px; cursor:pointer;" /><br>`;
                         document.execCommand('insertHTML', false, html);
                     };

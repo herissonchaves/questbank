@@ -52,7 +52,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                 const regex = new RegExp(marker, 'g');
                 const imgSrc = _resolveImageSrc(imgArray[i]);
                 if (imgSrc) {
-                    processedText = processedText.replace(regex, `<br><img class="max-w-[80%] max-h-48 rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgSrc}" alt="Imagem ${i}" /><br>`);
+                    processedText = processedText.replace(regex, `<br><img class="w-[100px] h-auto max-w-full rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgSrc}" alt="Imagem ${i}" /><br>`);
                 }
             }
 
@@ -63,7 +63,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                     const imgSrc = _resolveImageSrc(imgArray[imgIdx]);
                     imgIdx++;
                     if (imgSrc) {
-                        return `<br><img class="max-w-[80%] max-h-48 rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgSrc}" alt="Imagem" /><br>`;
+                        return `<br><img class="w-[100px] h-auto max-w-full rounded-lg border border-gray-200 my-2 inline-block shadow-sm" src="${imgSrc}" alt="Imagem" /><br>`;
                     }
                 }
                 return '';
@@ -256,7 +256,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                                             key={i}
                                             src={src}
                                             alt={`Imagem da questão`}
-                                            className="max-w-[80%] max-h-48 rounded-lg border border-gray-200 shadow-sm"
+                                            className="w-[100px] h-auto max-w-full rounded-lg border border-gray-200 shadow-sm"
                                         />
                                     ) : null;
                                 })}
@@ -433,6 +433,11 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                             </svg>
                             Excluir
                         </button>
+                        {displayQ.created_at && (
+                            <span className="ml-auto text-[10px] text-gray-400 font-medium whitespace-nowrap" title="Data de adição ao banco">
+                                Adicionada em {new Date(displayQ.created_at).toLocaleDateString('pt-BR')} às {new Date(displayQ.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        )}
                     </div>
                 </div>
             )}

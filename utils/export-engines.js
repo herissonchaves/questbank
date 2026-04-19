@@ -108,7 +108,7 @@ window.ExportEngines = {
             currentAlignment = alignment || null;
         };
 
-        var processTextNode = function(text, style) {
+        var processTextNode = async function(text, style) {
             if (text === '') return;
 
             var parts = text.split(/(\$\$[\s\S]+?\$\$|\$[\s\S]+?\$|\[IMAGEM_\d+\])/g);
@@ -119,11 +119,31 @@ window.ExportEngines = {
                 if (part.startsWith('[IMAGEM_')) {
                     var imgMatch = part.match(/\[IMAGEM_(\d+)\]/);
                     if (imgMatch && imagesArray && imagesArray[imgMatch[1]]) {
-                        var data = self._processBase64(imagesArray[imgMatch[1]]);
+                        var b64str = imagesArray[imgMatch[1]];
+                        var data = self._processBase64(b64str);
                         if (data) {
+                            var imgObj = new Image();
+                            if (b64str.startsWith('data:image')) {
+                                imgObj.src = b64str;
+                            } else {
+                                imgObj.src = 'data:image/png;base64,' + (b64str.includes(',') ? b64str.split(',')[1] : b64str);
+                            }
+                            await new Promise(function(resolve) {
+                                imgObj.onload = resolve;
+                                imgObj.onerror = resolve;
+                            });
+
+                            var w = 100;
+                            var h = 100;
+                            if (imgObj.naturalWidth) {
+                                h = Math.round(w * (imgObj.naturalHeight / imgObj.naturalWidth));
+                            } else {
+                                h = Math.round(w * 0.7);
+                            }
+
                             currentRuns.push(new ImageRun({
                                 data: data,
-                                transformation: { width: 350, height: 250 }
+                                transformation: { width: w, height: h }
                             }));
                         }
                     }
@@ -157,7 +177,7 @@ window.ExportEngines = {
 
         var traverse = async function(node, style, parentAlignment) {
             if (node.nodeType === Node.TEXT_NODE) {
-                processTextNode(node.textContent, style);
+                await processTextNode(node.textContent, style);
             } else if (node.nodeType === Node.ELEMENT_NODE) {
                 var tag = node.tagName.toLowerCase();
 
@@ -207,11 +227,37 @@ window.ExportEngines = {
                             } else if (node.style && node.style.width && node.style.width.endsWith('px')) {
                                 width = parseInt(node.style.width);
                                 height = (node.style.height && node.style.height.endsWith('px'))
-                                    ? parseInt(node.style.height) : Math.round(width * 0.7);
+                                    ? parseInt(node.style.height) : null;
                             } else if (node.getAttribute('width')) {
                                 width = parseInt(node.getAttribute('width'));
-                                height = node.getAttribute('height') ? parseInt(node.getAttribute('height')) : Math.round(width * 0.7);
+                                height = node.getAttribute('height') ? parseInt(node.getAttribute('height')) : null;
                             }
+                            
+                            if (!height || (!width && !height)) {
+                                var imgObj = new Image();
+                                imgObj.src = src;
+                                await new Promise(function(resolve) {
+                                    imgObj.onload = resolve;
+                                    imgObj.onerror = resolve;
+                                });
+                                if (width && !height) {
+                                    if (imgObj.naturalWidth) {
+                                        height = Math.round(width * (imgObj.naturalHeight / imgObj.naturalWidth));
+                                    } else {
+                                        height = Math.round(width * 0.7);
+                                    }
+                                } else if (!width && height) {
+                                    if (imgObj.naturalHeight) {
+                                        width = Math.round(height * (imgObj.naturalWidth / imgObj.naturalHeight));
+                                    } else {
+                                        width = Math.round(height * 1.4);
+                                    }
+                                } else {
+                                    width = imgObj.naturalWidth || 350;
+                                    height = imgObj.naturalHeight || 250;
+                                }
+                            }
+
                             if (width > 550) { height = Math.round(height * (550 / width)); width = 550; }
                             if (height > 700) { width = Math.round(width * (700 / height)); height = 700; }
                             currentRuns.push(new ImageRun({
@@ -272,9 +318,16 @@ window.ExportEngines = {
         return allRuns;
     },
 
-    async htmlToLatex(htmlText, zip, imgCounterRef, imagesArray) {
+    async htmlToLatex(htmlText, zip, imgCounterRef, imagesArray, globalImgObjRef) {
+        var processedText = htmlText || '';
+        if (imagesArray && imagesArray.length > 0) {
+            processedText = processedText.replace(/\[IMAGEM\]/g, function() {
+                var current = globalImgObjRef ? globalImgObjRef.idx++ : 0;
+                return '[IMAGEM_' + current + ']';
+            });
+        }
         var parser = new DOMParser();
-        var doc = parser.parseFromString(htmlText || '', 'text/html');
+        var doc = parser.parseFromString(processedText, 'text/html');
         var tex = '';
         var self = this;
 
@@ -373,14 +426,15 @@ window.ExportEngines = {
 
         for (var qi = 0; qi < questions.length; qi++) {
             var q = questions[qi];
-            var texto = await this.htmlToLatex(q.enunciado, zip, imgRef, q.imagens);
+            var imgObjRef = { idx: 0 };
+            var texto = await this.htmlToLatex(q.enunciado, zip, imgRef, q.imagens, imgObjRef);
             t += '\\item ' + texto + '\n';
 
             var isObj = q.tipo === 'objetiva';
             if (isObj && q.alternativas) {
                 t += '\\begin{itemize}\n';
                 for (var ai = 0; ai < q.alternativas.length; ai++) {
-                    var altTxt = await this.htmlToLatex(q.alternativas[ai].texto, zip, imgRef, q.imagens);
+                    var altTxt = await this.htmlToLatex(q.alternativas[ai].texto, zip, imgRef, q.imagens, imgObjRef);
                     t += '  \\item[' + q.alternativas[ai].letra + ')] ' + altTxt + '\n';
                 }
                 t += '\\end{itemize}\n';
@@ -480,9 +534,26 @@ window.ExportEngines = {
         for (var idx = 0; idx < questions.length; idx++) {
             var q = questions[idx];
             var isObj = q.tipo === 'objetiva';
+            
+            var globalImgIdx = 0;
+            var prepHTML = function(html) {
+                if (!html) return '';
+                return html.replace(/\[IMAGEM\]/g, function() {
+                    return '[IMAGEM_' + (globalImgIdx++) + ']';
+                });
+            };
+            
+            var enunciadoText = prepHTML(q.enunciado);
+            
+            var alternativasText = [];
+            if (isObj && q.alternativas) {
+                for (var ai = 0; ai < q.alternativas.length; ai++) {
+                    alternativasText.push(prepHTML(q.alternativas[ai].texto));
+                }
+            }
 
             // ── Get paragraph groups with alignment for enunciado ──
-            var enunciadoGroups = await this.processMixedContentWithParagraphs(q.enunciado, q.imagens || [], TextRun, ImageRun);
+            var enunciadoGroups = await this.processMixedContentWithParagraphs(enunciadoText, q.imagens || [], TextRun, ImageRun);
 
             // First paragraph: uses Word auto-numbering (no manual number prefix)
             var firstGroup = enunciadoGroups[0] || { alignment: null, runs: [] };
@@ -506,10 +577,19 @@ window.ExportEngines = {
                 }
             }
 
-            // Standalone images from imagens array (not embedded in enunciado)
+            // Standalone images from imagens array (not embedded in enunciado or alternativas)
+            var getFullText = function() {
+                var txt = enunciadoText;
+                if (isObj && q.alternativas) {
+                    for (var k = 0; k < q.alternativas.length; k++) txt += alternativasText[k];
+                }
+                return txt;
+            };
+            var fullQuestionText = getFullText();
+
             if (q.imagens && q.imagens.length > 0) {
                 for (var im = 0; im < q.imagens.length; im++) {
-                    if (!(q.enunciado || '').includes('[IMAGEM_' + im + ']')) {
+                    if (!fullQuestionText.includes('[IMAGEM_' + im + ']')) {
                         try {
                             var b64m = q.imagens[im].match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
                             if (b64m) {
@@ -530,8 +610,8 @@ window.ExportEngines = {
             // Alternativas — Word auto-numbering (upper letter: A), B), C)...)
             if (isObj && q.alternativas && q.alternativas.length > 0) {
                 for (var ai = 0; ai < q.alternativas.length; ai++) {
-                    var alt = q.alternativas[ai];
-                    var altRuns = await this.processMixedContent(alt.texto, q.imagens || [], TextRun, ImageRun);
+                    var altText = alternativasText[ai];
+                    var altRuns = await this.processMixedContent(altText, q.imagens || [], TextRun, ImageRun);
                     children.push(new Paragraph({
                         numbering: { reference: "alt-numbering-" + idx, level: 0 },
                         spacing: { before: 40, after: 40 },
