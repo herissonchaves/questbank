@@ -154,11 +154,12 @@ const QBImport = {
                     isAdapted = true;
                     baseOldId = 'auto-' + oldId.substring(6);
                 }
-            } else if (oldId.startsWith('A-')) {
+            } else if (/^A-\d+$/.test(oldId)) {
+                // Ex: "A-00001"
                 isAdapted = true;
                 baseOldId = oldId.substring(2);
-            } else if (oldId.startsWith('A') && !oldId.startsWith('A-')) {
-                // Apenas inicia com A (ex: A000052)
+            } else if (/^A\d+$/.test(oldId)) {
+                // Ex: "A000052" (apenas A seguido de dígitos)
                 isAdapted = true;
                 baseOldId = oldId.substring(1);
             }

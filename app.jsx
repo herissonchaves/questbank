@@ -321,29 +321,31 @@ const App = () => {
 
     // ─── Adapted Questions Logic ────────────────────────────
     // Build a map: regularId -> adaptedQuestion
+    // An adapted question ID must strictly match "A-<digits>" or "A<digits>"
+    // (not just any ID starting with 'A', which would incorrectly classify
+    // legitimate questions whose IDs happen to start with 'A')
     const { adaptedMap, regularQuestions } = useMemo(() => {
         const map = {};
-        
-        // Pass 1: Assign adapted questions mapped to their regular counterpart's ID
+        const adaptedIdSet = new Set();
+
+        // Pass 1: Identify adapted questions (strict format: A-<digits> or A<digits>)
         state.questions.forEach(q => {
             const idStr = String(q.id);
             let regularId = null;
-            if (idStr.startsWith('A-')) {
-                regularId = idStr.substring(2); // Extracts "00001" from "A-00001"
-            } else if (idStr.startsWith('A')) {
-                regularId = idStr.substring(1); // Extracts "11" from "A11"
+            if (/^A-\d+$/.test(idStr)) {
+                regularId = idStr.substring(2); // "A-00001" -> "00001"
+            } else if (/^A\d+$/.test(idStr)) {
+                regularId = idStr.substring(1); // "A11" -> "11"
             }
-            
+
             if (regularId) {
                 map[regularId] = q;
+                adaptedIdSet.add(idStr);
             }
         });
 
         // Pass 2: Filter out adapted questions from the regular list
-        const regular = state.questions.filter(q => {
-            const idStr = String(q.id);
-            return !idStr.startsWith('A-') && !idStr.startsWith('A');
-        });
+        const regular = state.questions.filter(q => !adaptedIdSet.has(String(q.id)));
 
         return { adaptedMap: map, regularQuestions: regular };
     }, [state.questions]);
@@ -372,16 +374,16 @@ const App = () => {
             // Text search (enunciado, id, tags)
             if (state.filters.search) {
                 const term = state.filters.search.toLowerCase();
-                const inEnunciado = q.enunciado.toLowerCase().includes(term);
-                const inId = q.id.toLowerCase().includes(term);
-                const inTags = (q.tags || []).some(t => t.toLowerCase().includes(term));
+                const inEnunciado = (q.enunciado || '').toLowerCase().includes(term);
+                const inId = String(q.id || '').toLowerCase().includes(term);
+                const inTags = (q.tags || []).some(t => String(t).toLowerCase().includes(term));
                 if (!inEnunciado && !inId && !inTags) return false;
             }
 
             // Código filter
             if (state.filters.codigo) {
                 const term = state.filters.codigo.toLowerCase();
-                if (!q.id.toLowerCase().includes(term)) return false;
+                if (!String(q.id || '').toLowerCase().includes(term)) return false;
             }
 
             // Dropdown filters

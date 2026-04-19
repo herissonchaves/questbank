@@ -3,6 +3,11 @@
 // Supports optional Step 2: creating adapted version for questions that don't have one
 
 const EditQuestionModal = ({ question, onClose, onSave }) => {
+    // Early bail-out before any hook is declared to respect Rules of Hooks.
+    // The parent already renders this component conditionally, so this is
+    // just a defensive guard for hot-reloading / future callers.
+    if (!question) return null;
+
     // Clean Word/Office formatting when loading into editor
     const cleanQuestion = React.useMemo(() => {
         if (!question) return question;
@@ -111,15 +116,14 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
     const adaptedEnunciadoRef = React.useRef(null);
     const adaptedAlternativasRefs = React.useRef([]);
 
-    if (!question) return null;
-
     // Check if adapted version already exists
     React.useEffect(() => {
         const checkAdapted = async () => {
             try {
-                // Skip check for adapted questions (already start with A- or A)
+                // Skip check for adapted questions — strict format only:
+                // "A-<digits>" (edit-modal format) or "A<digits>" (imported format)
                 const idStr = question.id ? question.id.toString() : '';
-                if (idStr.startsWith('A-') || (idStr.startsWith('A') && !idStr.startsWith('A-'))) {
+                if (/^A-\d+$/.test(idStr) || /^A\d+$/.test(idStr)) {
                     setHasExistingAdapted(true);
                     setCheckingAdapted(false);
                     return;
@@ -233,7 +237,11 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
     };
 
     const totalSteps = includeAdapted ? 2 : 1;
-    const isAdaptedQuestion = question.id && question.id.toString().startsWith('A-');
+    // Detect adapted questions strictly: "A-<digits>" or "A<digits>"
+    const isAdaptedQuestion = (() => {
+        const s = question.id ? question.id.toString() : '';
+        return /^A-\d+$/.test(s) || /^A\d+$/.test(s);
+    })();
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>

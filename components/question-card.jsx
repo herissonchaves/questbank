@@ -19,7 +19,10 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
         if (!isExpanded) setCarouselPage(0);
     }, [isExpanded]);
 
-    // After render, let KaTeX chew the DOM natively
+    // After render, let KaTeX chew the DOM natively.
+    // Re-run only when the visible content or carousel page actually changes —
+    // without a dependency array this fired on every render and could cause
+    // performance issues / rendering loops.
     React.useEffect(() => {
         if (cardRef.current && window.renderMathInElement) {
             window.renderMathInElement(cardRef.current, {
@@ -32,7 +35,7 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                 throwOnError: false
             });
         }
-    }); // re-run on full expansions
+    }, [isExpanded, carouselPage, displayQ?.enunciado, displayQ?.alternativas]);
 
     // Processar imagens inline e HTML no enunciado:
     // Suporta: base64 data URIs (novo), {arquivo: "..."} legado, e marcadores [IMAGEM]
@@ -121,10 +124,15 @@ const QuestionCard = ({ question, isSelected, isExpanded, onToggleExpand, onTogg
                 <div className="flex-1 min-w-0">
                     {/* Top row: badges */}
                     <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                        {/* ID badge */}
-                        <span className="text-[10px] font-mono font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded" title={q.id}>
-                            {q.id.length > 12 ? q.id.substring(0, 8) + '...' : q.id}
-                        </span>
+                        {/* ID badge — force string conversion so numeric IDs don't crash */}
+                        {(() => {
+                            const idStr = String(q.id ?? '');
+                            return (
+                                <span className="text-[10px] font-mono font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded" title={idStr}>
+                                    {idStr.length > 12 ? idStr.substring(0, 8) + '...' : idStr}
+                                </span>
+                            );
+                        })()}
 
                         {/* Discipline badge */}
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${colors.bg} ${colors.text}`}>
