@@ -194,28 +194,15 @@ const ExportModal = ({ isOpen, onClose, selectedQuestions, onExamSaved, adaptedM
                                 </div>
                             </div>
 
-                            {/* Date + Linhas discursiva */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Data da Prova</label>
-                                    <input
-                                        type="date"
-                                        value={config.data}
-                                        onChange={(e) => updateConfig('data', e.target.value)}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Linhas (discursiva)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="20"
-                                        value={config.linhas_discursiva}
-                                        onChange={(e) => updateConfig('linhas_discursiva', parseInt(e.target.value) || 5)}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-                                    />
-                                </div>
+                            {/* Date */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Data da Prova</label>
+                                <input
+                                    type="date"
+                                    value={config.data}
+                                    onChange={(e) => updateConfig('data', e.target.value)}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
+                                />
                             </div>
 
                             {/* Options */}

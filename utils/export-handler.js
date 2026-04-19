@@ -63,10 +63,12 @@ const QBExport = {
             data: { questions, exams, settings },
         };
 
-        const dateStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
         QBExport._download(
             JSON.stringify(backup, null, 2),
-            `questbank-backup-${dateStr}.questbank.json`,
+            `questbank-backup-${dateStr}_${timeStr}.questbank.json`,
             'application/json'
         );
 

@@ -87,8 +87,91 @@ window.ExportEngines = {
         return arr;
     },
 
+    // ── Build a docx Table from an HTML <table> DOM node ──
+    async _buildDocxTable(tableNode, imagesArray, TextRun, ImageRun) {
+        var D = docx;
+        var Table = D.Table, TableRow = D.TableRow, TableCell = D.TableCell, Paragraph = D.Paragraph;
+        var BorderStyle = D.BorderStyle, WidthType = D.WidthType, AlignmentType = D.AlignmentType;
+        var self = this;
+
+        var borderDef = { style: BorderStyle.SINGLE, size: 6, color: '999999' };
+        var allBorders = { top: borderDef, bottom: borderDef, left: borderDef, right: borderDef, insideH: borderDef, insideV: borderDef };
+
+        var rows = Array.from(tableNode.querySelectorAll('tr'));
+        var docxRows = [];
+
+        // Skip ghost/empty tables that Word inserts as formatting artifacts
+        var allCellsText = tableNode.textContent || '';
+        if (allCellsText.trim() === '') return null;
+
+        for (var ri = 0; ri < rows.length; ri++) {
+            var tr = rows[ri];
+            var cells = Array.from(tr.querySelectorAll('td, th'));
+            var docxCells = [];
+
+            for (var ci = 0; ci < cells.length; ci++) {
+                var td = cells[ci];
+                var isHeader = td.tagName.toLowerCase() === 'th';
+                var colspan = parseInt(td.getAttribute('colspan') || '1');
+                var rowspan = parseInt(td.getAttribute('rowspan') || '1');
+
+                // Get inner text/runs from cell content
+                var cellHTML = td.innerHTML || '';
+                var cellGroups = await self.processMixedContentWithParagraphs(cellHTML, imagesArray, TextRun, ImageRun);
+
+                var cellChildren = cellGroups.map(function(g) {
+                    if (g.type === 'table') return null; // nested tables skipped for simplicity
+                    return new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 40, after: 40 },
+                        children: g.runs.length > 0 ? g.runs :
+                            [new TextRun({ text: '', font: 'Arial', size: 22, bold: isHeader })]
+                    });
+                }).filter(Boolean);
+
+                if (cellChildren.length === 0) {
+                    cellChildren = [new Paragraph({
+                        children: [new TextRun({ text: '', font: 'Arial', size: 22, bold: isHeader })]
+                    })];
+                }
+
+                // Read background color only from explicit CSS — skip auto gray for th
+                var bgColor = undefined;
+                var bgStyle = td.style && td.style.backgroundColor;
+                if (bgStyle && bgStyle.startsWith('rgb')) {
+                    var m = bgStyle.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (m) bgColor = ('0' + parseInt(m[1]).toString(16)).slice(-2) +
+                                      ('0' + parseInt(m[2]).toString(16)).slice(-2) +
+                                      ('0' + parseInt(m[3]).toString(16)).slice(-2);
+                }
+
+                var cellProps = {
+                    borders: { top: borderDef, bottom: borderDef, left: borderDef, right: borderDef },
+                    children: cellChildren,
+                    verticalAlign: D.VerticalAlign ? D.VerticalAlign.CENTER : undefined,
+                };
+                if (bgColor) cellProps.shading = { fill: bgColor };
+                if (colspan > 1) cellProps.columnSpan = colspan;
+
+                docxCells.push(new TableCell(cellProps));
+            }
+
+            if (docxCells.length > 0) {
+                docxRows.push(new TableRow({ children: docxCells }));
+            }
+        }
+
+        if (docxRows.length === 0) return null;
+
+        return new Table({
+            rows: docxRows,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: allBorders,
+        });
+    },
+
     // ── NEW: Process HTML into paragraph groups with alignment ──
-    // Returns: [{ alignment: 'LEFT'|'CENTER'|'RIGHT'|'BOTH'|null, runs: [...] }, ...]
+    // Returns: [{ type: 'paragraph', alignment, runs } | { type: 'table', tableNode }]
     async processMixedContentWithParagraphs(htmlText, imagesArray, TextRun, ImageRun) {
         var self = this;
         var parser = new DOMParser();
@@ -183,6 +266,13 @@ window.ExportEngines = {
 
                 if (tag === 'br') {
                     currentRuns.push(new TextRun({ break: 1 }));
+                    return;
+                }
+
+                // ── TABLE: flush pending runs and push a table group ──
+                if (tag === 'table') {
+                    flushParagraph(null);
+                    paragraphs.push({ type: 'table', tableNode: node });
                     return;
                 }
 
@@ -438,10 +528,6 @@ window.ExportEngines = {
                     t += '  \\item[' + q.alternativas[ai].letra + ')] ' + altTxt + '\n';
                 }
                 t += '\\end{itemize}\n';
-            } else if (q.tipo === 'discursiva') {
-                var nl = cfg.linhas_discursiva || 5;
-                t += '\\vspace{0.5cm}\n';
-                for (var k = 0; k < nl; k++) t += '\\hrulefill \\\\[0.5cm]\n';
             }
             t += '\\vspace{0.5cm}\n';
         }
@@ -552,23 +638,40 @@ window.ExportEngines = {
                 }
             }
 
-            // ── Get paragraph groups with alignment for enunciado ──
+            // ── Get paragraph/table groups for enunciado ──
             var enunciadoGroups = await this.processMixedContentWithParagraphs(enunciadoText, q.imagens || [], TextRun, ImageRun);
 
+            // Find the first non-table group to get the question text paragraph
+            var firstParaIdx = -1;
+            for (var gi2 = 0; gi2 < enunciadoGroups.length; gi2++) {
+                if (!enunciadoGroups[gi2].type || enunciadoGroups[gi2].type === 'paragraph') {
+                    firstParaIdx = gi2;
+                    break;
+                }
+            }
+
             // First paragraph: uses Word auto-numbering (no manual number prefix)
-            var firstGroup = enunciadoGroups[0] || { alignment: null, runs: [] };
+            var firstGroup = firstParaIdx >= 0 ? enunciadoGroups[firstParaIdx] : { alignment: null, runs: [] };
 
             children.push(new Paragraph({
                 numbering: { reference: "question-numbering", level: 0 },
                 spacing: { before: 250, after: 40 },
                 alignment: firstGroup.alignment ? alignMap[firstGroup.alignment] : AlignmentType.BOTH,
-                children: firstGroup.runs
+                children: firstGroup.runs || []
             }));
 
-            // Remaining paragraphs (continuation of enunciado with different alignment)
-            for (var pg = 1; pg < enunciadoGroups.length; pg++) {
+            // Remaining groups (paragraphs or tables)
+            for (var pg = 0; pg < enunciadoGroups.length; pg++) {
+                if (pg === firstParaIdx) continue; // already rendered above
                 var group = enunciadoGroups[pg];
-                if (group.runs.length > 0) {
+                if (group.type === 'table') {
+                    var tbl = await this._buildDocxTable(group.tableNode, q.imagens || [], TextRun, ImageRun);
+                    if (tbl) {
+                        children.push(tbl);
+                        // Empty paragraph after table for spacing
+                        children.push(new Paragraph({ spacing: { before: 80, after: 80 }, children: [] }));
+                    }
+                } else if (group.runs && group.runs.length > 0) {
                     children.push(new Paragraph({
                         spacing: { before: 40, after: 40 },
                         alignment: group.alignment ? alignMap[group.alignment] : undefined,
@@ -617,17 +720,6 @@ window.ExportEngines = {
                         numbering: { reference: "alt-numbering-" + idx, level: 0 },
                         spacing: { before: 40, after: 40 },
                         children: altRuns
-                    }));
-                }
-            }
-
-            if (q.tipo === 'discursiva') {
-                var nLines = cfg.linhas_discursiva || 5;
-                for (var li = 0; li < nLines; li++) {
-                    children.push(new Paragraph({
-                        spacing: { before: 200 },
-                        border: { bottom: { color: 'AAAAAA', space: 1, style: BorderStyle.SINGLE, size: 4 } },
-                        children: [new TextRun({ text: ' ', size: 22 })]
                     }));
                 }
             }
