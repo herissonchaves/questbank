@@ -2,7 +2,7 @@
 // Fixes: font size dropdown now works, select mousedown not blocked
 // Features: undo/redo, active states, lists, alignment
 
-const RichTextToolbar = ({ onEquation, onImage, onUndo, onRedo }) => {
+const RichTextToolbar = ({ onEquation, onImage, onInsertRespBox, onUndo, onRedo }) => {
     const exec = (command, value = null) => {
         document.execCommand(command, false, value);
     };
@@ -161,7 +161,7 @@ const RichTextToolbar = ({ onEquation, onImage, onUndo, onRedo }) => {
                 </button>
             </div>
 
-            {/* Equation & Image */}
+            {/* Equation & Image & RespBox */}
             <div className="flex items-center gap-1 pl-1 ml-auto">
                 {onEquation && (
                     <button type="button" onClick={onEquation} className="px-2.5 h-8 flex items-center gap-1.5 rounded-lg text-brand-600 hover:bg-brand-50 transition-colors font-medium text-xs" title="Inserir Equacao LaTeX">
@@ -173,6 +173,12 @@ const RichTextToolbar = ({ onEquation, onImage, onUndo, onRedo }) => {
                     <button type="button" onClick={onImage} className="px-2.5 h-8 flex items-center gap-1.5 rounded-lg text-brand-600 hover:bg-brand-50 transition-colors font-medium text-xs" title="Inserir Imagem">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         Imagem
+                    </button>
+                )}
+                {onInsertRespBox && (
+                    <button type="button" onClick={onInsertRespBox} className="px-2.5 h-8 flex items-center gap-1.5 rounded-lg text-violet-600 hover:bg-violet-50 transition-colors font-medium text-xs" title="Inserir retangulo de resposta">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        Retangulo
                     </button>
                 )}
             </div>

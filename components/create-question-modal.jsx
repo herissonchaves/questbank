@@ -254,6 +254,11 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
         if (eq) document.execCommand('insertHTML', false, '<span>$$' + eq + '$$</span>&nbsp;');
     };
 
+    const handleInsertRespBox = () => {
+        const html = '<div data-respbox="1" style="border: 1.5px solid #9ca3af; min-height: 90px; margin: 8px 0; border-radius: 4px; background: #fafafa; display: block;"></div><br>';
+        document.execCommand('insertHTML', false, html);
+    };
+
     // Validate Step 1
     const validateStep1 = () => {
         const errs = {};
@@ -523,7 +528,7 @@ const CreateQuestionModal = ({ isOpen, onClose, onSave, existingQuestions, adapt
                                     <div className="flex items-center gap-1">
                                     </div>
                                 </div>
-                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
+                                <RichTextToolbar onEquation={handleEquationInsert} onImage={handleImageUpload} onInsertRespBox={handleInsertRespBox} onUndo={() => document.execCommand('undo')} onRedo={() => document.execCommand('redo')} />
                                 <VisualEditor
                                     forwardedRef={enunciadoRef}
                                     value={form.enunciado}

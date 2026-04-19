@@ -276,6 +276,13 @@ window.ExportEngines = {
                     return;
                 }
 
+                // ── RESPBOX: flush pending runs and push a respbox group ──
+                if (tag === 'div' && node.getAttribute && node.getAttribute('data-respbox') === '1') {
+                    flushParagraph(null);
+                    paragraphs.push({ type: 'respbox' });
+                    return;
+                }
+
                 // Block-level elements: div, p — start new paragraph if they have alignment
                 if (tag === 'div' || tag === 'p') {
                     var blockAlign = self._getAlignment(node) || parentAlignment;
@@ -671,6 +678,32 @@ window.ExportEngines = {
                         // Empty paragraph after table for spacing
                         children.push(new Paragraph({ spacing: { before: 80, after: 80 }, children: [] }));
                     }
+                } else if (group.type === 'respbox') {
+                    // ── Retângulo de resposta: tabela 1×1 com altura fixa de 3,5 cm ──
+                    // 1 cm = 567 Twips; 3,5 cm = 1984 Twips
+                    var D2 = docx;
+                    var respTable = new D2.Table({
+                        rows: [
+                            new D2.TableRow({
+                                height: { value: 1984, rule: D2.HeightRule ? D2.HeightRule.EXACT : 'exact' },
+                                children: [
+                                    new D2.TableCell({
+                                        borders: {
+                                            top: { style: D2.BorderStyle.SINGLE, size: 6, color: '000000' },
+                                            bottom: { style: D2.BorderStyle.SINGLE, size: 6, color: '000000' },
+                                            left: { style: D2.BorderStyle.SINGLE, size: 6, color: '000000' },
+                                            right: { style: D2.BorderStyle.SINGLE, size: 6, color: '000000' },
+                                        },
+                                        shading: { fill: 'FFFFFF' },
+                                        children: [new D2.Paragraph({ children: [] })],
+                                    })
+                                ]
+                            })
+                        ],
+                        width: { size: 100, type: D2.WidthType.PERCENTAGE },
+                    });
+                    children.push(respTable);
+                    children.push(new Paragraph({ spacing: { before: 80, after: 80 }, children: [] }));
                 } else if (group.runs && group.runs.length > 0) {
                     children.push(new Paragraph({
                         spacing: { before: 40, after: 40 },

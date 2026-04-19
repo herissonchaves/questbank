@@ -435,7 +435,7 @@ function sanitizeNode(node) {
     ]);
     const allowedAttrs = new Set([
         'src', 'alt', 'href', 'style', 'data-width', 'data-height',
-        'width', 'height', 'colspan', 'rowspan', 'target',
+        'width', 'height', 'colspan', 'rowspan', 'target', 'data-respbox',
     ]);
     let html = '';
     for (let i = 0; i < node.childNodes.length; i++) {
