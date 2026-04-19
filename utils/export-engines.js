@@ -591,7 +591,8 @@ window.ExportEngines = {
                 for (var im = 0; im < q.imagens.length; im++) {
                     if (!fullQuestionText.includes('[IMAGEM_' + im + ']')) {
                         try {
-                            var b64m = q.imagens[im].match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+                            var imgItem = q.imagens[im];
+                            var b64m = (typeof imgItem === 'string') ? imgItem.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/) : null;
                             if (b64m) {
                                 var binStr = atob(b64m[2]);
                                 var bytes = new Uint8Array(binStr.length);

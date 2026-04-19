@@ -257,8 +257,9 @@ const App = () => {
         const fieldNames = ['disciplina', 'tópico', 'conteúdo', 'assunto'];
 
         if (oldName === newName) return;
+        if (!newName || !newName.trim()) return; // Ignora nome vazio ou só espaços
 
-        if (!window.confirm(`Renomear ${fieldNames[level]} de "${oldName}" para "${newName}"?\nTodas as questões associadas serão atualizadas.`)) return;
+        if (!window.confirm(`Renomear ${fieldNames[level]} de "${oldName}" para "${newName.trim()}"?\nTodas as questões associadas serão atualizadas.`)) return;
 
         try {
             const d = parts[0];
@@ -290,10 +291,11 @@ const App = () => {
             }));
 
             const fieldKey = ['disciplina', 'topico', 'conteudo', 'assunto'][level];
+            const trimmedName = newName.trim();
 
             await db.transaction('rw', db.questions, async () => {
                 for (const q of questionsToUpdate) {
-                    await db.questions.update(q.id, { [fieldKey]: newName });
+                    await db.questions.update(q.id, { [fieldKey]: trimmedName });
                 }
             });
 
@@ -416,7 +418,7 @@ const App = () => {
                     let s = String(idStr);
                     if (s.startsWith('A-')) s = s.substring(2);
                     else if (s.startsWith('A')) s = s.substring(1);
-                    return parseInt(s.replace(/\\D/g, ''), 10) || 0;
+                    return parseInt(s.replace(/\D/g, ''), 10) || 0;
                 };
                 const idA = a.id ? parseId(a.id) : 0;
                 const idB = b.id ? parseId(b.id) : 0;
