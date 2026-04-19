@@ -473,6 +473,63 @@ const App = () => {
         dispatch({ type: 'SHUFFLE_SELECTED' });
     }, []);
 
+    const handleShuffleAlternatives = useCallback(async () => {
+        if (state.selectedIds.length === 0) return;
+        
+        try {
+            const selectedQ = await db.questions.filter(q => state.selectedIds.includes(q.id) && q.tipo === 'objetiva').toArray();
+            
+            if (selectedQ.length === 0) {
+                showToast("Nenhuma questão objetiva selecionada para embaralhar.", "info");
+                return;
+            }
+
+            let updatedCount = 0;
+
+            await db.transaction('rw', db.questions, async () => {
+                for (const q of selectedQ) {
+                    if (!q.alternativas || q.alternativas.length === 0) continue;
+                    
+                    const originalGabarito = String(q.gabarito || '').trim().toUpperCase();
+                    const correctAlt = q.alternativas.find(a => String(a.letra || '').trim().toUpperCase() === originalGabarito);
+                    
+                    if (!correctAlt) continue;
+
+                    const originalCorrectText = correctAlt.texto;
+
+                    const shuffled = [...q.alternativas];
+                    for (let i = shuffled.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                    }
+
+                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const newAlternativas = shuffled.map((alt, index) => {
+                        return { ...alt, letra: alphabet[index] };
+                    });
+
+                    const newCorrectAlt = newAlternativas.find(a => a.texto === originalCorrectText);
+                    const newGabarito = newCorrectAlt ? newCorrectAlt.letra : originalGabarito;
+
+                    if (newCorrectAlt) {
+                        await db.questions.update(q.id, { alternativas: newAlternativas, gabarito: newGabarito });
+                        updatedCount++;
+                    }
+                }
+            });
+
+            if (updatedCount > 0) {
+                showToast(`Alternativas embaralhadas em ${updatedCount} questões!`, 'success');
+                loadQuestions();
+            } else {
+                showToast("Não foi possível embaralhar algumas alternativas (gabarito inconsistente).", "warning");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Erro ao embaralhar alternativas', 'error');
+        }
+    }, [state.selectedIds]);
+
     const handleOrderByDifficulty = useCallback(() => {
         dispatch({ type: 'ORDER_BY_DIFFICULTY' });
     }, []);
@@ -827,6 +884,7 @@ const App = () => {
                         onRemove={(id) => dispatch({ type: 'REMOVE_SELECTED', payload: id })}
                         onReorder={handleReorder}
                         onShuffle={handleShuffle}
+                        onShuffleAlternatives={handleShuffleAlternatives}
                         onOrderByDifficulty={handleOrderByDifficulty}
                         onClear={() => dispatch({ type: 'CLEAR_SELECTED' })}
                         onDeleteSelected={handleDeleteSelected}

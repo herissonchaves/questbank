@@ -1,7 +1,7 @@
 // QuestBank — SelectedPanel Component
 // Selected questions for the exam with drag & drop reordering + shuffle
 
-const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onOrderByDifficulty, onClear, onDeleteSelected, onExport }) => {
+const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onShuffleAlternatives, onOrderByDifficulty, onClear, onDeleteSelected, onExport }) => {
     const [dragIndex, setDragIndex] = React.useState(null);
     const [dragOverIndex, setDragOverIndex] = React.useState(null);
 
@@ -174,16 +174,34 @@ const SelectedPanel = ({ questions, onRemove, onReorder, onShuffle, onOrderByDif
                         </button>
 
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={onShuffle}
-                                className="flex-1 py-1.5 text-xs text-gray-500 hover:text-brand-600 transition-colors flex items-center justify-center gap-1"
-                                title="Embaralhar ordem das questões"
-                            >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Embaralhar
-                            </button>
+                            <div className="relative group flex-1">
+                                <button
+                                    className="w-full py-1.5 text-xs text-gray-500 hover:text-brand-600 transition-colors flex items-center justify-center gap-1"
+                                    title="Opções de embaralhar"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Embaralhar
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                    </svg>
+                                </button>
+                                <div className="absolute left-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-1">
+                                    <button
+                                        onClick={onShuffle}
+                                        className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 hover:text-brand-600 transition-colors"
+                                    >
+                                        Ordem das questões
+                                    </button>
+                                    <button
+                                        onClick={onShuffleAlternatives}
+                                        className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 hover:text-brand-600 transition-colors"
+                                    >
+                                        Alternativas (objetivas)
+                                    </button>
+                                </div>
+                            </div>
                             <span className="w-px h-4 bg-gray-200" />
                             <button
                                 onClick={onClear}
