@@ -662,7 +662,93 @@ const App = () => {
                     showToast('Questão atualizada, mas erro na versão adaptada.', 'error');
                 }
             } else {
-                showToast('Questão atualizada!', 'success');
+                // ── Sync image sizes to existing adapted version ──────────────
+                try {
+                    const idStr = String(updatedQuestion.id);
+                    const adaptedId = await (async () => {
+                        const a1 = 'A-' + idStr;
+                        const a2 = 'A' + idStr;
+                        if (await db.questions.get(a1)) return a1;
+                        if (await db.questions.get(a2)) return a2;
+                        return null;
+                    })();
+
+                    if (adaptedId) {
+                        const existingAdapted = await db.questions.get(adaptedId);
+
+                        // Extract image sizes (width, height) from an HTML string by position
+                        const extractImgSizes = (html) => {
+                            if (!html) return [];
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            return Array.from(doc.querySelectorAll('img')).map(img => ({
+                                w: img.getAttribute('data-width') || img.style.width || null,
+                                h: img.getAttribute('data-height') || img.style.height || null,
+                            }));
+                        };
+
+                        // Apply parent sizes to adapted HTML by image position
+                        const applySizes = (adaptedHtml, sizes) => {
+                            if (!adaptedHtml || !sizes.length) return adaptedHtml;
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(adaptedHtml, 'text/html');
+                            const imgs = Array.from(doc.querySelectorAll('img'));
+                            imgs.forEach((img, i) => {
+                                if (i >= sizes.length) return;
+                                const { w, h } = sizes[i];
+                                if (w) {
+                                    const wPx = String(w).replace('px', '');
+                                    img.style.width = wPx + 'px';
+                                    img.setAttribute('data-width', wPx);
+                                }
+                                if (h) {
+                                    const hPx = String(h).replace('px', '');
+                                    img.style.height = hPx + 'px';
+                                    img.setAttribute('data-height', hPx);
+                                }
+                            });
+                            return doc.body.innerHTML;
+                        };
+
+                        const parentSizes = extractImgSizes(updatedQuestion.enunciado);
+                        const updatedAdapted = { ...existingAdapted };
+                        let changed = false;
+
+                        if (parentSizes.length > 0) {
+                            const newEnunciado = applySizes(existingAdapted.enunciado, parentSizes);
+                            if (newEnunciado !== existingAdapted.enunciado) {
+                                updatedAdapted.enunciado = newEnunciado;
+                                changed = true;
+                            }
+                        }
+
+                        // Also sync alternativas images if parent has them
+                        if (updatedQuestion.alternativas && existingAdapted.alternativas) {
+                            const newAlts = existingAdapted.alternativas.map((alt, i) => {
+                                const parentAlt = updatedQuestion.alternativas[i];
+                                if (!parentAlt) return alt;
+                                const altSizes = extractImgSizes(parentAlt.texto);
+                                if (!altSizes.length) return alt;
+                                const newTexto = applySizes(alt.texto, altSizes);
+                                if (newTexto !== alt.texto) { changed = true; }
+                                return { ...alt, texto: newTexto };
+                            });
+                            if (changed) updatedAdapted.alternativas = newAlts;
+                        }
+
+                        if (changed) {
+                            await db.questions.update(adaptedId, updatedAdapted);
+                            showToast('Questão atualizada! Tamanhos de imagem sincronizados na versão adaptada.', 'success');
+                        } else {
+                            showToast('Questão atualizada!', 'success');
+                        }
+                    } else {
+                        showToast('Questão atualizada!', 'success');
+                    }
+                } catch (syncErr) {
+                    console.error('Erro ao sincronizar imagens com versão adaptada:', syncErr);
+                    showToast('Questão atualizada!', 'success');
+                }
             }
 
             dispatch({ type: 'SET_EDIT_QUESTION', payload: null });
@@ -1004,7 +1090,7 @@ const App = () => {
                 <StatsPanel
                     isOpen={state.modals.stats}
                     onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'stats' })}
-                    questions={state.questions}
+                    questions={regularQuestions}
                 />
             )}
 
