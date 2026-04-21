@@ -676,69 +676,122 @@ const App = () => {
                     if (adaptedId) {
                         const existingAdapted = await db.questions.get(adaptedId);
 
-                        // Extract image sizes (width, height) from an HTML string by position
+                        // ── Step 1: expand [IMAGEM_X] / [IMAGEM] placeholders into real <img> tags
+                        const expandPlaceholders = (html, imagens) => {
+                            if (!html) return html || '';
+                            const imgs = imagens || [];
+                            if (!imgs.length) return html;
+                            let processed = html;
+                            const consumed = new Set();
+                            // Indexed markers: [IMAGEM_0], [IMAGEM_1] ...
+                            for (let i = 0; i < imgs.length; i++) {
+                                const src = imgs[i];
+                                if (!src) continue;
+                                const re = new RegExp(`\\[IMAGEM_${i}\\]`, 'g');
+                                if (re.test(processed)) {
+                                    consumed.add(i);
+                                    processed = processed.replace(
+                                        new RegExp(`\\[IMAGEM_${i}\\]`, 'g'),
+                                        `<br><img src="${src}" style="width:auto; height:145px; display:block; margin:10px auto; border-radius:4px; cursor:pointer;" /><br>`
+                                    );
+                                }
+                            }
+                            // Generic [IMAGEM] markers
+                            let gIdx = 0;
+                            processed = processed.replace(/\[IMAGEM\]/g, () => {
+                                while (gIdx < imgs.length && consumed.has(gIdx)) gIdx++;
+                                if (gIdx < imgs.length) {
+                                    const src = imgs[gIdx++];
+                                    if (src) return `<br><img src="${src}" style="width:auto; height:145px; display:block; margin:10px auto; border-radius:4px; cursor:pointer;" /><br>`;
+                                }
+                                return '';
+                            });
+                            return processed;
+                        };
+
+                        // ── Step 2: extract image sizes from parent HTML by position
                         const extractImgSizes = (html) => {
                             if (!html) return [];
                             const parser = new DOMParser();
                             const doc = parser.parseFromString(html, 'text/html');
                             return Array.from(doc.querySelectorAll('img')).map(img => ({
-                                w: img.getAttribute('data-width') || img.style.width || null,
-                                h: img.getAttribute('data-height') || img.style.height || null,
+                                w: img.getAttribute('data-width') || (img.style.width !== 'auto' ? img.style.width : null) || null,
+                                h: img.getAttribute('data-height') || (img.style.height !== 'auto' ? img.style.height : null) || null,
                             }));
                         };
 
-                        // Apply parent sizes to adapted HTML by image position
+                        // ── Step 3: apply parent sizes to adapted HTML by image position
                         const applySizes = (adaptedHtml, sizes) => {
                             if (!adaptedHtml || !sizes.length) return adaptedHtml;
                             const parser = new DOMParser();
                             const doc = parser.parseFromString(adaptedHtml, 'text/html');
                             const imgs = Array.from(doc.querySelectorAll('img'));
+                            if (!imgs.length) return adaptedHtml; // no images to update
                             imgs.forEach((img, i) => {
                                 if (i >= sizes.length) return;
                                 const { w, h } = sizes[i];
-                                if (w) {
+                                if (w && w !== 'auto') {
                                     const wPx = String(w).replace('px', '');
                                     img.style.width = wPx + 'px';
+                                    img.removeAttribute('data-width');
                                     img.setAttribute('data-width', wPx);
                                 }
-                                if (h) {
+                                if (h && h !== 'auto') {
                                     const hPx = String(h).replace('px', '');
                                     img.style.height = hPx + 'px';
+                                    img.removeAttribute('data-height');
                                     img.setAttribute('data-height', hPx);
                                 }
                             });
                             return doc.body.innerHTML;
                         };
 
-                        const parentSizes = extractImgSizes(updatedQuestion.enunciado);
                         const updatedAdapted = { ...existingAdapted };
                         let changed = false;
 
+                        // Expand placeholders in adapted enunciado if needed
+                        let adaptedEnunciado = existingAdapted.enunciado || '';
+                        const hasPlaceholders = /\[IMAGEM/.test(adaptedEnunciado);
+                        if (hasPlaceholders) {
+                            adaptedEnunciado = expandPlaceholders(adaptedEnunciado, existingAdapted.imagens);
+                            updatedAdapted.enunciado = adaptedEnunciado;
+                            updatedAdapted.imagens = []; // consolidate into HTML
+                            changed = true;
+                        }
+
+                        // Apply parent image sizes to enunciado
+                        const parentSizes = extractImgSizes(updatedQuestion.enunciado);
                         if (parentSizes.length > 0) {
-                            const newEnunciado = applySizes(existingAdapted.enunciado, parentSizes);
-                            if (newEnunciado !== existingAdapted.enunciado) {
+                            const newEnunciado = applySizes(adaptedEnunciado, parentSizes);
+                            if (newEnunciado !== adaptedEnunciado) {
                                 updatedAdapted.enunciado = newEnunciado;
                                 changed = true;
                             }
                         }
 
-                        // Also sync alternativas images if parent has them
+                        // Apply parent alternativa image sizes to adapted alternativas
                         if (updatedQuestion.alternativas && existingAdapted.alternativas) {
                             const newAlts = existingAdapted.alternativas.map((alt, i) => {
                                 const parentAlt = updatedQuestion.alternativas[i];
                                 if (!parentAlt) return alt;
+                                // Expand placeholders in alt if needed
+                                let altTexto = alt.texto || '';
+                                if (/\[IMAGEM/.test(altTexto)) {
+                                    altTexto = expandPlaceholders(altTexto, existingAdapted.imagens);
+                                    changed = true;
+                                }
                                 const altSizes = extractImgSizes(parentAlt.texto);
-                                if (!altSizes.length) return alt;
-                                const newTexto = applySizes(alt.texto, altSizes);
-                                if (newTexto !== alt.texto) { changed = true; }
+                                if (!altSizes.length) return { ...alt, texto: altTexto };
+                                const newTexto = applySizes(altTexto, altSizes);
+                                if (newTexto !== altTexto) changed = true;
                                 return { ...alt, texto: newTexto };
                             });
-                            if (changed) updatedAdapted.alternativas = newAlts;
+                            updatedAdapted.alternativas = newAlts;
                         }
 
                         if (changed) {
                             await db.questions.update(adaptedId, updatedAdapted);
-                            showToast('Questão atualizada! Tamanhos de imagem sincronizados na versão adaptada.', 'success');
+                            showToast('Questão atualizada! Imagens sincronizadas na versão adaptada.', 'success');
                         } else {
                             showToast('Questão atualizada!', 'success');
                         }
