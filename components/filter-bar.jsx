@@ -135,10 +135,108 @@ const TagFilter = ({ selectedTags, availableTags, onChange }) => {
     );
 };
 
+// ─── ImportBatchPicker ──────────────────────────────────────
+const ImportBatchPicker = ({ selectedBatch, batches, onChange }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const containerRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const isActive = !!selectedBatch;
+    const activeLabel = isActive
+        ? (batches.find(b => b.key === selectedBatch)?.label || selectedBatch)
+        : null;
+
+    return (
+        <div className="relative" ref={containerRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${isActive
+                    ? 'bg-violet-50 border-violet-200 text-violet-700 shadow-sm'
+                    : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                title="Filtrar por data de importação"
+            >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {isActive ? activeLabel : 'Importado em'}
+                {isActive && (
+                    <span
+                        onMouseDown={(e) => { e.stopPropagation(); onChange(''); setIsOpen(false); }}
+                        className="ml-1 text-violet-400 hover:text-violet-700 transition-colors cursor-pointer"
+                        title="Remover filtro"
+                    >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </span>
+                )}
+                {!isActive && (
+                    <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                    </svg>
+                )}
+            </button>
+
+            {isOpen && (
+                <div className="absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 z-[100] overflow-hidden animate-slide-up">
+                    <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Lotes de importação</span>
+                    </div>
+
+                    {batches.length === 0 ? (
+                        <div className="px-3 py-4 text-center">
+                            <p className="text-xs text-gray-400">Nenhuma questão com data de importação registrada.</p>
+                        </div>
+                    ) : (
+                        <div className="max-h-64 overflow-y-auto py-1">
+                            {batches.map((batch) => {
+                                const isSelected = selectedBatch === batch.key;
+                                return (
+                                    <button
+                                        key={batch.key}
+                                        onClick={() => { onChange(isSelected ? '' : batch.key); setIsOpen(false); }}
+                                        className={`w-full text-left px-3 py-2 text-xs transition-all flex items-center justify-between gap-2 ${isSelected
+                                            ? 'bg-violet-50 text-violet-700 font-semibold'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-violet-500' : 'bg-gray-200'}`} />
+                                            <span className="truncate">{batch.label}</span>
+                                        </div>
+                                        <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                            isSelected ? 'bg-violet-100 text-violet-600' : 'bg-gray-100 text-gray-500'
+                                        }`}>
+                                            {batch.count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, resultCount, totalCount, ignoreUsed, onToggleIgnoreUsed, searchRef }) => {
 
     const [showAdvanced, setShowAdvanced] = React.useState(false);
-    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.codigo || filters.orderById || ignoreUsed || filters.orderByRecent || filters.resolucao || (filters.tag && filters.tag.length > 0);
+    const hasActiveFilters = filters.search || filters.banca || filters.ano || filters.dificuldade || filters.tipo || filters.codigo || filters.orderById || ignoreUsed || filters.orderByRecent || filters.resolucao || (filters.tag && filters.tag.length > 0) || filters.importBatch;
 
     return (
         <div className="flex flex-col gap-2 p-3 border-b border-gray-200">
@@ -350,6 +448,16 @@ const FilterBar = ({ filters, availableValues, onFilterChange, onClearFilters, r
                             Ignorar já usadas
                         </span>
                     </label>
+
+                    {/* Divider */}
+                    <div className="w-px h-5 bg-gray-200 mx-1"></div>
+
+                    {/* Import batch picker */}
+                    <ImportBatchPicker
+                        selectedBatch={filters.importBatch || ''}
+                        batches={availableValues.importBatches || []}
+                        onChange={(val) => onFilterChange('importBatch', val)}
+                    />
 
                     {/* Divider */}
                     <div className="w-px h-5 bg-gray-200 mx-1"></div>

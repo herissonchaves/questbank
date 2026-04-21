@@ -73,6 +73,31 @@ const QuestionList = ({ questions, allQuestions, selectedIds, selectedIdsSet, fi
             });
             return [...allTags].sort();
         })(),
+        importBatches: (() => {
+            // Build a local-time minute key (YYYY-MM-DDTHH:mm) from an ISO UTC string
+            const toLocalKey = (isoStr) => {
+                const d = new Date(isoStr);
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            };
+            // Group questions by local created_at truncated to the minute
+            const batchMap = new Map(); // key -> count
+            allQuestions.forEach(q => {
+                if (!q.created_at) return;
+                const key = toLocalKey(q.created_at);
+                batchMap.set(key, (batchMap.get(key) || 0) + 1);
+            });
+            // Sort newest first, build display objects
+            return Array.from(batchMap.entries())
+                .sort((a, b) => b[0].localeCompare(a[0]))
+                .map(([key, count]) => {
+                    // Format: dd/MM/YYYY às HH:mm
+                    const [datePart, timePart] = key.split('T');
+                    const [y, m, d] = datePart.split('-');
+                    const label = `${d}/${m}/${y} às ${timePart}`;
+                    return { key, label, count };
+                });
+        })(),
     }), [allQuestions]);
 
     // Check if all visible filtered questions are selected
