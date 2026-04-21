@@ -35,7 +35,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                     if (processed.match(regex)) {
                         const src = resolveImage(imagensCopia[i]);
                         if (src) {
-                            processed = processed.replace(regex, `<br><img src="${src}" style="width:100px; height:auto; display:block; margin:10px auto; border-radius:4px; max-width:100%; cursor:pointer;" /><br>`);
+                            processed = processed.replace(regex, `<br><img src="${src}" style="width:auto; height:100px; display:block; margin:10px auto; border-radius:4px; max-height:100%; cursor:pointer;" /><br>`);
                             consumedImages.add(i);
                         }
                     }
@@ -52,7 +52,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                         consumedImages.add(globalImgIdx);
                         globalImgIdx++;
                         if (src) {
-                            return `<br><img src="${src}" style="width:100px; height:auto; display:block; margin:10px auto; border-radius:4px; max-width:100%; cursor:pointer;" /><br>`;
+                            return `<br><img src="${src}" style="width:auto; height:100px; display:block; margin:10px auto; border-radius:4px; max-height:100%; cursor:pointer;" /><br>`;
                         }
                     }
                     return '';
@@ -79,7 +79,7 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                 if (!consumedImages.has(i)) {
                     const src = resolveImage(imagensCopia[i]);
                     if (src) {
-                        unconsumedHtml += `<br><img src="${src}" style="width:100px; height:auto; display:block; margin:10px auto; border-radius:4px; max-width:100%; cursor:pointer;" /><br>`;
+                        unconsumedHtml += `<br><img src="${src}" style="width:auto; height:100px; display:block; margin:10px auto; border-radius:4px; max-height:100%; cursor:pointer;" /><br>`;
                     }
                 }
             }
@@ -223,8 +223,8 @@ const EditQuestionModal = ({ question, onClose, onSave }) => {
                     const b64 = re.target.result;
                     const img = new Image();
                     img.onload = () => {
-                        let w = 100;
-                        let h = Math.round(img.naturalHeight * (100 / img.naturalWidth));
+                        let h = 100;
+                        let w = Math.round(img.naturalWidth * (100 / img.naturalHeight));
                         const html = `<img src="${b64}" data-width="${w}" data-height="${h}" style="width:${w}px; height:${h}px; display:block; margin:10px auto; border-radius:4px; cursor:pointer;" /><br>`;
                         document.execCommand('insertHTML', false, html);
                     };
