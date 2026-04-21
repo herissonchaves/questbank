@@ -978,6 +978,7 @@ const App = () => {
                 onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'bulkEditTags' })}
                 onSave={handleBulkEditTags}
                 selectedQuestions={selectedQuestions}
+                allQuestions={state.questions}
             />
 
             <ExamsPanel
