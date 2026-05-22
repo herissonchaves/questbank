@@ -1,28 +1,5 @@
-// QuestBank — Database Schema (Dexie.js v3)
-// IndexedDB with optimized indices for taxonomy + filtering + exam history
-
-const db = new Dexie('QuestBankDB');
-
-// Version 1: original schema
-db.version(1).stores({
-    questions: 'id, disciplina, topico, conteudo, assunto, banca, ano, tipo, dificuldade, created_at',
-    exams: '++id, title, created_at',
-    settings: 'key',
-});
-
-// Version 2: add usedInExams to questions, improve exams table
-db.version(2).stores({
-    questions: 'id, disciplina, topico, conteudo, assunto, banca, ano, tipo, dificuldade, regiao, *tags, *usedInExams, created_at',
-    exams: '++id, title, created_at',
-    settings: 'key',
-}).upgrade(tx => {
-    // Add usedInExams array to existing questions
-    return tx.table('questions').toCollection().modify(q => {
-        if (!q.usedInExams) q.usedInExams = [];
-        if (!q.regiao) q.regiao = '';
-        if (!q.tags) q.tags = [];
-    });
-});
+// QuestBank — Database constants
+// (O banco de dados agora roda no servidor via API REST — veja db/api-client.js)
 
 // Discipline color palette — consistent colors per discipline (light theme)
 const DISCIPLINE_COLORS = {

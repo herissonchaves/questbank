@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Arquivos de desenvolvimento e scripts Python
+*.py
+*.patch
+*.txt
+fix_*.py
+refactor.py
+generate_test_db.py
+
+# Documentação (não vai para a imagem)
+README.md
+AGENT.md
+COMO-USAR.md
+
+# Saídas e exemplos
+saida/
+exemplo-saida.json
+exemplo.tex
+test-syntax.html
+info.txt
+
+# Servidor Python (latex2questbank — não faz parte do app web)
+questbank-server/
+
+# Skills do Antigravity (não fazem parte do app)
+.agents/
+
+# macOS
+.DS_Store
+**/.DS_Store

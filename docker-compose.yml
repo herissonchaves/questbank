@@ -1,0 +1,47 @@
+services:
+
+  # ── Backend: API REST + SQLite ──────────────────────────────
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: questbank-backend
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      DB_PATH: "/data/questbank.db"
+    volumes:
+      - questbank-data:/data          # banco de dados SQLite persistente
+    expose:
+      - "3000"                        # acessível apenas internamente (via nginx)
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend: nginx + proxy reverso ────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: questbank-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"                     # acesse em http://<IP-DO-SERVIDOR>:8080
+                                      # troque 8080 pela porta que preferir
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# ── Volumes ──────────────────────────────────────────────────
+volumes:
+  questbank-data:
+    driver: local
+    # Os dados ficam em: /var/lib/docker/volumes/questbank_questbank-data/_data/
+    # Para fazer backup: docker run --rm -v questbank_questbank-data:/data -v $(pwd):/backup alpine tar czf /backup/questbank-backup.tar.gz /data
