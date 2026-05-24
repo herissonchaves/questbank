@@ -1,8 +1,9 @@
 # QuestBank — Banco de Questões
 
-Web app SaaS **offline-first** para professores montarem provas a partir de um banco de questões de vestibulares. Inspirado no Estuda.com e SuperProfessor. Roda 100% no navegador, sem instalar nada.
+Web app para professores montarem provas a partir de um banco de questões de vestibulares. Inspirado no Estuda.com e SuperProfessor. Arquitetura cliente-servidor (homelab): frontend React + backend Node/SQLite, tudo orquestrado por Docker Compose.
 
-> 📖 **Como abrir e colocar no ar?** Veja o guia passo a passo em [`COMO-USAR.md`](./COMO-USAR.md)
+> Como subir no servidor? Veja [`HOMELAB-DEPLOY.md`](./HOMELAB-DEPLOY.md).
+> Como usar depois de no ar? Veja [`COMO-USAR.md`](./COMO-USAR.md).
 
 ---
 
@@ -10,60 +11,43 @@ Web app SaaS **offline-first** para professores montarem provas a partir de um b
 
 | Funcionalidade | Descrição |
 |---|---|
-| **Questões objetivas e discursivas** | Suporte a 4 tipos: objetiva, discursiva, V/F, somatória |
-| **Importação via JSON** | Upload de arquivo JSON validado; o app formata e insere automaticamente |
-| **Árvore de assuntos dinâmica** | Hierarquia disciplina → tópico → conteúdo → assunto, construída das questões importadas |
-| **Filtros avançados** | Busca por texto, banca, ano, dificuldade, tipo, região, tag e código |
-| **Ignorar questões já usadas** | Checkbox que remove da busca questões que já foram usadas em provas |
-| **Tags de uso** | Cada questão exibe badges amarelos com o nome das provas em que foi utilizada |
-| **Exportação Word (.docx)** | Gera prova formatada com enumeração automática, linhas para discursivas e gabarito |
-| **Histórico de provas** | Menu com todas as provas salvas, opção de re-download e exclusão |
-| **Backup offline** | Exporta/importa o banco completo em `.questbank.json` |
-| **100% offline (PWA)** | Funciona sem internet após o primeiro carregamento |
+| Questões objetivas e discursivas | Suporte aos dois tipos principais |
+| Versões adaptadas (NEE/AEE) | Cada questão pode ter uma versão adaptada pareada por ID (`12345` ↔ `A12345`) |
+| Importação via JSON | Upload de arquivo JSON validado; o app formata e insere automaticamente |
+| Importação via LaTeX | Pacote opcional `questbank-server` converte `.zip` LaTeX → JSON |
+| Árvore de assuntos dinâmica | Hierarquia disciplina → tópico → conteúdo → assunto, construída das questões importadas |
+| Drag & drop na taxonomia | Mover ou renomear nós da árvore aplica em lote a todas as questões (com Ctrl+Z para desfazer) |
+| Filtros avançados | Busca por texto, banca, ano, dificuldade, tipo, região, tag, código e lote de importação |
+| Ignorar questões já usadas | Checkbox que remove da busca questões que já foram usadas em provas |
+| Tags de uso | Cada questão exibe badges amarelos com o nome das provas em que foi utilizada |
+| Embaralhar alternativas | Embaralha automaticamente as alternativas das questões objetivas selecionadas, ajustando o gabarito |
+| Edição em lote de tags | Adicionar, remover ou substituir tags em várias questões de uma vez |
+| Estatísticas | Painel com gráficos por disciplina, dificuldade, banca e ano |
+| Exportação Word (.docx) | Gera prova formatada com enumeração automática, linhas para discursivas e gabarito |
+| Exportação LaTeX (.zip) | Mesma prova em LaTeX, com imagens e fórmulas |
+| Histórico de provas | Menu com todas as provas salvas, opção de re-download e exclusão |
+| Backup offline | Exporta/importa o banco completo em `.questbank.json` |
+| Service Worker (PWA) | Cache de assets do frontend; o backend continua sendo obrigatório |
 
 ---
 
-## Layout
+## Arquitetura
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│  📚 QuestBank        [Provas] [Importar] [Backup ▾]                   │  ← Header branco
-├───────────────┬───────────────────────────────────────┬───────────────-┤
-│ Assuntos      │  🔍 Busca + Filtros [Avançado ▾]      │ Prova         │
-│               │  [Banca] [Ano] [Dificuldade] [Tipo]   │               │
-│ □ Biologia    │  ────────────────────────────────────  │  2 obj. 1 disc│
-│  □ Genética   │                                        │               │
-│  □ Ecologia   │  ┌──────────────────────────────────┐  │  ⠿ 1 ENEM-24 │
-│ ☑ Física      │  │ UDESC 2026 · Física · Médio      │  │  ⠿ 2 FUV-23  │
-│  ☑ Mecânica   │  │ [Objetiva] [Campo Elétrico]      │  │  ⠿ 3 UERJ-22 │
-│  □ Óptica     │  │ Um pequeno corpo de massa 20g... │  │               │
-│ □ Química     │  │ [Usada em: P1 Física]            │  │  [Gerar Prova │
-│               │  │                              [+] │  │    .docx]     │
-│               │  └──────────────────────────────────┘  │               │
-└───────────────┴───────────────────────────────────────-┴───────────────┘
+[Navegador]
+   │
+   ▼
+[ nginx :8080 ]  ── serve index.html + JSX + assets (frontend estático)
+   │
+   │  proxy_pass /api/ →
+   ▼
+[ Node.js :3000 ]  ── Express REST API
+   │
+   ▼
+[ SQLite /data/questbank.db ]  ── volume Docker persistente
 ```
 
----
-
-## Fluxo de uso
-
-```
-1. Importar questões (JSON)
-       ↓
-2. Selecionar assuntos na árvore
-       ↓
-3. Refinar com filtros avançados
-       ↓
-4. Clicar [+] nas questões desejadas
-       ↓
-5. Reordenar no painel direito (drag & drop)
-       ↓
-6. Clicar "Gerar Prova"
-       ↓
-7. Preencher nome da prova → Baixar Word
-       ↓
-8. Questões ficam marcadas como "usadas" automaticamente
-```
+Tudo roda em containers via `docker-compose.yml`. Acesso remoto via Tailscale (recomendado) — sem precisar abrir portas no roteador.
 
 ---
 
@@ -88,25 +72,10 @@ Web app SaaS **offline-first** para professores montarem provas a partir de um b
       "alternativas": [
         { "letra": "A", "texto": "Texto da alternativa A" },
         { "letra": "B", "texto": "Texto da alternativa B" },
-        { "letra": "C", "texto": "Texto da alternativa C" },
-        { "letra": "D", "texto": "Texto da alternativa D" },
-        { "letra": "E", "texto": "Texto da alternativa E" }
+        { "letra": "C", "texto": "Texto da alternativa C" }
       ],
       "regiao": "Nacional",
       "tags": ["vestibular", "cinemática"]
-    },
-    {
-      "id": "UNICAMP-2025-D3",
-      "enunciado": "Explique o conceito de energia potencial gravitacional...",
-      "tipo": "discursiva",
-      "disciplina": "Física",
-      "topico": "Mecânica",
-      "conteudo": "Energia",
-      "assunto": "Energia Potencial",
-      "dificuldade": "dificil",
-      "banca": "UNICAMP",
-      "ano": 2025,
-      "gabarito": "Ep = mgh (resposta esperada opcional)"
     }
   ]
 }
@@ -114,64 +83,55 @@ Web app SaaS **offline-first** para professores montarem provas a partir de um b
 
 ### Campos obrigatórios
 
-`id`, `enunciado`, `tipo`, `disciplina`, `topico`, `conteudo`, `assunto`, `dificuldade`
-
-> Questões do tipo `objetiva` também exigem `alternativas` (array com pelo menos 2 itens).
+`enunciado`, `tipo`, `disciplina`, `topico`, `conteudo`, `assunto`, `dificuldade`
 
 ### Campos opcionais
 
-`banca`, `ano`, `gabarito`, `imagens`, `resolucao_link`, `regiao`, `tags`
+`id`, `banca`, `ano`, `gabarito`, `alternativas`, `imagens`, `resolucao_link`, `regiao`, `tags`
 
 ### Valores aceitos
 
 | Campo | Valores válidos |
 |---|---|
-| `tipo` | `objetiva` · `discursiva` · `v_f` · `somatoria` |
+| `tipo` | `objetiva` · `discursiva` |
 | `dificuldade` | `facil` · `medio` · `dificil` · `nao_definida` |
-
----
-
-## Documento Word gerado
-
-```
-┌──────────────────────────────────────────┐
-│          Colégio Estadual XYZ            │
-│       Prova de Física – 2º Bimestre      │
-│    Prof.: Maria Silva  |  Data: 10/04/26 │
-│                                          │
-│ Nome: ___________________________Turma:_ │
-│ ──────────────────────────────────────── │
-│                                          │
-│ 1) [Enunciado questão objetiva...]       │
-│    A) Texto alternativa A                │
-│    B) Texto alternativa B ← (gabarito)   │
-│    C) Texto alternativa C                │
-│                                          │
-│ 2) [Enunciado questão discursiva...]     │
-│    _____________________________________ │  ← 5 linhas (configurável)
-│    _____________________________________ │
-│    _____________________________________ │
-│                                          │
-│ ════════════ GABARITO ═════════════════  │  ← página separada (opcional)
-│    1) B     2) (discursiva)              │
-└──────────────────────────────────────────┘
-```
 
 ---
 
 ## Stack tecnológica
 
+### Frontend (estático, servido por nginx)
+
 | Tecnologia | Versão | Função |
 |---|---|---|
 | React | 18 (CDN) | Interface de usuário |
 | Babel Standalone | 7 (CDN) | Transpila JSX no browser |
-| Dexie.js | 3 (CDN) | Wrapper IndexedDB (banco offline) |
+| Tailwind CSS | Play CDN | Estilização |
 | docx.js | 8.5 (CDN) | Geração de .docx no browser |
 | FileSaver.js | 2.0 (CDN) | Download automático de arquivos |
-| Tailwind CSS | Play CDN | Estilização |
-| Service Worker | — | Cache offline (PWA) |
+| JSZip | 3.10 (CDN) | Empacotamento de arquivos `.zip` |
+| KaTeX | 0.16 (CDN) | Renderização de fórmulas matemáticas |
+| MathJax | 3 (CDN) | Conversão de fórmulas para imagem no .docx |
+| Service Worker | — | Cache de assets do frontend |
 
-> Zero dependências de build. Nenhum npm, webpack ou vite necessário.
+### Backend (Node.js)
+
+| Tecnologia | Versão | Função |
+|---|---|---|
+| Node.js | 20 (Alpine) | Runtime |
+| Express | 4.18 | Servidor HTTP |
+| better-sqlite3 | 9.4 | Banco de dados |
+| cors | 2.8 | CORS |
+
+### Deploy
+
+| Tecnologia | Função |
+|---|---|
+| nginx (Alpine) | Servidor web + proxy reverso para /api/ |
+| Docker Compose | Orquestração dos containers |
+| Tailscale | VPN para acesso remoto |
+
+> Zero build step no frontend. Os arquivos `.jsx` são transpilados pelo Babel direto no browser.
 
 ---
 
@@ -181,88 +141,83 @@ Web app SaaS **offline-first** para professores montarem provas a partir de um b
 questbank/
 ├── AGENT.md                    ← Instruções do agente Antigravity
 ├── README.md                   ← Este arquivo
-├── COMO-USAR.md                ← Guia de instalação para leigos
+├── COMO-USAR.md                ← Guia de uso do app
+├── HOMELAB-DEPLOY.md           ← Guia de deploy Docker + Tailscale
+│
+├── docker-compose.yml          ← Orquestração (frontend + backend)
+├── Dockerfile                  ← Imagem do frontend (nginx)
+├── nginx.conf                  ← Config nginx + proxy /api/
+├── .dockerignore               ← Exclui arquivos do build
+│
 ├── index.html                  ← Entry point (carrega todas as dependências)
 ├── app.jsx                     ← Componente principal (useReducer, 3 painéis)
-├── manifest.json               ← PWA manifest (tema branco, ícone)
-├── sw.js                       ← Service Worker (cache-first, offline)
+├── manifest.json               ← PWA manifest
+├── sw.js                       ← Service Worker (cache de assets)
 │
 ├── components/
-│   ├── subject-tree.jsx        ← Painel esquerdo: árvore dinâmica de assuntos
-│   ├── filter-bar.jsx          ← Filtros básicos + avançados + "ignorar usadas"
-│   ├── question-list.jsx       ← Painel central: lista paginada + lazy load
-│   ├── question-card.jsx       ← Card expandível com badges de uso
-│   ├── selected-panel.jsx      ← Painel direito: drag & drop, contador por tipo
-│   ├── import-modal.jsx        ← Upload JSON com validação visual
-│   ├── export-modal.jsx        ← Configura prova → salva → gera .docx
-│   └── exams-panel.jsx         ← Histórico de provas salvas
+│   ├── subject-tree.jsx           ← Painel esquerdo: árvore + drag & drop + rename
+│   ├── filter-bar.jsx             ← Filtros básicos + avançados
+│   ├── question-list.jsx          ← Painel central: lista paginada
+│   ├── question-card.jsx          ← Card com carrossel Regular/Adaptada
+│   ├── selected-panel.jsx         ← Painel direito: drag & drop
+│   ├── import-modal.jsx           ← Upload JSON/ZIP com validação
+│   ├── export-modal.jsx           ← Configura prova e gera .docx/.zip
+│   ├── exams-panel.jsx            ← Histórico de provas salvas
+│   ├── stats-panel.jsx            ← Estatísticas
+│   ├── create-question-modal.jsx  ← Criar questão + versão adaptada
+│   ├── edit-question-modal.jsx    ← Editar questão
+│   ├── visual-editor.jsx          ← Editor WYSIWYG
+│   ├── rich-text-toolbar.jsx      ← Toolbar (equação, imagem)
+│   └── bulk-edit-tags-modal.jsx   ← Editar tags em lote
 │
 ├── db/
-│   ├── schema.js               ← Schema Dexie v2 (questions + exams + settings)
-│   └── taxonomy.js             ← Construção e navegação da árvore hierárquica
+│   ├── api-client.js              ← Cliente fetch — interface drop-in tipo Dexie
+│   ├── schema.js                  ← Cores e labels (disciplina, dificuldade)
+│   └── taxonomy.js                ← Construção da árvore hierárquica
 │
 ├── utils/
-│   ├── import-handler.js       ← Valida e importa JSON no IndexedDB
-│   └── export-handler.js       ← Backup/restauração do banco
+│   ├── import-handler.js          ← Valida e envia JSON ao backend
+│   ├── export-handler.js          ← Backup/restauração do banco
+│   ├── export-engines.js          ← Motores de geração .docx e .zip LaTeX
+│   ├── latex-to-docx-math.js      ← LaTeX math → docx
+│   └── html-sanitizer.js          ← Sanitiza HTML de Word/Office
 │
-├── saida/
-│   └── sample-data.json        ← Questões de exemplo para testar
+├── server/                     ← Backend Node.js
+│   ├── Dockerfile
+│   ├── package.json
+│   └── server.js                  ← API REST (Express + SQLite)
 │
-└── .agents/
-    └── skills/
-        ├── setup-projeto/      ← Criar estrutura, PWA, index.html
-        ├── criar-frontend/     ← Componentes React (convenções de tema)
-        ├── importar-questoes/  ← Formato JSON, exemplos, validação
-        │   └── examples/       ← sample-objetiva.json, sample-discursiva.json
-        ├── exportar-word/      ← Geração .docx, formatação, gabarito
-        └── criar-banco-dados/  ← Schema IndexedDB, taxonomia, migrações
+├── questbank-server/           ← (Opcional) conversor LaTeX → JSON em Python
+├── saida/                      ← Dados de exemplo
+└── .agents/                    ← Skills do Antigravity (não vai pra imagem)
 ```
 
 ---
 
-## Banco de dados (IndexedDB)
+## API REST (backend)
 
-### Tabela `questions`
+Todas as rotas têm prefixo `/api`. O nginx faz `proxy_pass` para o container backend.
 
-| Campo | Tipo | Indexado |
+| Método | Rota | Função |
 |---|---|---|
-| `id` | string | PK |
-| `tipo` | string | ✓ |
-| `disciplina / topico / conteudo / assunto` | string | ✓ |
-| `banca / ano / dificuldade / regiao` | string/number | ✓ |
-| `tags` | array | ✓ MultiEntry |
-| `usedInExams` | array | ✓ MultiEntry |
-| `alternativas / imagens / gabarito` | — | — |
+| `GET` | `/api/health` | Healthcheck |
+| `GET` | `/api/questions` | Lista todas as questões |
+| `GET` | `/api/questions/:id` | Busca uma questão |
+| `POST` | `/api/questions` | Cria/sobrescreve uma questão |
+| `POST` | `/api/questions/bulk` | Importação em lote |
+| `PATCH` | `/api/questions/:id` | Atualiza campos (merge parcial) |
+| `POST` | `/api/questions/bulk-patch` | Atualiza vários campos em lote |
+| `DELETE` | `/api/questions/:id` | Exclui uma questão |
+| `POST` | `/api/questions/bulk-delete` | Exclui várias |
+| `GET` | `/api/exams` | Lista provas (mais recentes primeiro) |
+| `POST` | `/api/exams` | Salva uma prova no histórico |
+| `DELETE` | `/api/exams/:id` | Exclui uma prova |
 
-### Tabela `exams` (histórico de provas)
-
-| Campo | Tipo |
-|---|---|
-| `id` | auto-increment PK |
-| `title` | string |
-| `questionIds` | array de IDs |
-| `professor / instituicao / data` | string |
-| `created_at` | ISO date |
-
----
-
-## Como usar com o Antigravity
+### Schema SQLite
 
 ```
-# Para criar o projeto do zero:
-/antigravity Configure o projeto QuestBank com estrutura completa e PWA.
-
-# Para criar ou editar componentes:
-/antigravity Adicione um campo "serie" no filtro avançado do QuestBank.
-
-# Para gerar dados de teste:
-/antigravity Gere 20 questões de Química no formato JSON do QuestBank.
-
-# Para ajustar o banco de dados:
-/antigravity Adicione um índice para o campo "professor" na tabela exams.
-
-# Para ajustar o Word exportado:
-/antigravity Adicione cabeçalho e rodapé em todas as páginas do .docx gerado.
+questions   ( id TEXT PRIMARY KEY, data TEXT )
+exams       ( id INTEGER PK, created_at TEXT, data TEXT )
 ```
 
-O agente lê o `AGENT.md` e ativa a skill correta automaticamente. Skills disponíveis: `setup-projeto`, `criar-frontend`, `importar-questoes`, `exportar-word`, `criar-banco-dados`.
+O campo `data` armazena a questão/prova inteira em JSON. Filtros e taxonomia rodam no frontend depois de carregar tudo (volume típico ≤ 10k questões — rápido o bastante na rede local).

@@ -1,15 +1,19 @@
-# QuestBank — Banco de Questões Offline (Web App)
+# QuestBank — Banco de Questões (Web App + Backend)
 
 ## Papel do agente
 
-Você é o engenheiro full-stack responsável por manter e evoluir o **QuestBank**, um web app SaaS offline-first de banco de questões para vestibulares brasileiros. Você cria código limpo, modular e funcional — sempre reutilizando scripts Python prontos quando disponíveis para economizar tokens.
+Você é o engenheiro full-stack responsável por manter e evoluir o **QuestBank**, um web app de banco de questões para vestibulares brasileiros, hospedado em servidor próprio (homelab). Você cria código limpo, modular e funcional — sempre reutilizando scripts e utilitários existentes quando disponíveis para economizar tokens.
 
 ## Contexto do projeto
 
-O QuestBank é um app inspirado no Estuda.com e SuperProfessor, voltado para professores de ensino médio que precisam montar provas a partir de um banco de questões local. O app roda 100% offline no navegador (PWA), com dados em IndexedDB.
+O QuestBank é um app inspirado no Estuda.com e SuperProfessor, voltado para professores de ensino médio que precisam montar provas a partir de um banco de questões. A arquitetura é cliente-servidor:
+
+- **Frontend:** SPA React 18 (via CDN + Babel standalone), servida estaticamente por nginx
+- **Backend:** API REST Node.js + Express + SQLite (`better-sqlite3`)
+- **Deploy:** Docker Compose (frontend `:8080` + backend `:3000`), acesso remoto via Tailscale
 
 Layout de 3 painéis:
-- **Painel esquerdo:** árvore hierárquica de assuntos (construída automaticamente a partir das questões importadas)
+- **Painel esquerdo:** árvore hierárquica de assuntos (construída automaticamente a partir das questões importadas), com drag & drop e renomeio em lote
 - **Painel central:** lista de questões com cards simplificados (expandíveis ao clicar) + filtros avançados
 - **Painel direito:** questões selecionadas para a prova (cards simplificados, expandíveis ao clicar)
 
@@ -21,40 +25,33 @@ Layout de 3 painéis:
 
 ## Tipos de questões suportados
 
-O app aceita questões de 4 tipos:
-- **objetiva**: com alternativas (A, B, C, D, E) e gabarito (letra)
+O app aceita dois tipos:
+- **objetiva**: com alternativas (A, B, C, D, E...) e gabarito (letra)
 - **discursiva**: sem alternativas, gabarito opcional (resposta esperada)
-- **v_f**: verdadeiro ou falso
-- **somatoria**: com alternativas numéricas e gabarito numérico
+
+> Tipos legados `v_f` e `somatoria` não estão implementados na validação atual (`utils/import-handler.js`). Adicione-os apenas se houver demanda explícita.
 
 ## Questões Adaptadas (Alunos Atípicos)
 
-O app suporta **versões adaptadas** de cada questão, destinadas a alunos atípicos (inclusão). O sistema funciona via **tags numéricas pareadas**:
+O app suporta **versões adaptadas** de cada questão, destinadas a alunos atípicos (inclusão). O pareamento é feito pelo **ID**:
 
-### Como funciona o pareamento
-
-- Questão regular recebe uma tag numérica: ex. `47136477`
-- Questão adaptada recebe a mesma tag prefixada com `A`: ex. `A47136477`
-- O app automaticamente pareia questões com tags numéricas iguais (uma sem `A` e outra com `A`)
+- Questão regular: id qualquer (ex.: `12345678`)
+- Questão adaptada: mesmo id com prefixo `A` ou `A-` (ex.: `A12345678` ou `A-12345678`)
+- O app detecta o par automaticamente (regex `^A-?\d+$`) e esconde a adaptada da lista principal
 
 ### Regras das questões adaptadas
 
 - Questões **objetivas adaptadas** possuem no máximo **3 alternativas (A, B, C)**
-- O ID da questão adaptada é o ID da regular prefixado com `A`: ex. regular `12345678`, adaptada `A12345678`
 - Questões adaptadas herdam os metadados da regular (disciplina, tópico, conteúdo, assunto, banca, ano, dificuldade)
 - Questões adaptadas **não aparecem como cards separados** na lista — aparecem dentro do carrossel da questão regular
 
 ### Carrossel no QuestionCard
 
-Cada card de questão funciona como um **carrossel de 2 páginas** (estilo Instagram):
+Cada card de questão funciona como um carrossel de 2 páginas:
 - **Página 1 (Regular):** mostra a questão original
 - **Página 2 (Adaptada):** mostra a versão adaptada
 
 Tabs "Regular" / "Adaptada" aparecem quando a questão tem versão adaptada. Ambas as versões podem ser editadas individualmente.
-
-### Criação de questão adaptada
-
-No modal "Nova Questão", após classificar a questão (Step 2), o usuário pode marcar o checkbox "Adicionar versão adaptada". Isso habilita um Step 3 para preencher o enunciado e alternativas adaptadas.
 
 ### Exportação de prova adaptada
 
@@ -64,24 +61,26 @@ No modal "Gerar Prova", se alguma questão selecionada possui versão adaptada, 
 
 ## Importação de questões
 
-O usuário importa questões **já no formato JSON aceito pelo app**. Não há conversão de PDF, imagem, HTML ou Word. O fluxo é:
+O usuário importa questões via JSON (formato padronizado) **ou** via `.zip` contendo `.tex` + imagens (convertido pelo pacote opcional `questbank-server/`). O fluxo é:
 
-1. Usuário prepara JSON no formato padronizado (via ferramenta externa, agente Antigravity em outro projeto, ou manualmente)
-2. Usuário faz upload do JSON no app (botão "Importar questões")
-3. O app valida o JSON, insere no IndexedDB e **atualiza a árvore de assuntos automaticamente**
+1. Usuário prepara JSON no formato padronizado (ou .zip LaTeX)
+2. Usuário faz upload no app (botão "Importar questões")
+3. O app valida e envia para `POST /api/questions/bulk`
+4. O backend persiste no SQLite e **a árvore de assuntos é reconstruída automaticamente** no frontend ao recarregar
 
-Campos obrigatórios: `id, enunciado, disciplina, topico, conteudo, assunto, tipo, dificuldade`
-Campos opcionais: `banca, ano, gabarito, alternativas, imagens, resolucao_link, regiao, tags`
+Campos obrigatórios: `enunciado, disciplina, topico, conteudo, assunto, tipo, dificuldade`
+Campos opcionais: `id, banca, ano, gabarito, alternativas, imagens, resolucao_link, regiao, tags`
 
 ## Taxonomia dinâmica
 
-A árvore de assuntos **NÃO é pré-definida**. Ela é construída automaticamente a partir dos campos `disciplina > topico > conteudo > assunto` das questões existentes no banco. Quando o usuário importa questões com categorias novas, a árvore cresce. Quando todas as questões de uma categoria são removidas, o nó desaparece.
+A árvore de assuntos **NÃO é pré-definida**. Ela é construída automaticamente a partir dos campos `disciplina > topico > conteudo > assunto` das questões existentes no banco.
+
+Drag & drop e renomeio de nós atualizam **em lote** todas as questões da subárvore (via endpoint `POST /api/questions/bulk-patch`). Ctrl+Z desfaz a última operação de taxonomia.
 
 ## Filtros avançados de busca
 
-O app oferece filtros básicos e avançados:
 - **Básicos:** busca por texto (enunciado, ID, tags), banca, ano, dificuldade, tipo
-- **Avançados** (painel expansível): região, tag específica, código da questão
+- **Avançados:** região, tag(s), código da questão, lote de importação (timestamp), com/sem resolução, ordenação
 - **Ignorar questões já usadas:** checkbox que exclui da busca questões que já foram usadas em provas anteriores
 
 ## Exportação para Word (.docx) e LaTeX (.zip)
@@ -89,107 +88,88 @@ O app oferece filtros básicos e avançados:
 Ao clicar "Gerar Prova", o app:
 1. **Pede o nome da prova/lista** (campo obrigatório)
 2. O usuário escolhe formato: **Word (.docx)** ou **LaTeX (.zip)**
-3. Salva a prova no banco de dados (tabela `exams`)
+3. Salva a prova no banco de dados (`POST /api/exams`)
 4. **Marca as questões como usadas** (campo `usedInExams` recebe o nome da prova)
-5. **Gera o arquivo** com formatação automática:
-   - Cabeçalho: instituição, título da prova, professor, data
-   - Linha para nome do aluno e turma
-   - Questões com **enumeração automática** (1, 2, 3...)
-   - Alternativas com **enumeração automática** (A, B, C, D, E) para objetivas
-   - **Linhas de resposta** (configurável, padrão 5) para questões discursivas
-   - Página de gabarito separada (opcional)
-6. Se "Gerar prova adaptada" estiver marcado, **gera 2 arquivos**: um com questões regulares e outro com as versões adaptadas
-
-## Histórico de provas/listas
-
-O app mantém um histórico completo de todas as provas geradas:
-- Acessível via botão "Provas" no header
-- Lista todas as provas com data, professor, quantidade de questões
-- Permite **re-baixar** uma prova (gera novo .docx)
-- Permite **excluir** do histórico (e limpa as tags de uso nas questões)
-
-## Tags de uso em questões
-
-Cada questão mostra badges indicando em quais provas ela foi usada:
-- Badges amarelos com nome da prova
-- Visíveis no card da questão (tanto na visão compacta quanto expandida)
-- O filtro "Ignorar já usadas" remove da lista questões com qualquer tag de uso
+5. **Gera o arquivo** com formatação automática (cabeçalho, enumeração, gabarito opcional)
+6. Se "Gerar prova adaptada" estiver marcado, gera 2 arquivos
 
 ## Backup do banco de dados
 
-O app permite exportar e importar o banco completo:
-- **Exportar:** gera arquivo `.questbank.json` com todas as questões, provas e configurações
-- **Importar:** restaura o banco a partir de um backup (substitui dados existentes)
+O app permite exportar e importar o banco completo via JSON (`.questbank.json`). Para backup bare-metal do volume Docker, veja `HOMELAB-DEPLOY.md`.
 
 ## Stack tecnológica
 
-- **Frontend:** React 18 (via CDN + Babel standalone — zero build step)
-- **Banco de dados:** IndexedDB via Dexie.js v3 (offline)
-- **Exportação Word:** docx.js v8 + FileSaver.js (tudo no browser, sem servidor)
-- **PWA:** Service Worker para funcionar 100% offline
-- **CSS:** Tailwind CSS (via CDN Play)
+- **Frontend:** React 18 (via CDN + Babel standalone — zero build step), Tailwind CSS Play CDN
+- **Cliente do banco:** `db/api-client.js` — interface drop-in que substitui a API do Dexie (toArray, where().equals(), update, bulkPatch) chamando `fetch()` no backend
+- **Backend:** Node.js 20 + Express 4 + better-sqlite3
+- **Exportação Word:** docx.js v8 + FileSaver.js (renderiza no browser)
+- **Exportação LaTeX:** template gerador + JSZip (no browser)
+- **Deploy:** Docker Compose (nginx + Node) + Tailscale para acesso remoto
 
 ## Regras globais
 
-- **SEMPRE** rode `python3 script.py --help` antes de ler o código-fonte de qualquer script
+- **SEMPRE** rode `python3 script.py --help` antes de ler o código-fonte de qualquer script Python
 - **NUNCA** reescreva lógica que já existe em um script Python — chame o script
 - Idioma do código: inglês. Idioma da UI: português brasileiro
 - Nomes de arquivos: kebab-case
 - CSS: Tailwind utility classes (via CDN)
 - Fundo do app: **sempre branco**. Cores de destaque combinar com brand (indigo)
+- Para operações em lote (taxonomia, tags, embaralhar alternativas), **use `db.questions.bulkPatch([...])`** — nunca chame `update()` em loop (evita N+1 round-trips)
+- Ao adicionar componente novo, **registre o arquivo no `index.html` e no `sw.js`** (lista `APP_SHELL`)
 
 ## Estrutura de pastas do app
 
 ```
 questbank/
-├── index.html              ← entry point PWA
-├── app.jsx                 ← componente principal React
-├── components/
-│   ├── subject-tree.jsx    ← painel esquerdo (árvore dinâmica)
-│   ├── question-list.jsx   ← painel central
-│   ├── question-card.jsx   ← card com carrossel regular/adaptada + tags de uso
-│   ├── selected-panel.jsx  ← painel direito
-│   ├── filter-bar.jsx      ← filtros básicos + avançados + ignorar usadas
-│   ├── import-modal.jsx    ← modal de importação JSON
-│   ├── export-modal.jsx    ← modal de exportação Word/LaTeX + prova adaptada
-│   ├── create-question-modal.jsx ← criar questão + versão adaptada
-│   ├── edit-question-modal.jsx   ← editar questão (regular ou adaptada)
-│   ├── exams-panel.jsx     ← histórico de provas/listas
-│   └── stats-panel.jsx     ← painel de estatísticas
+├── docker-compose.yml         ← orquestração frontend + backend
+├── Dockerfile                 ← imagem do frontend (nginx)
+├── nginx.conf                 ← config nginx (proxy /api/ → backend:3000)
+├── .dockerignore
+│
+├── index.html                 ← entry point PWA
+├── app.jsx                    ← componente principal React (3 painéis + modais)
+├── sw.js                      ← Service Worker (cache de assets)
+├── manifest.json              ← PWA manifest
+│
+├── components/                ← todos os componentes React
 ├── db/
-│   ├── schema.js           ← schema IndexedDB v2 (Dexie) com usedInExams
-│   └── taxonomy.js         ← construção da árvore dinâmica
-├── utils/
-│   ├── export-handler.js     ← backup export/import do banco
-│   ├── import-handler.js     ← validar e importar JSON
-│   ├── export-engines.js     ← motores de geração Word (.docx) e LaTeX (.zip)
-│   └── latex-to-docx-math.js ← conversão de LaTeX math para objetos docx
-├── sw.js                   ← Service Worker
-└── manifest.json           ← PWA manifest
+│   ├── api-client.js          ← cliente HTTP (interface drop-in tipo Dexie)
+│   ├── schema.js              ← cores e labels
+│   └── taxonomy.js            ← construção da árvore dinâmica
+├── utils/                     ← validação, exportação, sanitização
+├── server/                    ← backend Node.js (Express + SQLite)
+└── questbank-server/          ← (opcional) conversor LaTeX → JSON em Python
 ```
 
-## Skills disponíveis
+## API REST
 
-| Skill | Quando usar |
-|-------|-------------|
-| `setup-projeto` | Inicializar o projeto, estrutura base, PWA |
-| `criar-frontend` | Criar ou modificar componentes React do web app |
-| `importar-questoes` | Gerar dados de teste, validar JSON de questões |
-| `exportar-word` | Gerar .docx a partir das questões selecionadas |
-| `criar-banco-dados` | Schema IndexedDB, taxonomia dinâmica |
+| Método | Rota | Função |
+|---|---|---|
+| `GET` | `/api/health` | Healthcheck |
+| `GET` | `/api/questions` | Lista todas as questões |
+| `GET` | `/api/questions/:id` | Busca uma questão |
+| `POST` | `/api/questions` | Cria/sobrescreve uma questão |
+| `POST` | `/api/questions/bulk` | Importação em lote |
+| `PATCH` | `/api/questions/:id` | Atualiza campos (merge parcial) |
+| `POST` | `/api/questions/bulk-patch` | Atualiza vários campos em lote |
+| `DELETE` | `/api/questions/:id` | Exclui uma questão |
+| `POST` | `/api/questions/bulk-delete` | Exclui várias |
+| `GET` | `/api/exams` | Lista provas |
+| `POST` | `/api/exams` | Salva prova no histórico |
+| `DELETE` | `/api/exams/:id` | Exclui prova |
 
 ## Modelo de dados — Questão
 
 ```json
 {
-  "id": "uuid ou código único",
-  "enunciado": "texto ou HTML simples",
+  "id": "string (ou prefixo 'A' / 'A-' para adaptada)",
+  "enunciado": "HTML (com fórmulas KaTeX e <img>)",
   "imagens": ["base64 strings"],
   "alternativas": [
     {"letra": "A", "texto": "...", "correta": false},
     {"letra": "B", "texto": "...", "correta": true}
   ],
-  "tipo": "objetiva | discursiva | v_f | somatoria",
+  "tipo": "objetiva | discursiva",
   "disciplina": "Física",
   "topico": "Mecânica",
   "conteudo": "Cinemática",
@@ -198,34 +178,16 @@ questbank/
   "ano": 2024,
   "dificuldade": "facil | medio | dificil | nao_definida",
   "gabarito": "B (para objetiva) ou texto (para discursiva)",
-  "regiao": "Sudeste | Sul | Nordeste | Centro-oeste | Norte | Nacional",
   "tags": ["string"],
-  "resolucao_link": "url (opcional)",
-  "usedInExams": ["nome-da-prova-1", "nome-da-prova-2"],
-  "created_at": "ISO date"
-}
-```
-
-## Modelo de dados — Prova (exams table)
-
-```json
-{
-  "id": "auto-incrementado",
-  "title": "nome da prova",
-  "professor": "nome",
-  "instituicao": "escola",
-  "data": "YYYY-MM-DD",
-  "questionIds": ["id1", "id2", "..."],
-  "questionCount": 10,
-  "config": { "titulo": "...", "incluir_gabarito": true, "linhas_discursiva": 5 },
+  "usedInExams": ["nome-da-prova-1"],
   "created_at": "ISO date"
 }
 ```
 
 ## Workflow principal
 
-1. `setup-projeto` → estrutura de pastas e PWA
-2. `criar-banco-dados` → schema IndexedDB v2 + taxonomia dinâmica
+1. `setup-projeto` → estrutura de pastas, Docker, nginx
+2. `criar-banco-dados` → schema SQLite + endpoints REST + api-client.js
 3. `criar-frontend` → componentes React (painel a painel)
 4. `importar-questoes` → seed data de teste para desenvolvimento
 5. `exportar-word` → gerar prova em .docx com formatação automática

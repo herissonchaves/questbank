@@ -21,9 +21,6 @@
     }
 
     // ─── Cache local de questões ───────────────────────────────
-    // O app carrega todas as questões uma vez no boot (loadQuestions).
-    // Para operações where/filter que acontecem nas funções de taxonomia,
-    // reutilizamos o cache para não fazer múltiplas requests GET /api/questions.
     let _questionsCache = null;
 
     async function getAllQuestions() {
@@ -39,17 +36,14 @@
     // ─── Objeto db (interface compatível com Dexie) ────────────
     const db = {
 
-        // ── questions ────────────────────────────────────────
         questions: {
 
-            // Retorna todas as questões
             async toArray() {
                 const qs = await apiFetch(`${BASE}/questions`);
-                _questionsCache = qs;          // atualiza cache
+                _questionsCache = qs;
                 return qs;
             },
 
-            // Retorna uma questão pelo id
             async get(id) {
                 try {
                     return await apiFetch(`${BASE}/questions/${encodeURIComponent(id)}`);
@@ -59,7 +53,6 @@
                 }
             },
 
-            // Cria uma questão. Retorna o id.
             async add(question) {
                 invalidateCache();
                 const r = await apiFetch(`${BASE}/questions`, {
@@ -69,7 +62,6 @@
                 return r.id;
             },
 
-            // Cria várias questões de uma vez (importação)
             async bulkAdd(questions) {
                 invalidateCache();
                 await apiFetch(`${BASE}/questions/bulk`, {
@@ -78,7 +70,6 @@
                 });
             },
 
-            // Atualiza campos de uma questão (merge parcial)
             async update(id, fields) {
                 invalidateCache();
                 await apiFetch(`${BASE}/questions/${encodeURIComponent(id)}`, {
@@ -87,7 +78,17 @@
                 });
             },
 
-            // Exclui uma questão
+            // Atualiza várias questões em uma única chamada (merge parcial).
+            // updates: [{ id, ...fields }, ...] — evita N+1 round-trips.
+            async bulkPatch(updates) {
+                if (!Array.isArray(updates) || updates.length === 0) return;
+                invalidateCache();
+                await apiFetch(`${BASE}/questions/bulk-patch`, {
+                    method: 'POST',
+                    body: JSON.stringify({ updates }),
+                });
+            },
+
             async delete(id) {
                 invalidateCache();
                 await apiFetch(`${BASE}/questions/${encodeURIComponent(id)}`, {
@@ -95,7 +96,6 @@
                 });
             },
 
-            // Exclui várias questões
             async bulkDelete(ids) {
                 invalidateCache();
                 await apiFetch(`${BASE}/questions/bulk-delete`, {
@@ -104,7 +104,6 @@
                 });
             },
 
-            // Filtra questões em memória (compatibilidade com db.questions.filter(fn).toArray())
             filter(fn) {
                 return {
                     async toArray() {
@@ -114,7 +113,6 @@
                 };
             },
 
-            // Consulta por campo (compatibilidade com db.questions.where(field).equals(val).filter(fn).toArray())
             where(field) {
                 return {
                     equals(value) {
@@ -137,10 +135,8 @@
             },
         },
 
-        // ── exams ────────────────────────────────────────────
         exams: {
 
-            // Retorna todas as provas (mais recente primeiro)
             orderBy(_field) {
                 return {
                     reverse() {
@@ -153,7 +149,6 @@
                 };
             },
 
-            // Salva uma prova no histórico. Retorna o id numérico gerado.
             async add(exam) {
                 const r = await apiFetch(`${BASE}/exams`, {
                     method: 'POST',
@@ -162,7 +157,6 @@
                 return r.id;
             },
 
-            // Exclui uma prova do histórico
             async delete(id) {
                 await apiFetch(`${BASE}/exams/${encodeURIComponent(id)}`, {
                     method: 'DELETE',
@@ -170,16 +164,14 @@
             },
         },
 
-        // ── transaction ──────────────────────────────────────
-        // As transações atômicas são tratadas pelos endpoints bulk do backend.
-        // Aqui apenas executamos a função sequencialmente.
-        // Para operações de taxonomia (bulk-patch), usamos o endpoint dedicado.
+        // Mantido por compatibilidade com código que escreveu `await db.transaction(...)`.
+        // Como cada chamada agora é uma request HTTP independente, esta função apenas
+        // executa o callback. Para garantir atomicidade, use os endpoints bulk-*.
         async transaction(_mode, _tables, fn) {
             return fn(db);
         },
     };
 
-    // Expõe `db` globalmente (compatível com o código existente)
     window.db = db;
     window.db._invalidateCache = invalidateCache;
 

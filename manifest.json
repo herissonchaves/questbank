@@ -1,7 +1,7 @@
 {
   "name": "QuestBank — Banco de Questões",
   "short_name": "QuestBank",
-  "description": "Monte provas a partir do seu banco de questões de vestibulares. 100% offline.",
+  "description": "Monte provas a partir do seu banco de questões de vestibulares. Roda em servidor próprio (homelab).",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

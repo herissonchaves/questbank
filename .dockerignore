@@ -2,27 +2,19 @@
 .git
 .gitignore
 
-# Arquivos de desenvolvimento e scripts Python
-*.py
-*.patch
-*.txt
-fix_*.py
-refactor.py
-generate_test_db.py
-
-# Documentação (não vai para a imagem)
+# Documentação (não vai para a imagem do frontend)
 README.md
 AGENT.md
 COMO-USAR.md
+HOMELAB-DEPLOY.md
 
-# Saídas e exemplos
+# Dados de exemplo e exportações
 saida/
-exemplo-saida.json
-exemplo.tex
-test-syntax.html
-info.txt
 
-# Servidor Python (latex2questbank — não faz parte do app web)
+# Backend Node — tem seu próprio Dockerfile em server/
+server/
+
+# Servidor Python opcional (latex2questbank — não faz parte do frontend)
 questbank-server/
 
 # Skills do Antigravity (não fazem parte do app)

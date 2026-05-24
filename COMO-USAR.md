@@ -1,186 +1,114 @@
-# QuestBank — Como abrir e colocar no ar
+# QuestBank — Como usar
 
-Guia passo a passo para pessoas leigas. Nenhum conhecimento técnico é necessário.
-
----
-
-## OPÇÃO 1: Abrir direto no seu computador (mais fácil)
-
-O QuestBank é um app que roda direto no navegador. Você só precisa de um "servidor local" simples para que o navegador consiga carregar todos os arquivos corretamente.
-
-### Passo 1 — Instale o Python (se ainda não tiver)
-
-O Python já vem instalado no Mac e na maioria dos Linux. No Windows:
-
-1. Acesse https://www.python.org/downloads/
-2. Clique no botão amarelo "Download Python 3.x.x"
-3. Na instalação, **marque a opção "Add Python to PATH"** (muito importante!)
-4. Clique em "Install Now" e aguarde
-
-Para conferir se já tem Python, abra o Terminal (Mac/Linux) ou Prompt de Comando (Windows) e digite:
-
-```
-python3 --version
-```
-
-Se aparecer algo como `Python 3.12.0`, está tudo certo.
-
-### Passo 2 — Abra o Terminal na pasta do QuestBank
-
-**No Windows:**
-1. Abra o Explorador de Arquivos e navegue até a pasta `questbank`
-2. Clique na barra de endereço (onde mostra o caminho da pasta)
-3. Digite `cmd` e aperte Enter
-4. O Prompt de Comando vai abrir já dentro da pasta certa
-
-**No Mac:**
-1. Abra o Finder e navegue até a pasta `questbank`
-2. Clique com botão direito na pasta → "Novo Terminal na Pasta"
-   (ou: Abra o Terminal e digite `cd ` e arraste a pasta para o Terminal)
-
-### Passo 3 — Inicie o servidor local
-
-No Terminal/Prompt, digite:
-
-```
-python3 -m http.server 8080
-```
-
-(No Windows, se não funcionar, tente `python -m http.server 8080`)
-
-Vai aparecer algo como:
-```
-Serving HTTP on :: port 8080 (http://[::]:8080/) ...
-```
-
-### Passo 4 — Abra no navegador
-
-Abra o Google Chrome (recomendado) e acesse:
-
-```
-http://localhost:8080
-```
-
-Pronto! O QuestBank está rodando no seu computador.
-
-**Para parar o servidor:** volte ao Terminal e aperte `Ctrl + C`.
+Guia rápido de uso do app **depois** que ele já estiver no ar. Para colocar no ar pela primeira vez, veja [`HOMELAB-DEPLOY.md`](./HOMELAB-DEPLOY.md).
 
 ---
 
-## OPÇÃO 2: Colocar online de graça com o GitHub Pages
+## Acessar o app
 
-Esta opção permite que qualquer pessoa acesse o app pela internet, sem instalar nada.
+Depois de subir os containers com `docker compose up -d --build`, o app fica disponível em:
 
-### Passo 1 — Crie uma conta no GitHub
+- **Na rede local:** `http://IP-DO-SERVIDOR:8080`
+- **Via Tailscale (de qualquer lugar):** `http://IP-TAILSCALE-DO-SERVIDOR:8080`
 
-1. Acesse https://github.com
-2. Clique em "Sign up" e crie sua conta gratuita
-3. Confirme seu email
-
-### Passo 2 — Crie um repositório
-
-1. No GitHub, clique no botão **"+"** no canto superior direito → "New repository"
-2. Nome do repositório: `questbank`
-3. Marque como **Public**
-4. Clique em **"Create repository"**
-
-### Passo 3 — Faça upload dos arquivos
-
-1. Na página do repositório recém-criado, clique em **"uploading an existing file"**
-2. Arraste TODA a pasta `questbank` (todos os arquivos e pastas dentro dela) para a área de upload
-   - Inclua: `index.html`, `app.jsx`, `manifest.json`, `sw.js`, pasta `components/`, pasta `db/`, pasta `utils/`
-   - **Não inclua** a pasta `.git` nem a pasta `.agents`
-3. Clique em **"Commit changes"**
-
-### Passo 4 — Ative o GitHub Pages
-
-1. No repositório, vá em **Settings** (engrenagem)
-2. No menu lateral, clique em **Pages**
-3. Em "Source", selecione **Deploy from a branch**
-4. Em "Branch", selecione **main** e pasta **/ (root)**
-5. Clique em **Save**
-
-### Passo 5 — Acesse seu app online
-
-Após 1-2 minutos, seu app estará disponível em:
-
-```
-https://SEU-USUARIO.github.io/questbank/
-```
-
-(Substitua `SEU-USUARIO` pelo seu nome de usuário do GitHub)
+Use Chrome, Edge ou Firefox. No celular funciona, mas o layout de 3 painéis é otimizado para tela grande (tablet ou computador).
 
 ---
 
-## OPÇÃO 3: Colocar online com o Netlify (alternativa ao GitHub Pages)
+## Importar questões
 
-O Netlify é outra plataforma gratuita, ainda mais simples.
+### Via JSON
 
-### Passo 1 — Acesse o Netlify Drop
-
-1. Acesse https://app.netlify.com/drop
-2. (Crie conta gratuita se necessário)
-
-### Passo 2 — Arraste a pasta
-
-1. Arraste a pasta `questbank` inteira para a área indicada no site
-2. Aguarde o upload (poucos segundos)
-
-### Passo 3 — Pronto!
-
-O Netlify vai gerar um link tipo:
-```
-https://nome-aleatorio.netlify.app
-```
-
-Seu app está no ar! Você pode depois personalizar o nome do link.
-
----
-
-## Como usar o QuestBank depois de abrir
-
-### Importar questões
-
-1. Prepare um arquivo JSON no formato aceito (veja os exemplos na pasta `.agents/skills/importar-questoes/examples/`)
-2. Clique no botão **"Importar"** no header
-3. Arraste o arquivo JSON ou clique para selecionar
+1. Prepare um arquivo JSON no formato aceito (veja exemplos em `.agents/skills/importar-questoes/examples/` ou `saida/sample-data.json`)
+2. Clique em **"Importar"** no header (atalho: `Ctrl + I`)
+3. Arraste o arquivo `.json` ou clique para selecionar
 4. O app valida e mostra quantas questões foram encontradas
 5. Clique em **"Importar X questões"**
 
-### Montar uma prova
+### Via LaTeX (`.zip`)
 
-1. Na árvore de assuntos (painel esquerdo), selecione os assuntos desejados
-2. Use os filtros para refinar (banca, ano, dificuldade, tipo)
-3. Clique no botão **"+"** em cada questão para adicionar à prova
-4. No painel direito, arraste para reordenar as questões
+Se você prefere editar em LaTeX, o pacote opcional `questbank-server/` (Python) converte `.zip` LaTeX → JSON automaticamente. Veja `questbank-server/README.md` para instalar e usar localmente.
+
+---
+
+## Montar uma prova
+
+1. Na **árvore de assuntos** (painel esquerdo), marque os assuntos desejados
+   - Clique na seta para expandir; marque a caixa para incluir
+   - Você pode **arrastar nós** entre disciplinas (atualiza em lote todas as questões)
+   - Clique com botão direito em um nó para **renomear** (atualiza em lote)
+   - `Ctrl + Z` desfaz a última operação de árvore
+2. Use os **filtros** (painel central) para refinar: banca, ano, dificuldade, tipo, tags, etc.
+3. Clique no botão **`+`** em cada questão para adicionar à prova (painel direito)
+4. No painel direito, **arraste** para reordenar; use os botões para embaralhar ou ordenar por dificuldade
 5. Clique em **"Gerar Prova"**
 6. Preencha o nome da prova (obrigatório), professor e instituição
-7. Clique em **"Baixar Word (.docx)"**
+7. Escolha **Word (`.docx`)** ou **LaTeX (`.zip`)** e baixe
+8. Se houver versões adaptadas, marque "Gerar prova adaptada" para baixar também a versão para alunos atípicos
 
-### Fazer backup
+---
 
-1. Clique no botão **"Backup"** no header
-2. **"Exportar banco"** salva todas as questões e provas em um arquivo .json
-3. **"Restaurar banco"** carrega um backup salvo anteriormente
+## Criar questão manualmente
+
+1. Clique em **"Nova Questão"** no header (atalho: `Ctrl + N`)
+2. Preencha enunciado, alternativas (se objetiva), gabarito
+3. Classifique: disciplina, tópico, conteúdo, assunto, banca, ano, dificuldade
+4. (Opcional) Marque "Adicionar versão adaptada" para criar a versão para alunos atípicos no mesmo fluxo
+5. Salve
+
+---
+
+## Editar / excluir questão
+
+- Clique no card da questão para expandir → botões **Editar** e **Excluir** aparecem no rodapé
+- Em lote: selecione várias questões (clicando no `+`) e use os botões do painel direito
+
+---
+
+## Estatísticas
+
+Botão **Stats** no header abre o painel de estatísticas: distribuição por disciplina, dificuldade, banca e ano.
+
+---
+
+## Backup do banco de dados
+
+### Via app (JSON)
+
+- **Backup → Exportar banco:** baixa um `.questbank.json` com todas as questões e provas
+- **Backup → Restaurar banco:** substitui dados existentes pelo conteúdo do arquivo
+
+### Via Docker (volume bare-metal)
+
+Para backups automáticos / restore rápido do volume SQLite, veja `HOMELAB-DEPLOY.md`.
+
+---
+
+## Atalhos de teclado
+
+| Atalho | Ação |
+|---|---|
+| `Ctrl + F` | Focar o campo de busca |
+| `Ctrl + N` | Nova questão |
+| `Ctrl + I` | Importar questões |
+| `Ctrl + Z` | Desfazer última operação de taxonomia (mover/renomear) |
+| `Esc` | Fechar modal aberto |
 
 ---
 
 ## Dúvidas frequentes
 
 **O app funciona offline?**
-Sim! Depois de abrir pela primeira vez, o app funciona mesmo sem internet (é um PWA).
+Não 100%. O frontend (React + assets) é cacheado pelo Service Worker e abre sem internet, mas as questões ficam no backend SQLite — então precisa de conexão com o servidor. Para uso "offline real", use Tailscale: o servidor fica acessível mesmo sem internet pública, desde que ambos os dispositivos estejam na mesma rede Tailscale.
 
 **Posso usar no celular?**
 Sim, mas a experiência é melhor em tela grande (computador ou tablet).
 
 **Meus dados ficam seguros?**
-Os dados ficam salvos apenas no SEU navegador (IndexedDB). Ninguém mais tem acesso. Faça backups regularmente!
+Os dados ficam no servidor (homelab) — apenas você tem acesso via rede local ou Tailscale. **Faça backups regularmente** usando o botão Backup → Exportar banco.
 
-**Posso usar em mais de um computador?**
-Sim, mas os dados não sincronizam automaticamente. Use a função de backup para transferir dados entre computadores.
+**Como uso em mais de um computador?**
+Como agora há servidor central, basta apontar todos os dispositivos para o mesmo `http://IP-DO-SERVIDOR:8080`. Sincronização automática.
 
-
-Latex:
-
-cd C:\Users\heris\Documents\Antigravity\questbank\questbank-server && pip install -e .
-questbank-server (deixe o terminal aberto).
+**Onde fica o banco de dados?**
+Num volume Docker chamado `questbank_questbank-data`. Por padrão em `/var/lib/docker/volumes/questbank_questbank-data/_data/questbank.db`.

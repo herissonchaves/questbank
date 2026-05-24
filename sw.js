@@ -1,13 +1,23 @@
-// QuestBank Service Worker — Network-First Strategy (v7 - Tags Feature)
-// Changed to network-first to ensure fresh files always load
-const CACHE_NAME = 'questbank-v15';
+// QuestBank Service Worker — Network-First Strategy
+// Local files: network-first (always tries fresh, falls back to cache when offline)
+// CDN files: cache-first (rarely change)
+//
+// Atenção: como o banco de dados agora roda no servidor (REST API),
+// o app não funciona 100% offline. O Service Worker continua útil para:
+//   - Acelerar reloads (cache de assets)
+//   - Servir o shell HTML quando o servidor estiver lento
+
+const CACHE_NAME = 'questbank-v16';
 
 const APP_SHELL = [
     './',
     './index.html',
     './app.jsx',
+    './manifest.json',
     './db/schema.js',
     './db/taxonomy.js',
+    './db/api-client.js',
+    './utils/html-sanitizer.js',
     './utils/import-handler.js',
     './utils/export-handler.js',
     './utils/latex-to-docx-math.js',
@@ -20,18 +30,19 @@ const APP_SHELL = [
     './components/import-modal.jsx',
     './components/export-modal.jsx',
     './components/exams-panel.jsx',
-    './components/edit-question-modal.jsx',
+    './components/visual-editor.jsx',
     './components/rich-text-toolbar.jsx',
     './components/create-question-modal.jsx',
+    './components/edit-question-modal.jsx',
     './components/stats-panel.jsx',
-    './manifest.json',
+    './components/bulk-edit-tags-modal.jsx',
 ];
 
+// CDNs cacheados agressivamente (raramente mudam dentro da mesma versão)
 const CDN_URLS = [
     'https://unpkg.com/react@18/umd/react.production.min.js',
     'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
     'https://unpkg.com/@babel/standalone@7/babel.min.js',
-    'https://unpkg.com/dexie@3/dist/dexie.js',
     'https://unpkg.com/docx@8.5.0/build/index.umd.js',
     'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
     'https://cdn.tailwindcss.com',
@@ -44,17 +55,17 @@ const CDN_URLS = [
 
 // Install — skip waiting so new SW activates immediately
 self.addEventListener('install', (event) => {
-    console.log('[SW v14] Installing...');
+    console.log(`[SW ${CACHE_NAME}] Installing...`);
     self.skipWaiting();
 });
 
 // Activate — delete ALL old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
-    console.log('[SW v14] Activating, clearing old caches...');
+    console.log(`[SW ${CACHE_NAME}] Activating, clearing old caches...`);
     event.waitUntil(
         caches.keys().then((keys) =>
-            Promise.all(keys.map((key) => {
-                console.log('[SW v14] Deleting cache:', key);
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map((key) => {
+                console.log(`[SW ${CACHE_NAME}] Deleting cache:`, key);
                 return caches.delete(key);
             }))
         ).then(() => self.clients.claim())
@@ -64,6 +75,11 @@ self.addEventListener('activate', (event) => {
 // Fetch — Network-first for local files, cache-first for CDN
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
+
+    // Nunca cachear chamadas à API (sempre dados frescos do backend)
+    if (url.pathname.startsWith('/api/')) {
+        return; // deixa o browser cuidar normalmente
+    }
 
     // CDN resources: cache-first (they rarely change)
     if (CDN_URLS.some(cdn => event.request.url.startsWith(cdn))) {

@@ -132,17 +132,14 @@ const App = () => {
         
         const prevStates = lastAction.previousStates;
         try {
-            await db.transaction('rw', db.questions, async () => {
-                for (const snap of prevStates) {
-                    await db.questions.update(snap.id, {
-                        disciplina: snap.disciplina,
-                        topico: snap.topico,
-                        conteudo: snap.conteudo,
-                        assunto: snap.assunto
-                    });
-                }
-            });
-            
+            await db.questions.bulkPatch(prevStates.map(snap => ({
+                id: snap.id,
+                disciplina: snap.disciplina,
+                topico: snap.topico,
+                conteudo: snap.conteudo,
+                assunto: snap.assunto,
+            })));
+
             setUndoStack(prev => prev.slice(0, -1));
             showToast(`Ação desfeita. ${prevStates.length} questões restauradas.`, 'success');
             loadQuestions(); // refresh UI
@@ -228,37 +225,36 @@ const App = () => {
                     assunto: q.assunto
                 }));
                 
-                await db.transaction('rw', db.questions, async () => {
-                    for (const q of questionsToUpdate) {
-                        const oldFields = [q.disciplina || '', q.topico || '', q.conteudo || '', q.assunto || ''];
-                        const newFields = ['', '', '', ''];
-                        const targetLen = targetParts.length;
-                        const shift = targetLen - sourceLevel;
+                const bulkUpdates = questionsToUpdate.map(q => {
+                    const oldFields = [q.disciplina || '', q.topico || '', q.conteudo || '', q.assunto || ''];
+                    const newFields = ['', '', '', ''];
+                    const targetLen = targetParts.length;
+                    const shift = targetLen - sourceLevel;
 
-                        for (let i = 0; i < 4; i++) {
-                            if (i < targetLen) {
-                                newFields[i] = targetParts[i] || '';
-                            } else if (i === targetLen) {
-                                newFields[i] = nodeName;
-                            } else {
-                                const oldIndex = i - shift;
-                                if (oldIndex >= 0 && oldIndex < 4) {
-                                    newFields[i] = oldFields[oldIndex];
-                                }
+                    for (let i = 0; i < 4; i++) {
+                        if (i < targetLen) {
+                            newFields[i] = targetParts[i] || '';
+                        } else if (i === targetLen) {
+                            newFields[i] = nodeName;
+                        } else {
+                            const oldIndex = i - shift;
+                            if (oldIndex >= 0 && oldIndex < 4) {
+                                newFields[i] = oldFields[oldIndex];
                             }
                         }
-
-                        const updates = {
-                            disciplina: newFields[0] || '',
-                            topico: newFields[1] || '',
-                            conteudo: newFields[2] || '',
-                            assunto: newFields[3] || ''
-                        };
-                        
-                        await db.questions.update(q.id, updates);
                     }
+
+                    return {
+                        id: q.id,
+                        disciplina: newFields[0] || '',
+                        topico: newFields[1] || '',
+                        conteudo: newFields[2] || '',
+                        assunto: newFields[3] || '',
+                    };
                 });
-                
+
+                await db.questions.bulkPatch(bulkUpdates);
+
                 setUndoStack(prev => [...prev, { type: 'TAXONOMY_MOVE', previousStates }]);
                 
                 showToast(`Sucesso! ${questionsToUpdate.length} questões alteradas. Pressione Ctrl+Z para desfazer.`, 'success');
@@ -312,11 +308,9 @@ const App = () => {
             const fieldKey = ['disciplina', 'topico', 'conteudo', 'assunto'][level];
             const trimmedName = newName.trim();
 
-            await db.transaction('rw', db.questions, async () => {
-                for (const q of questionsToUpdate) {
-                    await db.questions.update(q.id, { [fieldKey]: trimmedName });
-                }
-            });
+            await db.questions.bulkPatch(
+                questionsToUpdate.map(q => ({ id: q.id, [fieldKey]: trimmedName }))
+            );
 
             setUndoStack(prev => [...prev, { type: 'TAXONOMY_RENAME', previousStates }]);
 
@@ -511,39 +505,41 @@ const App = () => {
                 return;
             }
 
-            let updatedCount = 0;
+            const bulkUpdates = [];
 
-            await db.transaction('rw', db.questions, async () => {
-                for (const q of selectedQ) {
-                    if (!q.alternativas || q.alternativas.length === 0) continue;
-                    
-                    const originalGabarito = String(q.gabarito || '').trim().toUpperCase();
-                    const correctAlt = q.alternativas.find(a => String(a.letra || '').trim().toUpperCase() === originalGabarito);
-                    
-                    if (!correctAlt) continue;
+            for (const q of selectedQ) {
+                if (!q.alternativas || q.alternativas.length === 0) continue;
 
-                    const originalCorrectText = correctAlt.texto;
+                const originalGabarito = String(q.gabarito || '').trim().toUpperCase();
+                const correctAlt = q.alternativas.find(a => String(a.letra || '').trim().toUpperCase() === originalGabarito);
 
-                    const shuffled = [...q.alternativas];
-                    for (let i = shuffled.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                    }
+                if (!correctAlt) continue;
 
-                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                    const newAlternativas = shuffled.map((alt, index) => {
-                        return { ...alt, letra: alphabet[index] };
-                    });
+                const originalCorrectText = correctAlt.texto;
 
-                    const newCorrectAlt = newAlternativas.find(a => a.texto === originalCorrectText);
-                    const newGabarito = newCorrectAlt ? newCorrectAlt.letra : originalGabarito;
-
-                    if (newCorrectAlt) {
-                        await db.questions.update(q.id, { alternativas: newAlternativas, gabarito: newGabarito });
-                        updatedCount++;
-                    }
+                const shuffled = [...q.alternativas];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
                 }
-            });
+
+                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const newAlternativas = shuffled.map((alt, index) => ({ ...alt, letra: alphabet[index] }));
+
+                const newCorrectAlt = newAlternativas.find(a => a.texto === originalCorrectText);
+                if (!newCorrectAlt) continue;
+
+                bulkUpdates.push({
+                    id: q.id,
+                    alternativas: newAlternativas,
+                    gabarito: newCorrectAlt.letra,
+                });
+            }
+
+            const updatedCount = bulkUpdates.length;
+            if (updatedCount > 0) {
+                await db.questions.bulkPatch(bulkUpdates);
+            }
 
             if (updatedCount > 0) {
                 showToast(`Alternativas embaralhadas em ${updatedCount} questões!`, 'success');
@@ -601,29 +597,28 @@ const App = () => {
         
         try {
             const selectedQ = await db.questions.filter(q => state.selectedIds.includes(q.id)).toArray();
-            let updatedCount = 0;
 
-            await db.transaction('rw', db.questions, async () => {
-                for (const q of selectedQ) {
-                    let currentTags = q.tags || [];
-                    let newTags = [...currentTags];
+            const bulkUpdates = selectedQ.map(q => {
+                const currentTags = q.tags || [];
+                let newTags = [...currentTags];
 
-                    if (actionType === 'add') {
-                        parsedTags.forEach(t => {
-                            if (!newTags.includes(t)) newTags.push(t);
-                        });
-                    } else if (actionType === 'remove') {
-                        newTags = newTags.filter(t => !parsedTags.includes(t));
-                    } else if (actionType === 'replace') {
-                        // Keep internal system tags
-                        const systemTags = currentTags.filter(t => t.match(/^\d{8}$/) || t.match(/^A\d{8}$/));
-                        newTags = [...systemTags, ...parsedTags];
-                    }
-
-                    await db.questions.update(q.id, { tags: newTags });
-                    updatedCount++;
+                if (actionType === 'add') {
+                    parsedTags.forEach(t => {
+                        if (!newTags.includes(t)) newTags.push(t);
+                    });
+                } else if (actionType === 'remove') {
+                    newTags = newTags.filter(t => !parsedTags.includes(t));
+                } else if (actionType === 'replace') {
+                    // Keep internal system tags
+                    const systemTags = currentTags.filter(t => t.match(/^\d{8}$/) || t.match(/^A\d{8}$/));
+                    newTags = [...systemTags, ...parsedTags];
                 }
+
+                return { id: q.id, tags: newTags };
             });
+
+            await db.questions.bulkPatch(bulkUpdates);
+            const updatedCount = bulkUpdates.length;
 
             dispatch({ type: 'TOGGLE_MODAL', modal: 'bulkEditTags' });
             showToast(`Tags modificadas em ${updatedCount} questões!`, 'success');
