@@ -10,15 +10,32 @@ services:
     environment:
       PORT: "3000"
       DB_PATH: "/data/questbank.db"
+      NODE_ENV: "production"
     volumes:
       - questbank-data:/data          # banco de dados SQLite persistente
     expose:
       - "3000"                        # acessível apenas internamente (via nginx)
+    # init: true → tini como PID 1, faz reaping de zumbis e propaga SIGTERM
+    # corretamente para o Node (graças ao shutdown handler em server.js)
+    init: true
+    # Limites de recursos: protegem o host de um leak ou de uma importação
+    # base64 maluca. 512 MB é folga para 10k questões + transações bulk.
+    mem_limit: 512m
+    mem_reservation: 128m
+    cpus: 1.0
+    # Rotação de logs: sem isso, /var/lib/docker/containers/<id>-json.log
+    # cresce indefinidamente em servidor 24/7.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   # ── Frontend: nginx + proxy reverso ────────────────────────
   frontend:
@@ -33,11 +50,21 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    init: true
+    mem_limit: 256m
+    mem_reservation: 64m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
 # ── Volumes ──────────────────────────────────────────────────
 volumes:

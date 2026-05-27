@@ -21,8 +21,13 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 // ─── Banco de Dados ────────────────────────────────────────────
 const db = new Database(DB_PATH);
 
-// Ativa WAL mode para melhor performance em leituras concorrentes
+// Ativa WAL mode para melhor performance em leituras concorrentes.
+// synchronous = NORMAL é a combinação canônica com WAL: mantém durabilidade
+// prática (sobrevive a crash do app) e é drasticamente mais rápido em escrita.
+// busy_timeout protege contra SQLITE_BUSY em rajadas concorrentes.
 db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
+db.pragma('busy_timeout = 5000');
 db.pragma('foreign_keys = ON');
 
 // Cria as tabelas se não existirem
@@ -231,7 +236,60 @@ app.delete('/api/exams/:id', (req, res) => {
 });
 
 // ─── Start ────────────────────────────────────────────────────
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`QuestBank API rodando na porta ${PORT}`);
     console.log(`Banco de dados: ${DB_PATH}`);
+});
+
+// ─── Graceful shutdown ────────────────────────────────────────
+// Quando o Docker manda SIGTERM (rebuild, restart, deploy), paramos de aceitar
+// novas conexões, esperamos as inflight, fechamos o SQLite com checkpoint
+// limpo do WAL e só então saímos. Sem isso, transações grandes em curso
+// podem deixar o banco em estado inconsistente.
+let shuttingDown = false;
+function shutdown(signal, exitCode = 0) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[shutdown] Sinal recebido: ${signal}. Encerrando...`);
+
+    // Timeout de segurança: se algo travar, força saída em 10s
+    const killSwitch = setTimeout(() => {
+        console.error('[shutdown] Timeout de 10s atingido — forçando exit(1)');
+        process.exit(1);
+    }, 10000);
+    killSwitch.unref();
+
+    server.close((err) => {
+        if (err) {
+            console.error('[shutdown] Erro ao fechar servidor HTTP:', err);
+            exitCode = 1;
+        } else {
+            console.log('[shutdown] Servidor HTTP fechado');
+        }
+        try {
+            db.close();
+            console.log('[shutdown] SQLite fechado (checkpoint WAL concluído)');
+        } catch (e) {
+            console.error('[shutdown] Erro ao fechar SQLite:', e);
+            exitCode = 1;
+        }
+        process.exit(exitCode);
+    });
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
+
+// Crashes silenciosos viram um mistério em 24/7. Loga e deixa o Docker
+// reiniciar (restart: unless-stopped) — assim aparece nos logs e a gente
+// não fica adivinhando por que o container reiniciou.
+process.on('uncaughtException', (err) => {
+    console.error('[uncaughtException]', err);
+    shutdown('uncaughtException', 1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('[unhandledRejection]', reason);
+    // Não derruba o processo: muitos unhandledRejection vêm de libs e seriam
+    // benignos. Mas fica registrado no log para diagnóstico posterior.
 });
