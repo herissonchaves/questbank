@@ -104,6 +104,11 @@
                 });
             },
 
+            async clear() {
+                invalidateCache();
+                await apiFetch(`${BASE}/questions`, { method: 'DELETE' });
+            },
+
             filter(fn) {
                 return {
                     async toArray() {
@@ -162,6 +167,26 @@
                     method: 'DELETE',
                 });
             },
+
+            async clear() {
+                await apiFetch(`${BASE}/exams`, { method: 'DELETE' });
+            },
+
+            async bulkAdd(exams) {
+                for (const exam of exams) {
+                    await apiFetch(`${BASE}/exams`, {
+                        method: 'POST',
+                        body: JSON.stringify(exam),
+                    });
+                }
+            },
+        },
+
+        // Stub para compatibilidade com backup/restore (settings não são usados no backend)
+        settings: {
+            async clear() { /* no-op */ },
+            async bulkAdd(_items) { /* no-op */ },
+            async toArray() { return []; },
         },
 
         // Mantido por compatibilidade com código que escreveu `await db.transaction(...)`.

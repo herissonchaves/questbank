@@ -193,6 +193,28 @@ app.post('/api/questions/bulk-delete', (req, res) => {
     }
 });
 
+// DELETE /api/questions — apaga TODAS as questões (usado no restore de backup)
+app.delete('/api/questions', (req, res) => {
+    try {
+        const info = db.prepare('DELETE FROM questions').run();
+        res.json({ deleted: info.changes });
+    } catch (err) {
+        console.error('DELETE /api/questions', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /api/exams — apaga TODOS os exames (usado no restore de backup)
+app.delete('/api/exams', (req, res) => {
+    try {
+        const info = db.prepare('DELETE FROM exams').run();
+        res.json({ deleted: info.changes });
+    } catch (err) {
+        console.error('DELETE /api/exams', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ═══════════════════════════════════════════════════════════════
 //  EXAMS (histórico de provas geradas)
 // ═══════════════════════════════════════════════════════════════
