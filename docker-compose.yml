@@ -37,6 +37,31 @@ services:
       retries: 3
       start_period: 10s
 
+  # ── Servidor LaTeX: latex2questbank (Python) ───────────────
+  latex-server:
+    build:
+      context: ./questbank-server
+      dockerfile: Dockerfile
+    container_name: questbank-latex
+    restart: unless-stopped
+    expose:
+      - "8765"                        # acessível apenas internamente (via nginx)
+    init: true
+    mem_limit: 256m
+    mem_reservation: 64m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
   # ── Frontend: nginx + proxy reverso ────────────────────────
   frontend:
     build:
@@ -49,6 +74,8 @@ services:
                                       # troque 8080 pela porta que preferir
     depends_on:
       backend:
+        condition: service_healthy
+      latex-server:
         condition: service_healthy
     init: true
     mem_limit: 256m
