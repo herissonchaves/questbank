@@ -1,0 +1,11 @@
+cd ~/DaVinci/workspace/questbank
+
+# Corrigir o import-handler.js
+sed -i "s|LATEX_SERVER: 'http://127.0.0.1:8765'|LATEX_SERVER: window.location.origin + '/latex'|" utils/import-handler.js
+
+# Confirmar a mudança
+grep "LATEX_SERVER" utils/import-handler.js
+# Deve mostrar: LATEX_SERVER: window.location.origin + '/latex'
+
+# Rebuildar só o frontend
+docker compose up -d --build frontend
